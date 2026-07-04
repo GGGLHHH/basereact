@@ -1,6 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/')({ component: Home })
+export const Route = createFileRoute('/')({
+  component: Home,
+  staticData: {
+    title: 'Home',
+    menuTitle: 'Home',
+    icon: 'i-tabler-home',
+    order: 0,
+    group: 'General',
+  },
+})
 
 function Home() {
   return (
