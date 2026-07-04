@@ -1,0 +1,12 @@
+/* Custom utilities the components depend on. Ported from xchangeai-web
+   utilities.css — only the pieces basereact actually uses. */
+
+/* Scrollbar-less scrolling for DataTable's viewport (scroll-area handles UX). */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

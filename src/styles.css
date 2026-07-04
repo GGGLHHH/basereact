@@ -3,9 +3,10 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/inter';
 
-/* Local style partials (order: tokens -> theme bridge -> base layer). */
+/* Local style partials (order: tokens -> theme bridge -> base layer -> utilities). */
 @import './styles/tokens.css';
 @import './styles/theme.css';
 @import './styles/base.css';
+@import './styles/utilities.css';
 
 @custom-variant dark (&:is(.dark *));

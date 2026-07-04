@@ -38,7 +38,7 @@
     "better-tailwindcss/no-unknown-classes": [
       "error",
       {
-        "ignore": ["^i-"]
+        "ignore": ["^i-", "^scroll-shadow-", "^scrollbar-hidden$"]
       }
     ],
     "better-tailwindcss/enforce-canonical-classes": "error",
