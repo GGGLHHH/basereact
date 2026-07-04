@@ -35,7 +35,12 @@
     "better-tailwindcss/enforce-consistent-class-order": "error",
     "better-tailwindcss/no-unnecessary-whitespace": "error",
     "better-tailwindcss/enforce-consistent-variant-order": "error",
-    "better-tailwindcss/no-unknown-classes": "error",
+    "better-tailwindcss/no-unknown-classes": [
+      "error",
+      {
+        "ignore": ["^i-"]
+      }
+    ],
     "better-tailwindcss/enforce-canonical-classes": "error",
     "better-tailwindcss/enforce-consistent-important-position": "error",
     "better-tailwindcss/enforce-consistent-variable-syntax": "error",

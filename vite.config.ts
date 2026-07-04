@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import UnoCSS from 'unocss/vite'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 import { openapiCodegen } from 'vite-plugin-openapi-codegen'
 import { devtools } from '@tanstack/devtools-vite'
@@ -24,6 +25,7 @@ const config = defineConfig({
       generateOnHmr: false,
     }),
     tailwindcss(),
+    UnoCSS(),
     tanstackStart(),
     codeInspectorPlugin({
       bundler: 'vite',
