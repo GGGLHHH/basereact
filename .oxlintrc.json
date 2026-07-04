@@ -1,0 +1,59 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "vitest", "import"],
+  "jsPlugins": ["eslint-plugin-better-tailwindcss"],
+  "settings": {
+    "react": {
+      "version": "19.2.0"
+    },
+    "better-tailwindcss": {
+      "entryPoint": "src/styles.css",
+      "rootFontSize": 16
+    }
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "dist/**",
+    ".claude/**",
+    "*.md",
+    "node_modules/**",
+    "src/routeTree.gen.ts",
+    "src/generated/**",
+    "src/components/ui/**"
+  ],
+  "rules": {
+    "react/no-array-index-key": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "better-tailwindcss/no-deprecated-classes": "error",
+    "better-tailwindcss/no-conflicting-classes": "error",
+    "better-tailwindcss/no-duplicate-classes": "error",
+    "better-tailwindcss/enforce-consistent-class-order": "error",
+    "better-tailwindcss/no-unnecessary-whitespace": "error",
+    "better-tailwindcss/enforce-consistent-variant-order": "error",
+    "better-tailwindcss/no-unknown-classes": "error",
+    "better-tailwindcss/enforce-canonical-classes": "error",
+    "better-tailwindcss/enforce-consistent-important-position": "error",
+    "better-tailwindcss/enforce-consistent-variable-syntax": "error",
+    "better-tailwindcss/enforce-shorthand-classes": "error",
+    "better-tailwindcss/no-restricted-classes": [
+      "error",
+      {
+        "restrict": [
+          {
+            "pattern": "^(.*:)?(text|bg|border|ring|ring-offset|fill|stroke|from|to|via|divide|outline|decoration|shadow|accent|caret)-(zinc|gray|slate|neutral|stone|blue|green|red)-",
+            "message": "Use a theme token (foreground/muted/info/success/destructive/border ...) instead of a raw Tailwind palette color."
+          },
+          {
+            "pattern": "^(.*:)?(text|bg|border|ring|fill|stroke|from|to|via|divide|outline|decoration|shadow|accent|caret)-(black|white)\\b",
+            "message": "Use a theme token (foreground/background ...) instead of raw black/white."
+          }
+        ]
+      }
+    ]
+  }
+}
