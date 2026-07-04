@@ -1,0 +1,36 @@
+{
+  "home": {
+    "editHint": "编辑 <code>{{path}}</code> 开始开发。",
+    "welcome": "欢迎使用 TanStack Start"
+  },
+  "action": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "retry": "重试",
+    "save": "保存",
+    "search": "搜索"
+  },
+  "loading": {
+    "empty": "暂无数据",
+    "failed": "加载失败",
+    "loading": "加载中...",
+    "loadingMore": "加载更多..."
+  },
+  "pagination": {
+    "firstPage": "首页",
+    "lastPage": "末页",
+    "nextPage": "下一页",
+    "pageOf": "第 {{page}} / {{totalPages}} 页",
+    "previousPage": "上一页",
+    "rowsPerPage": "每页行数"
+  },
+  "upload": {
+    "confirming": "确认中...",
+    "done": "上传完成",
+    "error": "上传失败",
+    "preparing": "准备中...",
+    "uploading": "上传中..."
+  }
+}

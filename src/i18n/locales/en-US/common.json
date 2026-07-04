@@ -1,0 +1,36 @@
+{
+  "home": {
+    "editHint": "Edit <code>{{path}}</code> to get started.",
+    "welcome": "Welcome to TanStack Start"
+  },
+  "action": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "retry": "Retry",
+    "save": "Save",
+    "search": "Search"
+  },
+  "loading": {
+    "empty": "No data",
+    "failed": "Load failed",
+    "loading": "Loading...",
+    "loadingMore": "Loading more..."
+  },
+  "pagination": {
+    "firstPage": "First page",
+    "lastPage": "Last page",
+    "nextPage": "Next page",
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "previousPage": "Previous page",
+    "rowsPerPage": "Rows per page"
+  },
+  "upload": {
+    "confirming": "Confirming...",
+    "done": "Upload complete",
+    "error": "Upload failed",
+    "preparing": "Preparing...",
+    "uploading": "Uploading..."
+  }
+}

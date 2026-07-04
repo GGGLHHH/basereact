@@ -1,6 +1,9 @@
 import '@tanstack/react-router'
 
 import type { AccessPolicyKey } from '#/generated/access-policies'
+import type route from '#/i18n/locales/en-US/route.json'
+
+type RouteTitleKey = Extract<keyof typeof route, string>
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
@@ -10,6 +13,10 @@ declare module '@tanstack/react-router' {
     // 匿名访问显式白名单。无任何 access 元数据的路由按拒绝处理(fail closed)。
     accessPublic?: boolean
     // 菜单/面包屑元数据。嵌套路由继承由消费端(菜单树)决定,类型层不强约束。
+    // *Key 指向 route 命名空间,编译期对 en-US 基准 key 检查;硬编码 title 仅
+    // 留给不进翻译的路由(调试页等),两者都给时 Key 优先。
+    titleKey?: RouteTitleKey
+    menuTitleKey?: RouteTitleKey
     title?: string
     subtitle?: string
     menuTitle?: string
