@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
-import type { AdminListWidgetsQuery, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { login as buildLoginPath, logout as buildLogoutPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, refresh as buildRefreshPath, register as buildRegisterPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, adminListWidgets as buildAdminListWidgetsPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath } from "./api";
+import type { AdminListWidgetsQuery, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { login as buildLoginPath, logout as buildLogoutPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, refresh as buildRefreshPath, register as buildRegisterPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, adminListWidgets as buildAdminListWidgetsPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -323,6 +323,34 @@ export function previewContent(options: PreviewContentOptions, requestOptions: R
     return requestVoid(buildPreviewContentPath(options.path), {
         ...requestOptions,
         method: "GET",
+        signal: options.signal
+    });
+}
+// Profiles
+export interface GetProfileOptions {
+    query?: never;
+    path: GetProfilePath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getProfile(options: GetProfileOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildGetProfilePath(options.path), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
+export interface PutProfileOptions {
+    query?: never;
+    path: PutProfilePath;
+    body: PutProfileRequest;
+    signal?: AbortSignal;
+}
+export function putProfile(options: PutProfileOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildPutProfilePath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
         signal: options.signal
     });
 }

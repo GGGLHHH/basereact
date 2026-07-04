@@ -155,6 +155,22 @@ export const accessPolicies = {
     path: "contents/{id}/preview",
     permissions: ["contents:read"],
   },
+  getProfile: {
+    apiPath: "/api/v1/profiles/{user_id}",
+    kind: "permission",
+    method: "GET",
+    operationId: "get_profile",
+    path: "profiles/{user_id}",
+    permissions: ["profiles:read"],
+  },
+  putProfile: {
+    apiPath: "/api/v1/profiles/{user_id}",
+    kind: "permission",
+    method: "PUT",
+    operationId: "put_profile",
+    path: "profiles/{user_id}",
+    permissions: ["profiles:write"],
+  },
   listWidgets: {
     apiPath: "/api/v1/widgets",
     kind: "permission",

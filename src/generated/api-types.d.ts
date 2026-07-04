@@ -290,6 +290,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 读任意用户的资料(需 `profiles:read`;所有登录角色都有)。
+         *     注意:响应含 phone 等 PII,"任意登录可读"是脚手架的刻意选择——收紧时给 GET 加 ownership 或拆敏感字段视图。
+         */
+        get: operations["get_profile"];
+        /**
+         * 全量替换 upsert 自己的资料(`profiles:write`);带 `profiles:write:all` 可替任何人。
+         *     未建 → 201,已有 → 200(PUT 即建即替,RFC 7231 本义;profile 无独立 POST)。
+         */
+        put: operations["put_profile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/widgets": {
         parameters: {
             query?: never;
@@ -627,6 +651,38 @@ export interface components {
             object: components["schemas"]["ObjectResponse"];
             upload_url?: string | null;
         };
+        /** @description 出参 = 行字段 + 富化的 `avatar_url`(相对 preview 路径;悬空/未就绪/探测故障 → null)。 */
+        ProfileResponse: {
+            /** Format: uuid */
+            avatar_content_id?: string | null;
+            /** @description 相对路径 `/api/v1/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
+            avatar_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            first_name?: string | null;
+            last_name?: string | null;
+            middle_name?: string | null;
+            phone?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uuid */
+            user_id: string;
+        };
+        /**
+         * @description PUT 入参 —— **全量替换**:字段 null/缺省 = 清空(PUT 语义;不是 PATCH 的"跳过不改")。
+         *     phone 只做长度不做 E.164(刻意:格式是前端/业务关注,脚手架不猜地区)。
+         */
+        PutProfileRequest: {
+            /**
+             * Format: uuid
+             * @description 绑定头像:必须指向**已 confirm** 的 image/* content(service 写前经端口三查)。
+             */
+            avatar_content_id?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            middle_name?: string | null;
+            phone?: string | null;
+        };
         /** @description 注册请求(公开)。username 必填、唯一;email 可选;password 至少 3 位。 */
         RegisterRequest: {
             email?: string | null;
@@ -753,6 +809,8 @@ export type PageInfo = components['schemas']['PageInfo'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
+export type ProfileResponse = components['schemas']['ProfileResponse'];
+export type PutProfileRequest = components['schemas']['PutProfileRequest'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
@@ -1751,6 +1809,119 @@ export interface operations {
             };
         };
     };
+    get_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description idm user id(1:1) */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 资料(avatar_url 为相对 preview 路径;悬空/未就绪 → null) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 profiles:read 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 该用户尚未建资料 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description idm user id(1:1) */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description 已替换 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 首次建立 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 profiles:write / 改别人无 write:all */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败(超长 / 头像不存在 / 未 confirm / 非 image) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_widgets: {
         parameters: {
             query?: {
@@ -2233,12 +2404,14 @@ export type DeleteWidgetPath = operations['delete_widget']['parameters']['path']
 export type DownloadContentPath = operations['download_content']['parameters']['path'];
 export type GetContentMetadataPath = operations['get_content_metadata']['parameters']['path'];
 export type GetContentPath = operations['get_content']['parameters']['path'];
+export type GetProfilePath = operations['get_profile']['parameters']['path'];
 export type GetWidgetPath = operations['get_widget']['parameters']['path'];
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
+export type PutProfilePath = operations['put_profile']['parameters']['path'];
 export type SetContentMetadataPath = operations['set_content_metadata']['parameters']['path'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
 export type UpdateWidgetPath = operations['update_widget']['parameters']['path'];
