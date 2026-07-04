@@ -75,6 +75,14 @@ export const accessPolicies = {
     path: "contents/upload",
     permissions: ["contents:write"],
   },
+  prepareUpload: {
+    apiPath: "/api/v1/contents/upload-url",
+    kind: "permission",
+    method: "POST",
+    operationId: "prepare_upload",
+    path: "contents/upload-url",
+    permissions: ["contents:write"],
+  },
   getContent: {
     apiPath: "/api/v1/contents/{id}",
     kind: "permission",
@@ -98,6 +106,14 @@ export const accessPolicies = {
     operationId: "delete_content",
     path: "contents/{id}",
     permissions: ["contents:delete"],
+  },
+  confirmUpload: {
+    apiPath: "/api/v1/contents/{id}/confirm-upload",
+    kind: "permission",
+    method: "POST",
+    operationId: "confirm_upload",
+    path: "contents/{id}/confirm-upload",
+    permissions: ["contents:write"],
   },
   downloadContent: {
     apiPath: "/api/v1/contents/{id}/download",

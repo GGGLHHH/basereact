@@ -155,6 +155,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contents/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 两步上传①:建账 + 占格 + 签直传凭证(字节不过 app)。需 `contents:write`。
+         *     `upload_url = null` → 后端不支持,回退 multipart 一步上传。传完调 confirm-upload 销账。
+         */
+        post: operations["prepare_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contents/{id}": {
         parameters: {
             query?: never;
@@ -169,6 +189,26 @@ export interface paths {
         post?: never;
         /** 软删内容。需 `contents:delete`。不存在 → 404。 */
         delete: operations["delete_content"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contents/{id}/confirm-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 两步上传③:核对字节已落桶 → 销账(翻 uploaded + 补 size)。需 `contents:write`。
+         *     幂等(重试安全);没传就来 → 409;账不存在 → 404。
+         */
+        post: operations["confirm_upload"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -566,6 +606,27 @@ export interface components {
             }[];
             page_info: components["schemas"]["PageInfo"];
         };
+        /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
+        PrepareUploadRequest: {
+            description?: string | null;
+            document_type?: string | null;
+            file_name?: string | null;
+            mime_type?: string | null;
+            name?: string | null;
+            owner_type?: string | null;
+            tags?: string[];
+            /** Format: uuid */
+            tenant_id?: string | null;
+        };
+        /**
+         * @description 两步上传①的响应:账 + 格 + 凭证。`upload_url = null` = 后端不支持直传,
+         *     **回退一步上传**(multipart /contents/upload)—— 客户端按此判别。
+         */
+        PrepareUploadResponse: {
+            content: components["schemas"]["ContentResponse"];
+            object: components["schemas"]["ObjectResponse"];
+            upload_url?: string | null;
+        };
         /** @description 注册请求(公开)。username 必填、唯一;email 可选;password 至少 3 位。 */
         RegisterRequest: {
             email?: string | null;
@@ -690,6 +751,8 @@ export type LoginRequest = components['schemas']['LoginRequest'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
+export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
+export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
@@ -1133,6 +1196,57 @@ export interface operations {
             };
         };
     };
+    prepare_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepareUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description 账已建(created);upload_url=null 时回退一步上传 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrepareUploadResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 contents:write 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_content: {
         parameters: {
             query?: never;
@@ -1285,6 +1399,65 @@ export interface operations {
             };
             /** @description 不存在 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    confirm_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description content id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已销账(uploaded) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 contents:write 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 字节未落桶(先传再销账) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2054,6 +2227,7 @@ export interface operations {
     };
 }
 export type AdminListWidgetsQuery = operations['admin_list_widgets']['parameters']['query'];
+export type ConfirmUploadPath = operations['confirm_upload']['parameters']['path'];
 export type DeleteContentPath = operations['delete_content']['parameters']['path'];
 export type DeleteWidgetPath = operations['delete_widget']['parameters']['path'];
 export type DownloadContentPath = operations['download_content']['parameters']['path'];

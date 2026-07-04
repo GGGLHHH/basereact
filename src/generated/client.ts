@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
-import type { AdminListWidgetsQuery, ChangePasswordRequest, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, Page_WidgetView, PreviewContentPath, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { login as buildLoginPath, logout as buildLogoutPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, refresh as buildRefreshPath, register as buildRegisterPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, adminListWidgets as buildAdminListWidgetsPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath } from "./api";
+import type { AdminListWidgetsQuery, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { login as buildLoginPath, logout as buildLogoutPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, refresh as buildRefreshPath, register as buildRegisterPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, adminListWidgets as buildAdminListWidgetsPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -193,6 +193,20 @@ export function uploadContent(options: UploadContentOptions, requestOptions: Run
         signal: options.signal
     });
 }
+export interface PrepareUploadOptions {
+    query?: never;
+    path?: never;
+    body: PrepareUploadRequest;
+    signal?: AbortSignal;
+}
+export function prepareUpload(options: PrepareUploadOptions, requestOptions: RuntimeRequestOptions = {}): Promise<PrepareUploadResponse> {
+    return requestJson<PrepareUploadResponse>(buildPrepareUploadPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
 export interface GetContentOptions {
     query?: never;
     path: GetContentPath;
@@ -230,6 +244,19 @@ export function deleteContent(options: DeleteContentOptions, requestOptions: Run
     return requestVoid(buildDeleteContentPath(options.path), {
         ...requestOptions,
         method: "DELETE",
+        signal: options.signal
+    });
+}
+export interface ConfirmUploadOptions {
+    query?: never;
+    path: ConfirmUploadPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function confirmUpload(options: ConfirmUploadOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ContentResponse> {
+    return requestJson<ContentResponse>(buildConfirmUploadPath(options.path), {
+        ...requestOptions,
+        method: "POST",
         signal: options.signal
     });
 }
