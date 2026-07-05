@@ -10,6 +10,16 @@ import { NavUser } from '@/components/nav-user'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -23,6 +33,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { buildAdminMenu } from '@/lib/route-menu'
 import { cn } from '@/lib/utils'
@@ -66,6 +77,54 @@ function MenuIcon({ icon }: { icon?: string }) {
   )
 }
 
+// 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
+// 只切了个不可见的 open。改走向右弹出的 DropdownMenu 飞出层:叶子=Link 直达,
+// 含子=递归 DropdownMenuSub,多级也能点到任意子页。
+// 激活态用与展开侧栏一致的 sidebar-accent(SidebarMenuButton 的 data-active 同款)。
+const FLYOUT_ACTIVE_CLASS = 'bg-sidebar-accent text-sidebar-accent-foreground'
+
+function FlyoutMenuNode({
+  node,
+  pathname,
+  t,
+}: {
+  node: AdminMenuEntry
+  pathname: string
+  t: TFunction<'route'>
+}) {
+  const label = node.labelKey ? t(node.labelKey) : node.label
+  const isActive = pathname === node.url || pathname.startsWith(`${node.url}/`)
+  if (node.children.length === 0) {
+    return (
+      <DropdownMenuItem
+        render={<Link to={node.url} />}
+        className={cn(isActive && FLYOUT_ACTIVE_CLASS)}
+      >
+        <MenuIcon icon={node.icon} />
+        <span>{label}</span>
+      </DropdownMenuItem>
+    )
+  }
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger className={cn(isActive && FLYOUT_ACTIVE_CLASS)}>
+        <MenuIcon icon={node.icon} />
+        <span>{label}</span>
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        {node.children.map((child) => (
+          <FlyoutMenuNode
+            key={child.url}
+            node={child}
+            pathname={pathname}
+            t={t}
+          />
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
+
 // 递归渲染一个菜单节点。depth 0 用顶层 SidebarMenu 组件(带 tooltip,收起时
 // 悬停显名),depth≥1 用 SidebarMenuSub 组件。有子项 = 可折叠(点父行展开,
 // 不导航;落地页经面包屑或 URL 到达);叶子 = 直接是 Link。
@@ -83,6 +142,7 @@ function MenuNodeItem({
   const label = node.labelKey ? t(node.labelKey) : node.label
   const isActive = pathname === node.url || pathname.startsWith(`${node.url}/`)
   const hasChildren = node.children.length > 0
+  const { state, isMobile } = useSidebar()
 
   // 折叠态受控:初始展开 = 命中当前路由;导航进入该分支时自动展开(effect 只开不
   // 关,用户仍可手动折叠)。受控避免 defaultOpen 随路由变化触发 Base UI 的
@@ -126,6 +186,48 @@ function MenuNodeItem({
             <MenuIcon icon={node.icon} />
             <span>{label}</span>
           </SidebarMenuButton>
+        </SidebarMenuItem>
+      )
+    }
+    // 收起态:折叠展开区被隐藏,改用飞出 DropdownMenu(顶项自身落地页 + 递归子项)。
+    if (state === 'collapsed' && !isMobile) {
+      return (
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <SidebarMenuButton
+                  isActive={isActive}
+                  tooltip={label}
+                />
+              }
+            >
+              <MenuIcon icon={node.icon} />
+              <span>{label}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side='right'
+              align='start'
+              className='min-w-48'
+            >
+              <DropdownMenuItem
+                render={<Link to={node.url} />}
+                className={cn(pathname === node.url && FLYOUT_ACTIVE_CLASS)}
+              >
+                <MenuIcon icon={node.icon} />
+                <span>{label}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {node.children.map((child) => (
+                <FlyoutMenuNode
+                  key={child.url}
+                  node={child}
+                  pathname={pathname}
+                  t={t}
+                />
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       )
     }
