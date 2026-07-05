@@ -32,9 +32,15 @@ describe('isStaticDataGranted', () => {
   it('ANDs accessPolicyKeys', () => {
     const staticData = { accessPolicyKeys: ['adminListWidgets', 'purgePreview'] as const }
     expect(declaresAccessPolicy(staticData)).toBe(true)
-    expect(isStaticDataGranted(staticData, ['users:admin', 'widgets:read', 'widgets:delete'])).toBe(
-      true,
-    )
+    expect(
+      isStaticDataGranted(staticData, [
+        'users:admin',
+        'admin:login',
+        'widgets:read',
+        'widgets:delete',
+      ]),
+    ).toBe(true)
+    // 缺 admin:login(adminListWidgets 的第二个 AND 权限)→ 拒。
     expect(isStaticDataGranted(staticData, ['users:admin'])).toBe(false)
   })
 
@@ -43,7 +49,8 @@ describe('isStaticDataGranted', () => {
       accessPolicyAnyOf: [['adminListWidgets'], ['listWidgets']] as const,
     }
     expect(isStaticDataGranted(staticData, ['widgets:read'])).toBe(true)
-    expect(isStaticDataGranted(staticData, ['users:admin'])).toBe(true)
+    // adminListWidgets 组要 users:admin + admin:login 两权齐;齐 → anyOf 命中。
+    expect(isStaticDataGranted(staticData, ['users:admin', 'admin:login'])).toBe(true)
     expect(isStaticDataGranted(staticData, ['contents:read'])).toBe(false)
   })
 

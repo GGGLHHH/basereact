@@ -48,9 +48,9 @@ describe('buildAdminMenu with the real route tree', () => {
     history: createMemoryHistory(),
     routeTree,
   })
-  // widgets 声明了 accessPolicyKeys: ['adminListWidgets'](users:admin),
-  // 完整菜单断言要携带该权限;nested/* 无策略声明,恒可见。
-  const groups = buildAdminMenu({ ...router.routesById }, ['users:admin'])
+  // widgets 声明了 accessPolicyKeys: ['adminListWidgets'](AND: users:admin + admin:login),
+  // 完整菜单断言要携带这两个权限;nested/* 无策略声明,恒可见。
+  const groups = buildAdminMenu({ ...router.routesById }, ['users:admin', 'admin:login'])
 
   it('exposes the full nested tree of admin pages that declare menu titles', () => {
     expect(collectUrls(groups.flatMap((group) => group.entries))).toEqual([

@@ -135,7 +135,11 @@ describe('requireAdmin', () => {
 
   it('fetches permissions with the probe header and passes a granted chain', async () => {
     mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
-    mocks.getMyPermissions.mockResolvedValue({ permissions: ['users:admin'], roles: ['admin'] })
+    // adminListWidgets = AND(users:admin, admin:login);两权齐链才放行。
+    mocks.getMyPermissions.mockResolvedValue({
+      permissions: ['users:admin', 'admin:login'],
+      roles: ['admin'],
+    })
     mocks.matchRoutes.mockReturnValue([
       { staticData: {} },
       { staticData: { accessPolicyKeys: ['adminListWidgets'] } },
