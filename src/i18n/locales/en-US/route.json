@@ -5,5 +5,10 @@
   "adminWidgets": "Widgets",
   "forbidden": "Access denied",
   "home": "Home",
+  "nested": "Nested",
+  "nestedDaily": "Daily",
+  "nestedOverview": "Overview",
+  "nestedRegions": "Regions",
+  "nestedReports": "Reports",
   "notFound": "Page not found"
 }

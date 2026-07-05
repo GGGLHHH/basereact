@@ -13,12 +13,21 @@ import { Route as R404RouteImport } from './routes/404'
 import { Route as R403RouteImport } from './routes/403'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminShellRouteImport } from './routes/admin/_shell'
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
 import { Route as AdminShell403RouteImport } from './routes/admin/_shell/403'
+import { Route as AdminShellNestedRouteRouteImport } from './routes/admin/_shell/nested/route'
+import { Route as AdminShellNestedIndexRouteImport } from './routes/admin/_shell/nested/index'
+import { Route as AdminShellNestedOverviewRouteImport } from './routes/admin/_shell/nested/overview'
+import { Route as AdminShellNestedReportsRouteRouteImport } from './routes/admin/_shell/nested/reports/route'
+import { Route as AdminShellNestedReportsIndexRouteImport } from './routes/admin/_shell/nested/reports/index'
+import { Route as AdminShellNestedReportsDailyRouteImport } from './routes/admin/_shell/nested/reports/daily'
+import { Route as AdminShellNestedReportsRegionsRouteRouteImport } from './routes/admin/_shell/nested/reports/regions/route'
+import { Route as AdminShellNestedReportsRegionsIndexRouteImport } from './routes/admin/_shell/nested/reports/regions/index'
 
 const R404Route = R404RouteImport.update({
   id: '/404',
@@ -39,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
@@ -69,6 +83,52 @@ const AdminShell403Route = AdminShell403RouteImport.update({
   path: '/403',
   getParentRoute: () => AdminShellRoute,
 } as any)
+const AdminShellNestedRouteRoute = AdminShellNestedRouteRouteImport.update({
+  id: '/nested',
+  path: '/nested',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellNestedIndexRoute = AdminShellNestedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminShellNestedRouteRoute,
+} as any)
+const AdminShellNestedOverviewRoute =
+  AdminShellNestedOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AdminShellNestedRouteRoute,
+  } as any)
+const AdminShellNestedReportsRouteRoute =
+  AdminShellNestedReportsRouteRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AdminShellNestedRouteRoute,
+  } as any)
+const AdminShellNestedReportsIndexRoute =
+  AdminShellNestedReportsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminShellNestedReportsRouteRoute,
+  } as any)
+const AdminShellNestedReportsDailyRoute =
+  AdminShellNestedReportsDailyRouteImport.update({
+    id: '/daily',
+    path: '/daily',
+    getParentRoute: () => AdminShellNestedReportsRouteRoute,
+  } as any)
+const AdminShellNestedReportsRegionsRouteRoute =
+  AdminShellNestedReportsRegionsRouteRouteImport.update({
+    id: '/regions',
+    path: '/regions',
+    getParentRoute: () => AdminShellNestedReportsRouteRoute,
+  } as any)
+const AdminShellNestedReportsRegionsIndexRoute =
+  AdminShellNestedReportsRegionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminShellNestedReportsRegionsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -76,21 +136,35 @@ export interface FileRoutesByFullPath {
   '/403': typeof R403Route
   '/404': typeof R404Route
   '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/nested': typeof AdminShellNestedRouteRouteWithChildren
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
+  '/admin/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
+  '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
+  '/admin/nested/': typeof AdminShellNestedIndexRoute
+  '/admin/nested/reports/regions': typeof AdminShellNestedReportsRegionsRouteRouteWithChildren
+  '/admin/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
+  '/admin/nested/reports/': typeof AdminShellNestedReportsIndexRoute
+  '/admin/nested/reports/regions/': typeof AdminShellNestedReportsRegionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRouteWithChildren
   '/403': typeof R403Route
   '/404': typeof R404Route
+  '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
+  '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
+  '/admin/nested': typeof AdminShellNestedIndexRoute
+  '/admin/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
+  '/admin/nested/reports': typeof AdminShellNestedReportsIndexRoute
+  '/admin/nested/reports/regions': typeof AdminShellNestedReportsRegionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -100,10 +174,19 @@ export interface FileRoutesById {
   '/404': typeof R404Route
   '/admin/_shell': typeof AdminShellRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/_shell/nested': typeof AdminShellNestedRouteRouteWithChildren
   '/admin/_shell/403': typeof AdminShell403Route
   '/admin/_shell/404': typeof AdminShell404Route
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
+  '/admin/_shell/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
+  '/admin/_shell/nested/overview': typeof AdminShellNestedOverviewRoute
+  '/admin/_shell/nested/': typeof AdminShellNestedIndexRoute
+  '/admin/_shell/nested/reports/regions': typeof AdminShellNestedReportsRegionsRouteRouteWithChildren
+  '/admin/_shell/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
+  '/admin/_shell/nested/reports/': typeof AdminShellNestedReportsIndexRoute
+  '/admin/_shell/nested/reports/regions/': typeof AdminShellNestedReportsRegionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -113,21 +196,35 @@ export interface FileRouteTypes {
     | '/403'
     | '/404'
     | '/admin/login'
+    | '/admin/'
+    | '/admin/nested'
     | '/admin/403'
     | '/admin/404'
     | '/admin/home'
     | '/admin/widgets'
+    | '/admin/nested/reports'
+    | '/admin/nested/overview'
+    | '/admin/nested/'
+    | '/admin/nested/reports/regions'
+    | '/admin/nested/reports/daily'
+    | '/admin/nested/reports/'
+    | '/admin/nested/reports/regions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/403'
     | '/404'
+    | '/admin'
     | '/admin/login'
     | '/admin/403'
     | '/admin/404'
     | '/admin/home'
     | '/admin/widgets'
+    | '/admin/nested/overview'
+    | '/admin/nested'
+    | '/admin/nested/reports/daily'
+    | '/admin/nested/reports'
+    | '/admin/nested/reports/regions'
   id:
     | '__root__'
     | '/'
@@ -136,10 +233,19 @@ export interface FileRouteTypes {
     | '/404'
     | '/admin/_shell'
     | '/admin/login'
+    | '/admin/'
+    | '/admin/_shell/nested'
     | '/admin/_shell/403'
     | '/admin/_shell/404'
     | '/admin/_shell/home'
     | '/admin/_shell/widgets'
+    | '/admin/_shell/nested/reports'
+    | '/admin/_shell/nested/overview'
+    | '/admin/_shell/nested/'
+    | '/admin/_shell/nested/reports/regions'
+    | '/admin/_shell/nested/reports/daily'
+    | '/admin/_shell/nested/reports/'
+    | '/admin/_shell/nested/reports/regions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -178,6 +284,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/login': {
       id: '/admin/login'
@@ -221,10 +334,119 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShell403RouteImport
       parentRoute: typeof AdminShellRoute
     }
+    '/admin/_shell/nested': {
+      id: '/admin/_shell/nested'
+      path: '/nested'
+      fullPath: '/admin/nested'
+      preLoaderRoute: typeof AdminShellNestedRouteRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/nested/': {
+      id: '/admin/_shell/nested/'
+      path: '/'
+      fullPath: '/admin/nested/'
+      preLoaderRoute: typeof AdminShellNestedIndexRouteImport
+      parentRoute: typeof AdminShellNestedRouteRoute
+    }
+    '/admin/_shell/nested/overview': {
+      id: '/admin/_shell/nested/overview'
+      path: '/overview'
+      fullPath: '/admin/nested/overview'
+      preLoaderRoute: typeof AdminShellNestedOverviewRouteImport
+      parentRoute: typeof AdminShellNestedRouteRoute
+    }
+    '/admin/_shell/nested/reports': {
+      id: '/admin/_shell/nested/reports'
+      path: '/reports'
+      fullPath: '/admin/nested/reports'
+      preLoaderRoute: typeof AdminShellNestedReportsRouteRouteImport
+      parentRoute: typeof AdminShellNestedRouteRoute
+    }
+    '/admin/_shell/nested/reports/': {
+      id: '/admin/_shell/nested/reports/'
+      path: '/'
+      fullPath: '/admin/nested/reports/'
+      preLoaderRoute: typeof AdminShellNestedReportsIndexRouteImport
+      parentRoute: typeof AdminShellNestedReportsRouteRoute
+    }
+    '/admin/_shell/nested/reports/daily': {
+      id: '/admin/_shell/nested/reports/daily'
+      path: '/daily'
+      fullPath: '/admin/nested/reports/daily'
+      preLoaderRoute: typeof AdminShellNestedReportsDailyRouteImport
+      parentRoute: typeof AdminShellNestedReportsRouteRoute
+    }
+    '/admin/_shell/nested/reports/regions': {
+      id: '/admin/_shell/nested/reports/regions'
+      path: '/regions'
+      fullPath: '/admin/nested/reports/regions'
+      preLoaderRoute: typeof AdminShellNestedReportsRegionsRouteRouteImport
+      parentRoute: typeof AdminShellNestedReportsRouteRoute
+    }
+    '/admin/_shell/nested/reports/regions/': {
+      id: '/admin/_shell/nested/reports/regions/'
+      path: '/'
+      fullPath: '/admin/nested/reports/regions/'
+      preLoaderRoute: typeof AdminShellNestedReportsRegionsIndexRouteImport
+      parentRoute: typeof AdminShellNestedReportsRegionsRouteRoute
+    }
   }
 }
 
+interface AdminShellNestedReportsRegionsRouteRouteChildren {
+  AdminShellNestedReportsRegionsIndexRoute: typeof AdminShellNestedReportsRegionsIndexRoute
+}
+
+const AdminShellNestedReportsRegionsRouteRouteChildren: AdminShellNestedReportsRegionsRouteRouteChildren =
+  {
+    AdminShellNestedReportsRegionsIndexRoute:
+      AdminShellNestedReportsRegionsIndexRoute,
+  }
+
+const AdminShellNestedReportsRegionsRouteRouteWithChildren =
+  AdminShellNestedReportsRegionsRouteRoute._addFileChildren(
+    AdminShellNestedReportsRegionsRouteRouteChildren,
+  )
+
+interface AdminShellNestedReportsRouteRouteChildren {
+  AdminShellNestedReportsRegionsRouteRoute: typeof AdminShellNestedReportsRegionsRouteRouteWithChildren
+  AdminShellNestedReportsDailyRoute: typeof AdminShellNestedReportsDailyRoute
+  AdminShellNestedReportsIndexRoute: typeof AdminShellNestedReportsIndexRoute
+}
+
+const AdminShellNestedReportsRouteRouteChildren: AdminShellNestedReportsRouteRouteChildren =
+  {
+    AdminShellNestedReportsRegionsRouteRoute:
+      AdminShellNestedReportsRegionsRouteRouteWithChildren,
+    AdminShellNestedReportsDailyRoute: AdminShellNestedReportsDailyRoute,
+    AdminShellNestedReportsIndexRoute: AdminShellNestedReportsIndexRoute,
+  }
+
+const AdminShellNestedReportsRouteRouteWithChildren =
+  AdminShellNestedReportsRouteRoute._addFileChildren(
+    AdminShellNestedReportsRouteRouteChildren,
+  )
+
+interface AdminShellNestedRouteRouteChildren {
+  AdminShellNestedReportsRouteRoute: typeof AdminShellNestedReportsRouteRouteWithChildren
+  AdminShellNestedOverviewRoute: typeof AdminShellNestedOverviewRoute
+  AdminShellNestedIndexRoute: typeof AdminShellNestedIndexRoute
+}
+
+const AdminShellNestedRouteRouteChildren: AdminShellNestedRouteRouteChildren = {
+  AdminShellNestedReportsRouteRoute:
+    AdminShellNestedReportsRouteRouteWithChildren,
+  AdminShellNestedOverviewRoute: AdminShellNestedOverviewRoute,
+  AdminShellNestedIndexRoute: AdminShellNestedIndexRoute,
+}
+
+const AdminShellNestedRouteRouteWithChildren =
+  AdminShellNestedRouteRoute._addFileChildren(
+    AdminShellNestedRouteRouteChildren,
+  )
+
 interface AdminShellRouteChildren {
+  AdminShellNestedRouteRoute: typeof AdminShellNestedRouteRouteWithChildren
   AdminShell403Route: typeof AdminShell403Route
   AdminShell404Route: typeof AdminShell404Route
   AdminShellHomeRoute: typeof AdminShellHomeRoute
@@ -232,6 +454,7 @@ interface AdminShellRouteChildren {
 }
 
 const AdminShellRouteChildren: AdminShellRouteChildren = {
+  AdminShellNestedRouteRoute: AdminShellNestedRouteRouteWithChildren,
   AdminShell403Route: AdminShell403Route,
   AdminShell404Route: AdminShell404Route,
   AdminShellHomeRoute: AdminShellHomeRoute,
@@ -245,11 +468,13 @@ const AdminShellRouteWithChildren = AdminShellRoute._addFileChildren(
 interface AdminRouteRouteChildren {
   AdminShellRoute: typeof AdminShellRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminShellRoute: AdminShellRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

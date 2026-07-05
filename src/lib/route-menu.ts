@@ -3,6 +3,8 @@ import { isStaticDataGranted } from '#/lib/access-control'
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 
 export interface AdminMenuEntry<TPath extends string = string> {
+  /** 嵌套子项(按 fullPath 前缀构建);叶子为 []。 */
+  children: AdminMenuEntry<TPath>[]
   icon?: string
   /** 硬编码 fallback(menuTitle ?? title),labelKey 缺席时用。 */
   label?: string
@@ -29,54 +31,109 @@ export interface MenuSourceRoute<TPath extends string = string> {
   options: { staticData?: StaticDataRouteOption }
 }
 
+// 内部工作节点:多带 staticData/group 供建树、授权裁剪、分组,输出前抹掉。
+interface WorkNode<TPath extends string> {
+  children: WorkNode<TPath>[]
+  fullPath: TPath
+  group: string
+  icon?: string
+  label?: string
+  labelKey?: StaticDataRouteOption['menuTitleKey']
+  order: number
+  staticData: StaticDataRouteOption
+}
+
 // 数据源用 router.routesById(拍平路由表)而非递归走 routeTree。
 // 入菜单的判据是"显式给了菜单标题"(menuTitleKey / menuTitle),
-// 只有 titleKey 的路由(登录页、面包屑专用)不进菜单。
-// permissions = 有效权限集,声明了准入的条目按 access-control 公式裁剪;
-// fail-closed:权限集未加载(默认 [])时声明条目先不出现,加载后补上。
+// 只有 titleKey 的路由(登录页、面包屑专用、父路由的 index)不进菜单。
 //
-// 裁剪只看每条路由自身 staticData,不合并祖先——守卫(requireAdmin)按完整
-// 匹配链 AND。当前所有策略都声明在叶子(widgets),两者判定一致;若将来给
-// layout/父路由(如 _shell)加策略,菜单不会隐藏其子项,守卫却会 403——
-// 那时需在此按 fullPath 前缀合并祖先策略。ponytail: 无此类路由前不预造。
+// 菜单是树:子项按 fullPath 前缀挂到最近的菜单祖先下,消费端渲染折叠子菜单。
+// permissions = 有效权限集;授权裁剪按树做——未授权节点连同其整棵子树一起隐藏
+// (子路由的准入被守卫链 AND,父不通子必不可达)。这与守卫(requireAdmin 按完整
+// 匹配链 AND)在"菜单节点即策略声明处"时一致;仅当某条策略声明在非菜单的中间
+// 路由(如 _shell)才会与守卫分歧,当前无此类路由。fail-closed:权限集未加载
+// (默认 [])时,声明了准入的节点先不出现,加载后补上。
 export function buildAdminMenu<TPath extends string>(
   routesById: Record<string, MenuSourceRoute<TPath>>,
   permissions: readonly string[] = [],
 ): AdminMenuGroup<TPath>[] {
-  const collected: (AdminMenuEntry<TPath> & { group: string })[] = []
-
+  const nodes: WorkNode<TPath>[] = []
   for (const route of Object.values(routesById)) {
     const staticData = route.options.staticData ?? {}
-
     if (
       route.fullPath.startsWith('/admin/') &&
       !staticData.hideInMenu &&
-      (staticData.menuTitleKey || staticData.menuTitle) &&
-      isStaticDataGranted(staticData, permissions)
+      (staticData.menuTitleKey || staticData.menuTitle)
     ) {
-      collected.push({
+      nodes.push({
+        children: [],
+        fullPath: route.fullPath,
         group: staticData.group ?? DEFAULT_GROUP,
         icon: staticData.icon,
         label: staticData.menuTitle ?? staticData.title,
         labelKey: staticData.menuTitleKey,
         order: staticData.order ?? DEFAULT_ORDER,
-        url: route.fullPath,
+        staticData,
       })
     }
   }
 
-  collected.sort((a, b) => a.order - b.order || a.url.localeCompare(b.url))
-
-  const groups = new Map<string, AdminMenuGroup<TPath>>()
-  for (const { group, ...entry } of collected) {
-    const existing = groups.get(group)
-    if (existing) {
-      existing.entries.push(entry)
+  // 建树:父在前(fullPath 短)才能被子挂上。每个节点挂到 fullPath 前缀最长的
+  // 那个菜单祖先;无祖先则为根。前缀判定带 '/' 边界,防 /admin/nested 误吞
+  // /admin/nested2。
+  const byDepth = [...nodes].sort((a, b) => a.fullPath.length - b.fullPath.length)
+  const roots: WorkNode<TPath>[] = []
+  for (const node of byDepth) {
+    let parent: WorkNode<TPath> | undefined
+    for (const candidate of byDepth) {
+      if (
+        candidate !== node &&
+        node.fullPath.startsWith(`${candidate.fullPath}/`) &&
+        (!parent || candidate.fullPath.length > parent.fullPath.length)
+      ) {
+        parent = candidate
+      }
+    }
+    if (parent) {
+      parent.children.push(node)
     } else {
-      groups.set(group, { entries: [entry], label: group })
+      roots.push(node)
     }
   }
 
-  // collected 已按 order 排好,组顺序 = 各组首个条目的 order 顺序。
-  return [...groups.values()]
+  // 授权裁剪 + 同级排序 + 抹掉内部字段,自顶向下递归(未授权即断子树)。
+  const prune = (list: WorkNode<TPath>[]): AdminMenuEntry<TPath>[] =>
+    list
+      .filter((node) => isStaticDataGranted(node.staticData, permissions))
+      .sort((a, b) => a.order - b.order || a.fullPath.localeCompare(b.fullPath))
+      .map((node) => ({
+        children: prune(node.children),
+        icon: node.icon,
+        label: node.label,
+        labelKey: node.labelKey,
+        order: node.order,
+        url: node.fullPath,
+      }))
+
+  // 组顺序 = 各组首个根(按 order)出现的顺序,与老行为一致。
+  const groups = new Map<string, WorkNode<TPath>[]>()
+  for (const root of roots.sort(
+    (a, b) => a.order - b.order || a.fullPath.localeCompare(b.fullPath),
+  )) {
+    const existing = groups.get(root.group)
+    if (existing) {
+      existing.push(root)
+    } else {
+      groups.set(root.group, [root])
+    }
+  }
+
+  const result: AdminMenuGroup<TPath>[] = []
+  for (const [label, rootList] of groups) {
+    const entries = prune(rootList)
+    if (entries.length > 0) {
+      result.push({ entries, label })
+    }
+  }
+  return result
 }

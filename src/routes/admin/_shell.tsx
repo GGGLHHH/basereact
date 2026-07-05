@@ -1,12 +1,15 @@
-import { Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
+import { Fragment } from 'react'
+import { Link, Outlet, createFileRoute, useMatches } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { AppSidebar } from '@/components/app-sidebar'
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -23,20 +26,50 @@ export const Route = createFileRoute('/admin/_shell')({
   component: AdminShell,
 })
 
-// 面包屑吃最深一个带 titleKey 的路由,单级展示。
-// ponytail: 有多级导航需求时再沿 matches 走完整层级。
+// 面包屑走完整匹配链:每个带 titleKey 的路由一级。中间级链到自身 fullPath
+// (父路由都有 index 落地,含 /admin→重定向 home),末级是当前页不可点。
+// flatMap 条件收集,titleKey 在生成对象里收窄为非空,免非空断言。
 function CurrentPageBreadcrumb() {
   const matches = useMatches()
   const { t } = useTranslation('route')
-  const titleKey = [...matches].reverse().find((match) => match.staticData.titleKey)
-    ?.staticData.titleKey
+
+  // match.fullPath 的联合含 index 路由的尾斜杠形态(/admin/、/admin/nested/),
+  // 不在 Link 的 `to` 联合里;但带 titleKey 的都是 route.tsx/叶子(无尾斜杠),
+  // 运行时恒可导航。谓词从匹配链实际值的 fullPath 联合(字面量,须取自 matches
+  // 而非 typeof useMatches 的泛型默认 string)里 Exclude 掉尾斜杠形态,得 Link
+  // 能吃的子集,把不变量交给编译器,免 as。
+  type MatchPath = (typeof matches)[number]['fullPath']
+  const isNavigablePath = (fullPath: MatchPath): fullPath is Exclude<MatchPath, `${string}/`> =>
+    !fullPath.endsWith('/')
+
+  const crumbs = matches.flatMap((match) =>
+    match.staticData.titleKey
+      ? [{ fullPath: match.fullPath, titleKey: match.staticData.titleKey }]
+      : [],
+  )
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbPage>{titleKey ? t(titleKey) : null}</BreadcrumbPage>
-        </BreadcrumbItem>
+        {crumbs.map((crumb, index) => {
+          const isLast = index === crumbs.length - 1
+          return (
+            <Fragment key={crumb.fullPath}>
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{t(crumb.titleKey)}</BreadcrumbPage>
+                ) : isNavigablePath(crumb.fullPath) ? (
+                  <BreadcrumbLink render={<Link to={crumb.fullPath} />}>
+                    {t(crumb.titleKey)}
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{t(crumb.titleKey)}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {isLast ? null : <BreadcrumbSeparator />}
+            </Fragment>
+          )
+        })}
       </BreadcrumbList>
     </Breadcrumb>
   )
