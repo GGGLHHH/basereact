@@ -26,7 +26,7 @@ export const accessPolicies = {
     method: "GET",
     operationId: "admin_get_me",
     path: "admin/auth/me",
-    permissions: ["users:admin"],
+    permissions: ["admin:login"],
   },
   adminListWidgets: {
     apiPath: "/api/v1/admin/widgets",
@@ -34,7 +34,7 @@ export const accessPolicies = {
     method: "GET",
     operationId: "admin_list_widgets",
     path: "admin/widgets",
-    permissions: ["users:admin"],
+    permissions: ["users:admin", "admin:login"],
   },
   logoutAll: {
     apiPath: "/api/v1/frontend/auth/logout-all",

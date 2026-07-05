@@ -981,7 +981,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 凭据正确但无后台权限(users:admin),不发 token 不设 cookie */
+            /** @description 凭据正确但无后台准入(admin:login),不发 token 不设 cookie */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1017,7 +1017,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 组闸:无 users:admin */
+            /** @description 组闸:无 admin:login(后台准入) */
             403: {
                 headers: {
                     [name: string]: unknown;
