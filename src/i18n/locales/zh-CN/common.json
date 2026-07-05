@@ -1,5 +1,6 @@
 {
   "appTitle": "TanStack Start 脚手架",
+  "language": "语言",
   "home": {
     "editHint": "编辑 <code>{{path}}</code> 开始开发。",
     "welcome": "欢迎使用 TanStack Start"

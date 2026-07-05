@@ -1,5 +1,6 @@
 {
   "appTitle": "TanStack Start Starter",
+  "language": "Language",
   "home": {
     "editHint": "Edit <code>{{path}}</code> to get started.",
     "welcome": "Welcome to TanStack Start"

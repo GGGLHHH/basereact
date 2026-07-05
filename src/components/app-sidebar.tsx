@@ -6,6 +6,7 @@ import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { myPermissionsQueryOptions } from '@/api/auth'
+import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavUser } from '@/components/nav-user'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
@@ -373,6 +374,7 @@ export function AppSidebar({
         <NavAdminRoutes />
       </SidebarContent>
       <SidebarFooter>
+        <LanguageSwitcher />
         <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />

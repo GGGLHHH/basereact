@@ -6,6 +6,12 @@ export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const DEFAULT_LOCALE: AppLocale = 'en-US'
 
+// 各语言的原生名(切换器按各自文字显示,不走翻译)。
+export const LOCALE_NATIVE_NAMES: Record<AppLocale, string> = {
+  'en-US': 'English',
+  'zh-CN': '简体中文',
+}
+
 // 精确命中优先,退语言前缀(zh-TW 归 zh-CN,en-GB 归 en-US),再退默认。
 export function normalizeLocale(locale?: string | null): AppLocale {
   if (!locale) {
