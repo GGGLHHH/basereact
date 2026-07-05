@@ -23,6 +23,7 @@ import {
 import { queryKeys } from '#/lib/query-keys'
 
 // ---- admin surface (admin/auth/*) ----
+// beforeLoad 守卫的探针在 lib/route-guard.ts(带 AUTH_PROBE_HEADER,不走 hook)。
 
 export function useAdminMe(options?: { enabled?: boolean }) {
   return useQuery({
@@ -36,8 +37,11 @@ export function useAdminLogin() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (request: LoginRequest) => adminLoginApi({ body: request }),
-    onSuccess: (user) => {
-      queryClient.setQueryData(queryKeys.admin.auth.me(), user)
+    onSuccess: () => {
+      // 只清缓存(含登出留下的 null 标记),不用 adminLogin 响应直接种 me:
+      // 进壳时让守卫真正打一次 adminGetMe(users:admin 门)——adminLogin 若不校验
+      // 角色,种缓存会让非管理员绕过探针混进后台壳(复审 #5)。
+      queryClient.removeQueries({ queryKey: queryKeys.admin.auth.all })
     },
   })
 }
@@ -88,6 +92,8 @@ export function useLogout() {
     mutationFn: () => logoutApi({}),
     onSuccess: () => {
       queryClient.clear()
+      // 显式匿名标记:守卫见 null 直接转登录,不再发探针(避免登出后 401→refresh 连环)。
+      queryClient.setQueryData(queryKeys.admin.auth.me(), null)
     },
   })
 }
@@ -98,6 +104,7 @@ export function useLogoutAll() {
     mutationFn: () => logoutAllApi({}),
     onSuccess: () => {
       queryClient.clear()
+      queryClient.setQueryData(queryKeys.admin.auth.me(), null)
     },
   })
 }
@@ -114,6 +121,7 @@ export function useDeleteMe() {
     mutationFn: (request: DeleteMeRequest) => deleteMeApi({ body: request }),
     onSuccess: () => {
       queryClient.clear()
+      queryClient.setQueryData(queryKeys.admin.auth.me(), null)
     },
   })
 }

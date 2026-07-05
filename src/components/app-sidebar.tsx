@@ -24,11 +24,6 @@ import { IconLayoutRows, IconWaveSine, IconCommand } from '@tabler/icons-react'
 
 // This is sample data.
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
   teams: [
     {
       name: 'Acme Inc',
@@ -54,7 +49,9 @@ function NavAdminRoutes() {
   const router = useRouter()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { t } = useTranslation('route')
-  const groups = React.useMemo(() => buildAdminMenu(router.routeTree), [router])
+  // spread:FileRoutesById 是 interface(无隐式索引签名),摊成对象字面量
+  // 才能零 cast 匹配 Record<string, MenuSourceRoute>。
+  const groups = React.useMemo(() => buildAdminMenu({ ...router.routesById }), [router])
 
   return (
     <>
@@ -91,7 +88,12 @@ function NavAdminRoutes() {
   )
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  user,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user: { avatar: string; email: string; name: string }
+}) {
   return (
     <Sidebar
       collapsible='icon'
@@ -104,7 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavAdminRoutes />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

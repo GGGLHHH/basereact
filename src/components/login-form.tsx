@@ -29,8 +29,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
     },
     onSubmit: async ({ value }) => {
       await login.mutateAsync(value)
-      // ponytail: 登录后固定回首页;要"回跳来源页"时加 redirect search param。
-      await navigate({ to: '/' })
+      // ponytail: 登录后固定去后台首页;要"回跳来源页"时加 redirect search param。
+      await navigate({ to: '/admin/home' })
     },
   })
 

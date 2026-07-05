@@ -10,10 +10,25 @@ import type { ErrorBody } from '#/generated/api-types'
 
 import { refresh as buildRefreshPath } from '#/generated/api'
 import { globalRouter } from '#/lib/global-router'
+import { queryKeys } from '#/lib/query-keys'
+import type { LinkProps } from '@tanstack/react-router'
 
 const API_BASE_URL = '/api/v1'
-const LOGIN_ROUTE = '/admin/login'
+export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']
 const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
+
+/**
+ * 软探测标记:带此头的请求 401 时只抛 ApiError,不触发刷新梯、不跳登录页。
+ * 给"未登录也合法"的探测用(公开页的 me 探测),匿名访客不该白打 refresh。
+ */
+export const SOFT_AUTH_HEADER = 'x-soft-auth-check'
+
+/**
+ * 守卫探针标记:401 照常走刷新梯续期重试,但终态失败只抛错,不做命令式跳转/
+ * 匿名标记——重定向语义由 route-guard 单一归属。没有它,hover 预加载跑守卫
+ * 探针时 handleAuthFailure 会把用户从悬停直接拽到登录页。
+ */
+export const AUTH_PROBE_HEADER = 'x-auth-probe'
 // auth 端点自身的 401 不进刷新梯:login 是凭证错误,logout/refresh 本身就是会话终点。
 const SKIP_REFRESH_SUFFIXES = ['/login', '/logout', '/logout-all', '/refresh']
 
@@ -68,9 +83,13 @@ function handleAuthFailure() {
     return
   }
 
-  // ponytail: SPA 跳转不清 query 缓存;要 toast 提示 + 回跳来源页 + 清缓存时,
-  // 从 xchangeai-web 移植完整 handleAuthFailure。
   const router = globalRouter.instance
+
+  // 终态 401 = 会话已死:写显式匿名标记,守卫见 null 直转登录,
+  // 不再在 staleTime 窗口内信任尸体缓存(否则 guest 闸会把用户弹回后台壳)。
+  router?.options.context.queryClient.setQueryData(queryKeys.admin.auth.me(), null)
+
+  // ponytail: 要 toast 提示 + 回跳来源页时,从 xchangeai-web 移植完整 handleAuthFailure。
   if (router) {
     if (router.state.location.pathname !== LOGIN_ROUTE) {
       void router.navigate({ to: LOGIN_ROUTE })
@@ -85,16 +104,11 @@ function handleAuthFailure() {
 }
 
 async function ensureRefreshed(): Promise<void> {
-  // 并发 401 共享同一次刷新;失败即会话失效。
+  // 并发 401 共享同一次刷新;失败的定罪(handleAuthFailure 与否)由 await 方决定,
+  // 因为只有发起方知道自己是不是守卫探针。
   refreshPromise ??= api
     .post(buildRefreshPath())
-    .then(
-      () => undefined,
-      (error: unknown) => {
-        handleAuthFailure()
-        throw error
-      },
-    )
+    .then(() => undefined)
     .finally(() => {
       refreshPromise = null
     })
@@ -123,28 +137,43 @@ export const api = ky.create({
         }
 
         // 401 处理顺序(每支必须先于下一支):
+        //   0. 软探测            → 直接抛,零副作用
         //   1. /login 响应       → 直接抛(凭证错误,调用方自己展示)
-        //   2. /logout, /refresh → 抛 + 会话失效处理(跳登录页,只跳一次)
-        //   3. 刷新后重试仍 401   → 终态失败,同上
+        //   2. /logout*          → 抛 + 会话失效处理;/refresh 自身 401 只抛,
+        //                          定罪交给 await ensureRefreshed 的发起方
+        //   3. 刷新后重试仍 401   → 终态失败;守卫探针只抛(redirect 归 route-guard)
         //   4. 其余              → 刷新会话 + 重试一次
         if (response.status === 401) {
+          const isProbe = request.headers.get(AUTH_PROBE_HEADER) === '1'
+
+          if (request.headers.get(SOFT_AUTH_HEADER) === '1') {
+            throw await createApiError(response)
+          }
+
           if (request.url.endsWith('/login')) {
             throw await createApiError(response)
           }
 
           if (shouldSkipRefresh(request)) {
-            handleAuthFailure()
+            if (!request.url.endsWith('/refresh')) {
+              handleAuthFailure()
+            }
             throw await createApiError(response)
           }
 
           if (request.headers.get(RETRIED_AFTER_REFRESH_HEADER) === '1') {
-            handleAuthFailure()
+            if (!isProbe) {
+              handleAuthFailure()
+            }
             throw await createApiError(response)
           }
 
           try {
             await ensureRefreshed()
           } catch {
+            if (!isProbe) {
+              handleAuthFailure()
+            }
             throw await createApiError(response)
           }
 

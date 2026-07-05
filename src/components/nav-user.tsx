@@ -1,3 +1,6 @@
+import { useNavigate } from '@tanstack/react-router'
+
+import { useLogout } from '@/api/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -33,6 +36,17 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
+  const logout = useLogout()
+
+  function handleLogout() {
+    // 登出接口失败也照样去登录页:本地会话状态已不可信。
+    void logout
+      .mutateAsync()
+      .catch(() => undefined)
+      .finally(() => void navigate({ to: '/admin/login' }))
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -104,7 +118,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

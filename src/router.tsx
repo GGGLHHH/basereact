@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
+import { ErrorState } from './components/error-state'
 import { globalRouter } from './lib/global-router'
 import { routeTree } from './routeTree.gen'
 
@@ -26,6 +27,10 @@ export function getRouter() {
 
   const router = createTanStackRouter({
     routeTree,
+    // 守卫探针等非 401/403 错误(网络抖动/5xx)从 beforeLoad 抛出时的兜底,
+    // 不再落到 TanStack 无样式的内置错误页。
+    defaultErrorComponent: RouterError,
+    context: { queryClient },
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
@@ -38,6 +43,17 @@ export function getRouter() {
   }
 
   return router
+}
+
+function RouterError({ error }: { error: Error }) {
+  return (
+    <ErrorState
+      className='min-h-svh'
+      code='Error'
+      title='Something went wrong'
+      description={error.message}
+    />
+  )
 }
 
 declare module '@tanstack/react-router' {

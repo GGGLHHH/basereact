@@ -10,9 +10,13 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { requireAdmin } from '@/lib/route-guard'
 
 // sidebar-07 壳:登录页在 _shell 之外,不吃侧边栏。
+// 准入闸在 beforeLoad(admin 子树 ssr:false,只跑客户端):
+// 渲染前拦截,me 进 context——本组件的 NavUser 就是消费者。
 export const Route = createFileRoute('/admin/_shell')({
+  beforeLoad: ({ context }) => requireAdmin(context.queryClient),
   component: AdminShell,
 })
 
@@ -36,9 +40,11 @@ function CurrentPageBreadcrumb() {
 }
 
 function AdminShell() {
+  const { me } = Route.useRouteContext()
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={{ avatar: '', email: me.email ?? '', name: me.username }} />
       <SidebarInset>
         <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
           <div className='flex items-center gap-2 px-4'>
