@@ -91,7 +91,12 @@ function handleAuthFailure() {
   router?.options.context.queryClient.setQueryData(queryKeys.admin.auth.me(), null)
 
   // 会话终态失效:提示一次(authFailureHandled 已挡重复),再交给守卫/下面的跳转。
-  toast.error('Your session has expired. Please sign in again.')
+  // 本函数可能在路由初始 load/hydration 的 transition 内被 401 hook 同步调起;
+  // sonner 的 toast 是同步 setState,此刻 Toaster 尚未 commit 会报
+  // "update on a not-yet-mounted component"。推到 commit 之后的宏任务再弹。
+  setTimeout(() => {
+    toast.error('Your session has expired. Please sign in again.')
+  }, 0)
 
   // ponytail: 要"回跳来源页"时,从 xchangeai-web 移植完整 handleAuthFailure。
   if (router) {

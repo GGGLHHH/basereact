@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import type { ChangeEvent } from 'react'
@@ -17,7 +16,6 @@ import { nameInitials } from '@/lib/display-name'
 // 页面组件独立成非路由文件(`-` 前缀不进路由生成),路由文件保持薄:既能
 // 被测试直接 import,又不触发 tanstack-router 的"路由文件多导出破坏代码分割"告警。
 export function ProfilePage() {
-  const { t } = useTranslation('route')
   // loader 已 ensure,首帧即有数据。
   const { data: profile } = useMyProfile()
   const update = useUpdateProfile()
