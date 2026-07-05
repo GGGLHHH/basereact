@@ -4,10 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiErrorClass, AUTH_PROBE_HEADER } from './api-client'
 import { queryKeys } from './query-keys'
-import { requireAdmin, requireAdminGuest } from './route-guard'
+import { requireAdmin, requireAdminGuest, requireUser, requireUserGuest } from './route-guard'
 
 const mocks = vi.hoisted(() => ({
   adminGetMe: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  getMe: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   getMyPermissions: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   matchRoutes: vi.fn<(...args: unknown[]) => unknown>(),
 }))
@@ -19,7 +20,7 @@ vi.mock('#/generated/client', () => ({
   adminLogin: vi.fn(),
   changePassword: vi.fn(),
   deleteMe: vi.fn(),
-  getMe: vi.fn(),
+  getMe: mocks.getMe,
   getMyPermissions: mocks.getMyPermissions,
   login: vi.fn(),
   logout: vi.fn(),
@@ -61,6 +62,7 @@ function redirectTarget(error: unknown): string | undefined {
 
 beforeEach(() => {
   mocks.adminGetMe.mockReset()
+  mocks.getMe.mockReset()
   mocks.getMyPermissions.mockReset()
   mocks.matchRoutes.mockReset()
   mocks.matchRoutes.mockReturnValue([])
@@ -210,5 +212,79 @@ describe('requireAdminGuest', () => {
 
     expect(() => requireAdminGuest(queryClient)).not.toThrow()
     expect(mocks.adminGetMe).not.toHaveBeenCalled()
+  })
+})
+
+describe('requireUser', () => {
+  it('probes with AUTH_PROBE_HEADER, returns me, and reuses the fresh cache', async () => {
+    const me = { id: 'u1', username: 'alice' }
+    mocks.getMe.mockResolvedValue(me)
+    const queryClient = freshClient()
+
+    await expect(requireUser(queryClient)).resolves.toEqual({ me })
+    await expect(requireUser(queryClient)).resolves.toEqual({ me })
+
+    // 新鲜缓存复用:探针只发一次,且必带 AUTH_PROBE_HEADER。
+    expect(mocks.getMe).toHaveBeenCalledTimes(1)
+    const requestOptions = mocks.getMe.mock.calls[0]?.[1] as
+      | { headers?: Record<string, string> }
+      | undefined
+    expect(requestOptions?.headers?.[AUTH_PROBE_HEADER]).toBe('1')
+  })
+
+  it('redirects to the frontend login on 401 and writes the anonymous marker', async () => {
+    mocks.getMe.mockRejectedValue(new ApiErrorClass('unauthorized', { status: 401 }))
+    const queryClient = freshClient()
+
+    const error = await caught(requireUser(queryClient))
+    expect(redirectTarget(error)).toBe('/frontend/login')
+    expect(queryClient.getQueryData(queryKeys.auth.me())).toBeNull()
+
+    // 后续访问零网络直转登录。
+    const again = await caught(requireUser(queryClient))
+    expect(redirectTarget(again)).toBe('/frontend/login')
+    expect(mocks.getMe).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips the network probe when the cache says explicitly anonymous', async () => {
+    const queryClient = freshClient()
+    queryClient.setQueryData(queryKeys.auth.me(), null)
+
+    const error = await caught(requireUser(queryClient))
+    expect(redirectTarget(error)).toBe('/frontend/login')
+    expect(mocks.getMe).not.toHaveBeenCalled()
+  })
+
+  it('rethrows non-auth errors untouched', async () => {
+    const boom = new ApiErrorClass('server exploded', { status: 500 })
+    mocks.getMe.mockRejectedValue(boom)
+
+    const error = await caught(requireUser(freshClient()))
+    expect(error).toBe(boom)
+  })
+})
+
+describe('requireUserGuest', () => {
+  it('redirects a same-tab authenticated user to the frontend home', () => {
+    const queryClient = freshClient()
+    queryClient.setQueryData(queryKeys.auth.me(), { id: 'u1', username: 'alice' })
+
+    let error: unknown
+    try {
+      requireUserGuest(queryClient)
+    } catch (thrown) {
+      error = thrown
+    }
+    expect(redirectTarget(error)).toBe('/frontend/home')
+    expect(mocks.getMe).not.toHaveBeenCalled()
+  })
+
+  it('lets cold-cache and explicitly-anonymous visitors through without a probe', () => {
+    expect(() => requireUserGuest(freshClient())).not.toThrow()
+
+    const anon = freshClient()
+    anon.setQueryData(queryKeys.auth.me(), null)
+    expect(() => requireUserGuest(anon)).not.toThrow()
+    expect(mocks.getMe).not.toHaveBeenCalled()
   })
 })

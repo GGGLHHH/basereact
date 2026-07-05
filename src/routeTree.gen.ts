@@ -11,11 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as R404RouteImport } from './routes/404'
 import { Route as R403RouteImport } from './routes/403'
+import { Route as FrontendRouteRouteImport } from './routes/frontend/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FrontendIndexRouteImport } from './routes/frontend/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as FrontendLoginRouteImport } from './routes/frontend/login'
+import { Route as FrontendShellRouteImport } from './routes/frontend/_shell'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminShellRouteImport } from './routes/admin/_shell'
+import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
+import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
@@ -39,6 +45,11 @@ const R403Route = R403RouteImport.update({
   path: '/403',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FrontendRouteRoute = FrontendRouteRouteImport.update({
+  id: '/frontend',
+  path: '/frontend',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -49,10 +60,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FrontendIndexRoute = FrontendIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FrontendRouteRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const FrontendLoginRoute = FrontendLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => FrontendRouteRoute,
+} as any)
+const FrontendShellRoute = FrontendShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => FrontendRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
@@ -62,6 +87,16 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminShellRoute = AdminShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const FrontendShellHomeRoute = FrontendShellHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => FrontendShellRoute,
+} as any)
+const FrontendShellAboutRoute = FrontendShellAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => FrontendShellRoute,
 } as any)
 const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
   id: '/widgets',
@@ -133,15 +168,20 @@ const AdminShellNestedReportsRegionsIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/frontend': typeof FrontendRouteRouteWithChildren
   '/403': typeof R403Route
   '/404': typeof R404Route
   '/admin/login': typeof AdminLoginRoute
+  '/frontend/login': typeof FrontendLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/frontend/': typeof FrontendIndexRoute
   '/admin/nested': typeof AdminShellNestedRouteRouteWithChildren
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
+  '/frontend/about': typeof FrontendShellAboutRoute
+  '/frontend/home': typeof FrontendShellHomeRoute
   '/admin/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
   '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/nested/': typeof AdminShellNestedIndexRoute
@@ -156,10 +196,14 @@ export interface FileRoutesByTo {
   '/404': typeof R404Route
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/frontend': typeof FrontendIndexRoute
+  '/frontend/login': typeof FrontendLoginRoute
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
+  '/frontend/about': typeof FrontendShellAboutRoute
+  '/frontend/home': typeof FrontendShellHomeRoute
   '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/nested': typeof AdminShellNestedIndexRoute
   '/admin/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
@@ -170,16 +214,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/frontend': typeof FrontendRouteRouteWithChildren
   '/403': typeof R403Route
   '/404': typeof R404Route
   '/admin/_shell': typeof AdminShellRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/frontend/_shell': typeof FrontendShellRouteWithChildren
+  '/frontend/login': typeof FrontendLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/frontend/': typeof FrontendIndexRoute
   '/admin/_shell/nested': typeof AdminShellNestedRouteRouteWithChildren
   '/admin/_shell/403': typeof AdminShell403Route
   '/admin/_shell/404': typeof AdminShell404Route
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
+  '/frontend/_shell/about': typeof FrontendShellAboutRoute
+  '/frontend/_shell/home': typeof FrontendShellHomeRoute
   '/admin/_shell/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
   '/admin/_shell/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/_shell/nested/': typeof AdminShellNestedIndexRoute
@@ -193,15 +243,20 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/frontend'
     | '/403'
     | '/404'
     | '/admin/login'
+    | '/frontend/login'
     | '/admin/'
+    | '/frontend/'
     | '/admin/nested'
     | '/admin/403'
     | '/admin/404'
     | '/admin/home'
     | '/admin/widgets'
+    | '/frontend/about'
+    | '/frontend/home'
     | '/admin/nested/reports'
     | '/admin/nested/overview'
     | '/admin/nested/'
@@ -216,10 +271,14 @@ export interface FileRouteTypes {
     | '/404'
     | '/admin'
     | '/admin/login'
+    | '/frontend'
+    | '/frontend/login'
     | '/admin/403'
     | '/admin/404'
     | '/admin/home'
     | '/admin/widgets'
+    | '/frontend/about'
+    | '/frontend/home'
     | '/admin/nested/overview'
     | '/admin/nested'
     | '/admin/nested/reports/daily'
@@ -229,16 +288,22 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/frontend'
     | '/403'
     | '/404'
     | '/admin/_shell'
     | '/admin/login'
+    | '/frontend/_shell'
+    | '/frontend/login'
     | '/admin/'
+    | '/frontend/'
     | '/admin/_shell/nested'
     | '/admin/_shell/403'
     | '/admin/_shell/404'
     | '/admin/_shell/home'
     | '/admin/_shell/widgets'
+    | '/frontend/_shell/about'
+    | '/frontend/_shell/home'
     | '/admin/_shell/nested/reports'
     | '/admin/_shell/nested/overview'
     | '/admin/_shell/nested/'
@@ -251,6 +316,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  FrontendRouteRoute: typeof FrontendRouteRouteWithChildren
   R403Route: typeof R403Route
   R404Route: typeof R404Route
 }
@@ -271,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R403RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/frontend': {
+      id: '/frontend'
+      path: '/frontend'
+      fullPath: '/frontend'
+      preLoaderRoute: typeof FrontendRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -285,12 +358,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/frontend/': {
+      id: '/frontend/'
+      path: '/'
+      fullPath: '/frontend/'
+      preLoaderRoute: typeof FrontendIndexRouteImport
+      parentRoute: typeof FrontendRouteRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/frontend/login': {
+      id: '/frontend/login'
+      path: '/login'
+      fullPath: '/frontend/login'
+      preLoaderRoute: typeof FrontendLoginRouteImport
+      parentRoute: typeof FrontendRouteRoute
+    }
+    '/frontend/_shell': {
+      id: '/frontend/_shell'
+      path: ''
+      fullPath: '/frontend'
+      preLoaderRoute: typeof FrontendShellRouteImport
+      parentRoute: typeof FrontendRouteRoute
     }
     '/admin/login': {
       id: '/admin/login'
@@ -305,6 +399,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AdminShellRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/frontend/_shell/home': {
+      id: '/frontend/_shell/home'
+      path: '/home'
+      fullPath: '/frontend/home'
+      preLoaderRoute: typeof FrontendShellHomeRouteImport
+      parentRoute: typeof FrontendShellRoute
+    }
+    '/frontend/_shell/about': {
+      id: '/frontend/_shell/about'
+      path: '/about'
+      fullPath: '/frontend/about'
+      preLoaderRoute: typeof FrontendShellAboutRouteImport
+      parentRoute: typeof FrontendShellRoute
     }
     '/admin/_shell/widgets': {
       id: '/admin/_shell/widgets'
@@ -481,9 +589,40 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface FrontendShellRouteChildren {
+  FrontendShellAboutRoute: typeof FrontendShellAboutRoute
+  FrontendShellHomeRoute: typeof FrontendShellHomeRoute
+}
+
+const FrontendShellRouteChildren: FrontendShellRouteChildren = {
+  FrontendShellAboutRoute: FrontendShellAboutRoute,
+  FrontendShellHomeRoute: FrontendShellHomeRoute,
+}
+
+const FrontendShellRouteWithChildren = FrontendShellRoute._addFileChildren(
+  FrontendShellRouteChildren,
+)
+
+interface FrontendRouteRouteChildren {
+  FrontendShellRoute: typeof FrontendShellRouteWithChildren
+  FrontendLoginRoute: typeof FrontendLoginRoute
+  FrontendIndexRoute: typeof FrontendIndexRoute
+}
+
+const FrontendRouteRouteChildren: FrontendRouteRouteChildren = {
+  FrontendShellRoute: FrontendShellRouteWithChildren,
+  FrontendLoginRoute: FrontendLoginRoute,
+  FrontendIndexRoute: FrontendIndexRoute,
+}
+
+const FrontendRouteRouteWithChildren = FrontendRouteRoute._addFileChildren(
+  FrontendRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  FrontendRouteRoute: FrontendRouteRouteWithChildren,
   R403Route: R403Route,
   R404Route: R404Route,
 }

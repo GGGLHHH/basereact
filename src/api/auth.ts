@@ -21,7 +21,7 @@ import {
   register as registerApi,
   updateMe as updateMeApi,
 } from '#/generated/client'
-import { AUTH_PROBE_HEADER } from '#/lib/api-client'
+import { AUTH_PROBE_HEADER, SOFT_AUTH_HEADER } from '#/lib/api-client'
 import { queryKeys } from '#/lib/query-keys'
 
 // ---- admin surface (admin/auth/*) ----
@@ -56,6 +56,14 @@ export function useAdminLogin() {
 }
 
 // ---- frontend/public surface ----
+
+// 公开页导航栏的登录态探测:软探针(SOFT_AUTH_HEADER),匿名 401 只报错、
+// 不触发刷新梯/命令式跳转——公开页的匿名访客不该被一次注定失败的探测弹走。
+// 与 useMe 共用 auth.me 缓存:about 守卫(AUTH_PROBE_HEADER)一旦填充,导航即同步。
+export const meSoftQueryOptions = queryOptions({
+  queryFn: () => getMeApi({}, { headers: { [SOFT_AUTH_HEADER]: '1' } }),
+  queryKey: queryKeys.auth.me(),
+})
 
 export function useMe(options?: { enabled?: boolean }) {
   return useQuery({

@@ -4,7 +4,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { ParsedLocation } from '@tanstack/react-router'
 import type { UserResponse } from '#/generated/api-types'
 
-import { adminGetMe } from '#/generated/client'
+import { adminGetMe, getMe } from '#/generated/client'
 import { myPermissionsQueryOptions } from '#/api/auth'
 import { declaresAccessPolicy, isStaticDataGranted } from '#/lib/access-control'
 import { ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE } from '#/lib/api-client'
@@ -93,5 +93,45 @@ export function requireAdminGuest(queryClient: QueryClient): void {
   const cached = queryClient.getQueryData<UserResponse | null>(queryKeys.admin.auth.me())
   if (cached) {
     throw redirect({ to: '/admin/home' })
+  }
+}
+
+/**
+ * frontend(公开站)准入闸,挂在需登录的叶子(/frontend/about)。无权限层——
+ * frontend surface 只有登录/匿名两态,细粒度权限归 admin。探针 = getMe(带
+ * AUTH_PROBE_HEADER:刷新梯照常续期重试,但终态 401 只抛错,重定向单一归属这里,
+ * 约束同 requireAdmin)。缓存三态同 admin:null=显式匿名直转登录,免探针。
+ */
+export async function requireUser(queryClient: QueryClient): Promise<{ me: UserResponse }> {
+  const cached = queryClient.getQueryData<UserResponse | null>(queryKeys.auth.me())
+  if (cached === null) {
+    throw redirect({ to: '/frontend/login' })
+  }
+
+  try {
+    const me = await queryClient.ensureQueryData({
+      queryFn: () => getMe({}, { headers: { [AUTH_PROBE_HEADER]: '1' } }),
+      queryKey: queryKeys.auth.me(),
+      revalidateIfStale: true,
+    })
+    return { me }
+  } catch (error) {
+    const status = error instanceof ApiErrorClass ? error.status : undefined
+    if (status === 401) {
+      queryClient.setQueryData(queryKeys.auth.me(), null)
+      throw redirect({ to: '/frontend/login' })
+    }
+    throw error
+  }
+}
+
+/**
+ * frontend 登录页 guest 闸:纯缓存,零网络。本 tab 已登录才重定向去首页;
+ * 冷缓存/匿名直接放行。SSR 安全(服务端缓存空,不误跳),登录页因此可保持 SSR。
+ */
+export function requireUserGuest(queryClient: QueryClient): void {
+  const cached = queryClient.getQueryData<UserResponse | null>(queryKeys.auth.me())
+  if (cached) {
+    throw redirect({ to: '/frontend/home' })
   }
 }

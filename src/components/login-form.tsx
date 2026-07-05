@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { ComponentProps } from 'react'
 import { z } from 'zod'
 
-import { useAdminLogin } from '@/api/auth'
+import { useAdminLogin, useLogin } from '@/api/auth'
 import { FieldError } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Button } from '@/components/ui/button'
@@ -15,10 +15,18 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 })
 
-export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
+// surface 决定登录走哪个 surface 的端点与登录后落点。两个 hook 都无条件调用
+// (rules-of-hooks),未选中的那个只是空闲 mutation,不发请求。
+export function LoginForm({
+  className,
+  surface = 'admin',
+  ...props
+}: ComponentProps<'div'> & { surface?: 'admin' | 'frontend' }) {
   const navigate = useNavigate()
-  // /admin/login 走 admin surface 的登录端点。
-  const login = useAdminLogin()
+  const adminLogin = useAdminLogin()
+  const userLogin = useLogin()
+  const login = surface === 'admin' ? adminLogin : userLogin
+  const redirectTo = surface === 'admin' ? '/admin/home' : '/frontend/home'
   const form = useAppForm({
     defaultValues: {
       identifier: '',
@@ -29,8 +37,8 @@ export function LoginForm({ className, ...props }: ComponentProps<'div'>) {
     },
     onSubmit: async ({ value }) => {
       await login.mutateAsync(value)
-      // ponytail: 登录后固定去后台首页;要"回跳来源页"时加 redirect search param。
-      await navigate({ to: '/admin/home' })
+      // ponytail: 登录后固定去 surface 首页;要"回跳来源页"时加 redirect search param。
+      await navigate({ to: redirectTo })
     },
   })
 

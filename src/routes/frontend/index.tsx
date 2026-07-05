@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-// root 落地:重定向到 frontend 首页。公开站的真正首页是 /frontend/home。
-export const Route = createFileRoute('/')({
+// /frontend 落地 → 首页,避免直接访问 /frontend 落在空 Outlet 上。
+export const Route = createFileRoute('/frontend/')({
   beforeLoad: () => {
     throw redirect({ to: '/frontend/home' })
   },
