@@ -45,9 +45,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function LocaleSync() {
   useEffect(() => {
     const locale = detectInitialLocale()
-    if (locale !== i18next.language) {
-      void i18next.changeLanguage(locale)
+    if (locale === i18next.language) {
+      return
     }
+    // 推迟到 hydration commit 之后:changeLanguage 触发 react-i18next 全树重渲,
+    // 若落在 hydration 的 startTransition 窗口里,会对尚未挂载的组件 setState 而告警。
+    // 宏任务(setTimeout 0)确保此刻全树已挂载,语言切换退化成普通更新。
+    const timer = setTimeout(() => {
+      void i18next.changeLanguage(locale)
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   return null
