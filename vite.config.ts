@@ -10,7 +10,7 @@ import { nitro } from 'nitro/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const config = defineConfig({
+const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
@@ -30,8 +30,11 @@ const config = defineConfig({
     tanstackStart(),
     // Node/Docker 部署:官方要求经 Nitro 出自包含 server(.output/server/index.mjs,
     // 自带静态资产 + SSR + 监听 PORT)。见 docs/framework/react/guide/hosting。
-    // 测试环境排除:nitro 会在 vitest teardown 时挂住句柄(close timed out)。
-    ...(process.env.VITEST === 'true' ? [] : [nitro()]),
+    // 仅 build 期挂 Nitro:dev 用 TanStack Start(Vite)自带 dev server,才认下面
+    // server.proxy 的 /api 转发到后端;Nitro dev server 不认 Vite proxy,挂了 /api
+    // 就落到 SSR handler 返回 HTML(500 Only HTML requests are supported here)。
+    // 测试环境也排除:nitro 会在 vitest teardown 时挂住句柄(close timed out)。
+    ...(command === 'build' && process.env.VITEST !== 'true' ? [nitro()] : []),
     codeInspectorPlugin({
       bundler: 'vite',
       dev: () => process.env.NODE_ENV === 'development' && process.env.VITEST !== 'true',
@@ -47,6 +50,6 @@ const config = defineConfig({
       },
     },
   },
-})
+}))
 
 export default config
