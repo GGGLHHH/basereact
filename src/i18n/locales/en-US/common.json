@@ -1,6 +1,12 @@
 {
   "appTitle": "TanStack Start Starter",
   "language": "Language",
+  "theme": {
+    "changeTheme": "Change theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "home": {
     "editHint": "Edit <code>{{path}}</code> to get started.",
     "welcome": "Welcome to TanStack Start"

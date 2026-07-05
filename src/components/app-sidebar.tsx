@@ -10,6 +10,7 @@ import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavUser } from '@/components/nav-user'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   DropdownMenu,
@@ -374,6 +375,7 @@ export function AppSidebar({
         <NavAdminRoutes />
       </SidebarContent>
       <SidebarFooter>
+        <ThemeToggle />
         <LanguageSwitcher />
         <NavUser user={user} />
       </SidebarFooter>

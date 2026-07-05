@@ -1,6 +1,12 @@
 {
   "appTitle": "TanStack Start 脚手架",
   "language": "语言",
+  "theme": {
+    "changeTheme": "切换主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
+  },
   "home": {
     "editHint": "编辑 <code>{{path}}</code> 开始开发。",
     "welcome": "欢迎使用 TanStack Start"

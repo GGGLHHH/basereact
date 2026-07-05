@@ -11,6 +11,7 @@ import i18next from '#/i18n'
 import { detectInitialLocale } from '#/i18n/config'
 import { NotFoundScreen } from '#/components/error-state'
 import { Toaster } from '#/components/feedback/toaster'
+import { ThemeProvider } from '#/components/theme-provider'
 
 import appCss from '../styles.css?url'
 
@@ -54,25 +55,30 @@ function LocaleSync() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en'>
+    <html
+      lang='en'
+      suppressHydrationWarning
+    >
       <head>
         <HeadContent />
       </head>
       <body>
-        <LocaleSync />
-        {children}
-        <Toaster />
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
+        <ThemeProvider>
+          <LocaleSync />
+          {children}
+          <Toaster />
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

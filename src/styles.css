@@ -10,3 +10,14 @@
 @import './styles/utilities.css';
 
 @custom-variant dark (&:is(.dark *));
+
+/* 主题切换圆形揭示(见 lib/theme-transition.ts):切换期间禁掉根快照默认交叉淡入,
+   把新主题快照抬到最上层,让 clipPath 圆形单独揭示。 */
+.theme-transitioning::view-transition-old(root),
+.theme-transitioning::view-transition-new(root) {
+  animation: none;
+}
+
+.theme-transitioning::view-transition-new(root) {
+  z-index: 9999;
+}
