@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { myPermissionsQueryOptions } from '@/api/auth'
 import { NavUser } from '@/components/nav-user'
+import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
@@ -101,7 +102,7 @@ function FlyoutMenuNode({
         className={cn(isActive && FLYOUT_ACTIVE_CLASS)}
       >
         <MenuIcon icon={node.icon} />
-        <span>{label}</span>
+        <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
       </DropdownMenuItem>
     )
   }
@@ -109,7 +110,7 @@ function FlyoutMenuNode({
     <DropdownMenuSub>
       <DropdownMenuSubTrigger className={cn(isActive && FLYOUT_ACTIVE_CLASS)}>
         <MenuIcon icon={node.icon} />
-        <span>{label}</span>
+        <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
         {node.children.map((child) => (
@@ -143,6 +144,17 @@ function MenuNodeItem({
   const isActive = pathname === node.url || pathname.startsWith(`${node.url}/`)
   const hasChildren = node.children.length > 0
   const { state, isMobile } = useSidebar()
+  // 展开态才走滑动高亮:标记可 hover 项 + 激活项,并抹掉按钮自身 hover/active 背景
+  // (背景交给滑动 pill,见 SidebarNavHighlight)。收起态用飞出,不需要。
+  const highlight = state === 'expanded'
+  // pill 目标 = 当前页那一项(精确匹配)。用 isActive(startsWith)会把整条父链都标上
+  // data-nav-active,querySelector 取到最上层父项,离开菜单时 pill 就回不到子项。
+  const isCurrent = pathname === node.url
+  const highlightProps = {
+    'data-nav-item': highlight ? '' : undefined,
+    'data-nav-active': highlight && isCurrent ? 'true' : undefined,
+    className: cn(highlight && 'hover:bg-transparent! data-active:bg-transparent!'),
+  }
 
   // 折叠态受控:初始展开 = 命中当前路由;导航进入该分支时自动展开(effect 只开不
   // 关,用户仍可手动折叠)。受控避免 defaultOpen 随路由变化触发 Base UI 的
@@ -182,9 +194,10 @@ function MenuNodeItem({
             isActive={isActive}
             tooltip={label}
             render={<Link to={node.url} />}
+            {...highlightProps}
           >
             <MenuIcon icon={node.icon} />
-            <span>{label}</span>
+            <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       )
@@ -203,7 +216,7 @@ function MenuNodeItem({
               }
             >
               <MenuIcon icon={node.icon} />
-              <span>{label}</span>
+              <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side='right'
@@ -215,7 +228,7 @@ function MenuNodeItem({
                 className={cn(pathname === node.url && FLYOUT_ACTIVE_CLASS)}
               >
                 <MenuIcon icon={node.icon} />
-                <span>{label}</span>
+                <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {node.children.map((child) => (
@@ -243,11 +256,12 @@ function MenuNodeItem({
             <SidebarMenuButton
               isActive={isActive}
               tooltip={label}
+              {...highlightProps}
             />
           }
         >
           <MenuIcon icon={node.icon} />
-          <span>{label}</span>
+          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
           {chevron}
         </CollapsibleTrigger>
         {childrenSub}
@@ -261,9 +275,10 @@ function MenuNodeItem({
         <SidebarMenuSubButton
           isActive={isActive}
           render={<Link to={node.url} />}
+          {...highlightProps}
         >
           <MenuIcon icon={node.icon} />
-          <span>{label}</span>
+          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     )
@@ -282,11 +297,12 @@ function MenuNodeItem({
           <SidebarMenuSubButton
             isActive={isActive}
             render={<button type='button' />}
+            {...highlightProps}
           />
         }
       >
         <MenuIcon icon={node.icon} />
-        <span>{label}</span>
+        <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
         {chevron}
       </CollapsibleTrigger>
       {childrenSub}
@@ -301,6 +317,7 @@ function NavAdminRoutes() {
   const router = useRouter()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { t } = useTranslation('route')
+  const { state } = useSidebar()
   // 权限集与守卫共用一份缓存(同 queryKey);守卫若已按需取过则零请求。
   // 未加载时 permissions 为 [],声明了准入的条目 fail-closed 先隐藏。
   const { data: myPermissions } = useQuery(myPermissionsQueryOptions)
@@ -314,7 +331,10 @@ function NavAdminRoutes() {
   )
 
   return (
-    <>
+    <SidebarNavHighlight
+      enabled={state === 'expanded'}
+      activeKey={pathname}
+    >
       {groups.map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
@@ -331,7 +351,7 @@ function NavAdminRoutes() {
           </SidebarMenu>
         </SidebarGroup>
       ))}
-    </>
+    </SidebarNavHighlight>
   )
 }
 
