@@ -25,13 +25,13 @@ function FrontendShell() {
             to='/frontend/home'
             className='[&.active]:font-semibold'
           >
-            {t('route:frontendHome')}
+            {t('route:titles.frontendHome')}
           </Link>
           <Link
             to='/frontend/about'
             className='[&.active]:font-semibold'
           >
-            {t('route:frontendAbout')}
+            {t('route:titles.frontendAbout')}
           </Link>
         </nav>
         <div className='ml-auto flex items-center gap-3 text-sm'>
@@ -56,7 +56,7 @@ function FrontendShell() {
               to='/frontend/login'
               className='[&.active]:font-semibold'
             >
-              {t('route:frontendLogin')}
+              {t('route:titles.frontendLogin')}
             </Link>
           )}
         </div>

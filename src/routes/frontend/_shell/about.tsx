@@ -13,7 +13,7 @@ export const Route = createFileRoute('/frontend/_shell/about')({
   component: AboutPage,
   pendingComponent: AboutPending,
   staticData: {
-    titleKey: 'frontendAbout',
+    titleKey: 'titles.frontendAbout',
   },
 })
 
@@ -32,7 +32,7 @@ function AboutPage() {
 
   return (
     <div className='flex flex-1 flex-col gap-4'>
-      <h1 className='text-2xl font-semibold'>{tr('frontendAbout')}</h1>
+      <h1 className='text-2xl font-semibold'>{tr('titles.frontendAbout')}</h1>
       <p className='text-sm text-muted-foreground'>
         {t('frontend.about.signedIn', { username: me.username })}
       </p>

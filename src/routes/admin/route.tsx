@@ -12,7 +12,7 @@ export const Route = createFileRoute('/admin')({
   // beforeLoad/loader 因此只跑客户端,守卫无需 cookie 转发。
   ssr: false,
   staticData: {
-    titleKey: 'admin',
+    titleKey: 'titles.admin',
     hideInMenu: true,
   },
 })

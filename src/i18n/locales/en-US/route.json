@@ -1,18 +1,25 @@
 {
-  "admin": "Admin",
-  "adminHome": "Home",
-  "adminLogin": "Login",
-  "adminWidgets": "Widgets",
-  "forbidden": "Access denied",
-  "frontendAbout": "About",
-  "frontendHome": "Home",
-  "frontendLogin": "Login",
-  "home": "Home",
-  "nested": "Nested",
-  "nestedDaily": "Daily",
-  "nestedOverview": "Overview",
-  "nestedRegions": "Regions",
-  "nestedReports": "Reports",
-  "notFound": "Page not found",
-  "profile": "Profile"
+  "titles": {
+    "admin": "Admin",
+    "adminHome": "Home",
+    "adminLogin": "Login",
+    "adminWidgets": "Widgets",
+    "forbidden": "Access denied",
+    "frontendAbout": "About",
+    "frontendHome": "Home",
+    "frontendLogin": "Login",
+    "home": "Home",
+    "nested": "Nested",
+    "nestedDaily": "Daily",
+    "nestedOverview": "Overview",
+    "nestedRegions": "Regions",
+    "nestedReports": "Reports",
+    "notFound": "Page not found",
+    "profile": "Profile"
+  },
+  "menuGroups": {
+    "admin": "Admin",
+    "demo": "Demo",
+    "general": "General"
+  }
 }

@@ -1,18 +1,25 @@
 {
-  "admin": "管理后台",
-  "adminHome": "首页",
-  "adminLogin": "登录",
-  "adminWidgets": "组件",
-  "forbidden": "无权访问",
-  "frontendAbout": "关于",
-  "frontendHome": "首页",
-  "frontendLogin": "登录",
-  "home": "首页",
-  "nested": "多级演示",
-  "nestedDaily": "每日",
-  "nestedOverview": "概览",
-  "nestedRegions": "地区",
-  "nestedReports": "报表",
-  "notFound": "页面不存在",
-  "profile": "个人信息"
+  "titles": {
+    "admin": "管理后台",
+    "adminHome": "首页",
+    "adminLogin": "登录",
+    "adminWidgets": "组件",
+    "forbidden": "无权访问",
+    "frontendAbout": "关于",
+    "frontendHome": "首页",
+    "frontendLogin": "登录",
+    "home": "首页",
+    "nested": "多级演示",
+    "nestedDaily": "每日",
+    "nestedOverview": "概览",
+    "nestedRegions": "地区",
+    "nestedReports": "报表",
+    "notFound": "页面不存在",
+    "profile": "个人信息"
+  },
+  "menuGroups": {
+    "admin": "管理",
+    "demo": "演示",
+    "general": "常规"
+  }
 }

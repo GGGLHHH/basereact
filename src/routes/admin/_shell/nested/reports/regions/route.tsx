@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const Route = createFileRoute('/admin/_shell/nested/reports/regions')({
   component: RegionsLayout,
   staticData: {
-    titleKey: 'nestedRegions',
-    menuTitleKey: 'nestedRegions',
+    titleKey: 'titles.nestedRegions',
+    menuTitleKey: 'titles.nestedRegions',
     order: 1,
   },
 })
@@ -22,7 +22,7 @@ function RegionsLayout() {
       <CardHeader>
         <CardTitle>
           {t('nested.reports.regions.level3Prefix')}
-          {tr('nestedRegions')}
+          {tr('titles.nestedRegions')}
         </CardTitle>
         <CardDescription>{t('nested.reports.regions.description')}</CardDescription>
       </CardHeader>

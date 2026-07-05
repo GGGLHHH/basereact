@@ -9,11 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const Route = createFileRoute('/admin/_shell/nested')({
   component: NestedLayout,
   staticData: {
-    titleKey: 'nested',
-    menuTitleKey: 'nested',
+    titleKey: 'titles.nested',
+    menuTitleKey: 'titles.nested',
     icon: 'i-tabler-stack-2',
     // 独立分组名与条目名区分开(否则 section "NESTED" 里又套一个 "Nested")。
-    group: 'Demo',
+    groupKey: 'menuGroups.demo',
     order: 3,
   },
 })
@@ -26,7 +26,7 @@ function NestedLayout() {
       <CardHeader>
         <CardTitle>
           {t('nested.level1Prefix')}
-          {tr('nested')}
+          {tr('titles.nested')}
         </CardTitle>
         <CardDescription>{t('nested.parentLayoutDescription')}</CardDescription>
       </CardHeader>

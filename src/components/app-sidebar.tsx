@@ -338,8 +338,8 @@ function NavAdminRoutes() {
       activeKey={pathname}
     >
       {groups.map((group) => (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+        <SidebarGroup key={group.labelKey}>
+          <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
           <SidebarMenu>
             {group.entries.map((entry) => (
               <MenuNodeItem

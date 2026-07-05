@@ -3,7 +3,10 @@ import '@tanstack/react-router'
 import type { AccessPolicyKey } from '#/generated/access-policies'
 import type route from '#/i18n/locales/en-US/route.json'
 
-type RouteTitleKey = Extract<keyof typeof route, string>
+// route.json 拆两块:titles(页面/菜单标题)、menuGroups(菜单分组标签)。
+// key 带对象前缀,消费端 t('titles.x') / t('menuGroups.x')。
+type RouteTitleKey = `titles.${Extract<keyof (typeof route)['titles'], string>}`
+type RouteGroupKey = `menuGroups.${Extract<keyof (typeof route)['menuGroups'], string>}`
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
@@ -27,7 +30,7 @@ declare module '@tanstack/react-router' {
     subtitle?: string
     menuTitle?: string
     icon?: string
-    group?: string
+    groupKey?: RouteGroupKey
     order?: number
     hideInMenu?: boolean
   }

@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next'
 export const Route = createFileRoute('/admin/_shell/home')({
   component: AdminHomePage,
   staticData: {
-    titleKey: 'adminHome',
-    menuTitleKey: 'adminHome',
+    titleKey: 'titles.adminHome',
+    menuTitleKey: 'titles.adminHome',
     icon: 'i-tabler-home',
-    group: 'Admin',
+    groupKey: 'menuGroups.admin',
     order: 0,
   },
 })
@@ -18,7 +18,7 @@ function AdminHomePage() {
 
   return (
     <div className='flex flex-1 flex-col gap-4'>
-      <h1 className='text-2xl font-semibold'>{t('route:adminHome')}</h1>
+      <h1 className='text-2xl font-semibold'>{t('route:titles.adminHome')}</h1>
       <p className='text-sm text-muted-foreground'>{t('admin.home.welcome')}</p>
     </div>
   )

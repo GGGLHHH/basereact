@@ -7,8 +7,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 export const Route = createFileRoute('/admin/_shell/nested/overview')({
   component: NestedOverview,
   staticData: {
-    titleKey: 'nestedOverview',
-    menuTitleKey: 'nestedOverview',
+    titleKey: 'titles.nestedOverview',
+    menuTitleKey: 'titles.nestedOverview',
     order: 0,
   },
 })
@@ -19,7 +19,7 @@ function NestedOverview() {
   return (
     <Card size='sm'>
       <CardHeader>
-        <CardTitle>{tr('nestedOverview')}</CardTitle>
+        <CardTitle>{tr('titles.nestedOverview')}</CardTitle>
         <CardDescription>{t('nested.overviewDescription')}</CardDescription>
       </CardHeader>
     </Card>

@@ -132,11 +132,6 @@
   "admin": {
     "home": {
       "welcome": "欢迎使用管理后台。"
-    },
-    "menu": {
-      "groups": {
-        "general": "常规"
-      }
     }
   },
   "frontend": {

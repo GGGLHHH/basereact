@@ -132,11 +132,6 @@
   "admin": {
     "home": {
       "welcome": "Welcome to the admin console."
-    },
-    "menu": {
-      "groups": {
-        "general": "General"
-      }
     }
   },
   "frontend": {

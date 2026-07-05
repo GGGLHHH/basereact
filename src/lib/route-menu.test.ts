@@ -24,20 +24,24 @@ function collectUrls<TPath extends string>(entries: AdminMenuEntry<TPath>[]): TP
 
 const routesById = {
   __root__: route(''),
-  '/': route('/', { menuTitleKey: 'home', titleKey: 'home' }),
-  '/admin': route('/admin', { hideInMenu: true, titleKey: 'admin' }),
+  '/': route('/', { menuTitleKey: 'titles.home', titleKey: 'titles.home' }),
+  '/admin': route('/admin', { hideInMenu: true, titleKey: 'titles.admin' }),
   '/admin/_shell': route('/admin'),
   '/admin/_shell/widgets': route('/admin/widgets', {
-    group: 'Admin',
+    groupKey: 'menuGroups.admin',
     icon: 'i-tabler-box',
-    menuTitleKey: 'adminWidgets',
+    menuTitleKey: 'titles.adminWidgets',
     order: 2,
-    titleKey: 'adminWidgets',
+    titleKey: 'titles.adminWidgets',
   }),
-  '/admin/_shell/first': route('/admin/first', { group: 'Admin', menuTitle: 'First', order: 1 }),
+  '/admin/_shell/first': route('/admin/first', {
+    groupKey: 'menuGroups.admin',
+    menuTitle: 'First',
+    order: 1,
+  }),
   '/admin/_shell/hidden': route('/admin/hidden', { hideInMenu: true, menuTitle: 'Hidden' }),
   '/admin/_shell/ungrouped': route('/admin/ungrouped', { menuTitle: 'Loose', order: 3 }),
-  '/admin/login': route('/admin/login', { accessPublic: true, titleKey: 'adminLogin' }),
+  '/admin/login': route('/admin/login', { accessPublic: true, titleKey: 'titles.adminLogin' }),
 }
 
 // 真实 routeTree 集成:抓"约定漂移"类回归——新路由的 staticData 写错/漏写、
@@ -93,10 +97,10 @@ describe('buildAdminMenu with the real route tree', () => {
   })
 
   it('groups top-level pages, Admin (home first) before Demo', () => {
-    expect(groups.map((group) => group.label)).toEqual(['Admin', 'Demo'])
+    expect(groups.map((group) => group.labelKey)).toEqual(['menuGroups.admin', 'menuGroups.demo'])
     expect(groups[0].entries[0]).toMatchObject({
       icon: 'i-tabler-home',
-      labelKey: 'adminHome',
+      labelKey: 'titles.adminHome',
       url: '/admin/home',
     })
   })
@@ -113,14 +117,17 @@ describe('buildAdminMenu', () => {
   })
 
   it('groups by staticData.group and sorts by order', () => {
-    expect(groups.map((group) => group.label)).toEqual(['Admin', 'General'])
+    expect(groups.map((group) => group.labelKey)).toEqual([
+      'menuGroups.admin',
+      'menuGroups.general',
+    ])
     expect(groups[0].entries.map((entry) => entry.url)).toEqual(['/admin/first', '/admin/widgets'])
   })
 
   it('keeps icon and translation key on entries', () => {
     const widgets = groups[0].entries.find((entry) => entry.url === '/admin/widgets')
     expect(widgets?.icon).toBe('i-tabler-box')
-    expect(widgets?.labelKey).toBe('adminWidgets')
+    expect(widgets?.labelKey).toBe('titles.adminWidgets')
   })
 })
 

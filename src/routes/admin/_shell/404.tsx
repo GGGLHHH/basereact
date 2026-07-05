@@ -6,7 +6,7 @@ import { ErrorState } from '@/components/error-state'
 export const Route = createFileRoute('/admin/_shell/404')({
   component: ShellNotFoundPage,
   staticData: {
-    titleKey: 'notFound',
+    titleKey: 'titles.notFound',
   },
 })
 

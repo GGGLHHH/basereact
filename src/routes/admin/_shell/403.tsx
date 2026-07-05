@@ -6,7 +6,7 @@ import { ErrorState } from '@/components/error-state'
 export const Route = createFileRoute('/admin/_shell/403')({
   component: ShellForbiddenPage,
   staticData: {
-    titleKey: 'forbidden',
+    titleKey: 'titles.forbidden',
   },
 })
 

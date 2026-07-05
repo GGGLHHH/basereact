@@ -1,7 +1,9 @@
-import i18next from 'i18next'
 import { isStaticDataGranted } from '#/lib/access-control'
 
 import type { StaticDataRouteOption } from '@tanstack/react-router'
+
+// 分组键指向 route 命名空间(消费端 t() 译),与 titleKey/menuTitleKey 同范式。
+type GroupKey = NonNullable<StaticDataRouteOption['groupKey']>
 
 export interface AdminMenuEntry<TPath extends string = string> {
   /** 嵌套子项(按 fullPath 前缀构建);叶子为 []。 */
@@ -16,7 +18,7 @@ export interface AdminMenuEntry<TPath extends string = string> {
 
 export interface AdminMenuGroup<TPath extends string = string> {
   entries: AdminMenuEntry<TPath>[]
-  label: string
+  labelKey: GroupKey
 }
 
 const DEFAULT_ORDER = Number.MAX_SAFE_INTEGER
@@ -35,7 +37,7 @@ export interface MenuSourceRoute<TPath extends string = string> {
 interface WorkNode<TPath extends string> {
   children: WorkNode<TPath>[]
   fullPath: TPath
-  group: string
+  group: GroupKey
   icon?: string
   label?: string
   labelKey?: StaticDataRouteOption['menuTitleKey']
@@ -68,7 +70,7 @@ export function buildAdminMenu<TPath extends string>(
       nodes.push({
         children: [],
         fullPath: route.fullPath,
-        group: staticData.group ?? i18next.t('admin.menu.groups.general'),
+        group: staticData.groupKey ?? 'menuGroups.general',
         icon: staticData.icon,
         label: staticData.menuTitle ?? staticData.title,
         labelKey: staticData.menuTitleKey,
@@ -116,7 +118,7 @@ export function buildAdminMenu<TPath extends string>(
       }))
 
   // 组顺序 = 各组首个根(按 order)出现的顺序,与老行为一致。
-  const groups = new Map<string, WorkNode<TPath>[]>()
+  const groups = new Map<GroupKey, WorkNode<TPath>[]>()
   for (const root of roots.sort(
     (a, b) => a.order - b.order || a.fullPath.localeCompare(b.fullPath),
   )) {
@@ -129,10 +131,10 @@ export function buildAdminMenu<TPath extends string>(
   }
 
   const result: AdminMenuGroup<TPath>[] = []
-  for (const [label, rootList] of groups) {
+  for (const [labelKey, rootList] of groups) {
     const entries = prune(rootList)
     if (entries.length > 0) {
-      result.push({ entries, label })
+      result.push({ entries, labelKey })
     }
   }
   return result

@@ -9,7 +9,7 @@ export const Route = createFileRoute('/frontend/login')({
   beforeLoad: ({ context }) => requireUserGuest(context.queryClient),
   component: LoginPage,
   staticData: {
-    titleKey: 'frontendLogin',
+    titleKey: 'titles.frontendLogin',
     accessPublic: true,
   },
 })

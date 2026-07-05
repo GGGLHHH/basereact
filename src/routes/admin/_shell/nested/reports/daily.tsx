@@ -7,8 +7,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 export const Route = createFileRoute('/admin/_shell/nested/reports/daily')({
   component: ReportsDaily,
   staticData: {
-    titleKey: 'nestedDaily',
-    menuTitleKey: 'nestedDaily',
+    titleKey: 'titles.nestedDaily',
+    menuTitleKey: 'titles.nestedDaily',
     order: 0,
   },
 })
@@ -19,7 +19,7 @@ function ReportsDaily() {
   return (
     <Card size='sm'>
       <CardHeader>
-        <CardTitle>{tr('nestedDaily')}</CardTitle>
+        <CardTitle>{tr('titles.nestedDaily')}</CardTitle>
         <CardDescription>{t('nested.reports.dailyDescription')}</CardDescription>
       </CardHeader>
     </Card>

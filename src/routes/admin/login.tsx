@@ -8,7 +8,7 @@ export const Route = createFileRoute('/admin/login')({
   beforeLoad: ({ context }) => requireAdminGuest(context.queryClient),
   component: LoginPage,
   staticData: {
-    titleKey: 'adminLogin',
+    titleKey: 'titles.adminLogin',
     accessPublic: true,
   },
 })

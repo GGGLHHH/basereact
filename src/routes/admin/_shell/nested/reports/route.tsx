@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const Route = createFileRoute('/admin/_shell/nested/reports')({
   component: ReportsLayout,
   staticData: {
-    titleKey: 'nestedReports',
-    menuTitleKey: 'nestedReports',
+    titleKey: 'titles.nestedReports',
+    menuTitleKey: 'titles.nestedReports',
     icon: 'i-tabler-chart-bar',
     order: 1,
   },
@@ -23,7 +23,7 @@ function ReportsLayout() {
       <CardHeader>
         <CardTitle>
           {t('nested.reports.level2Prefix')}
-          {tr('nestedReports')}
+          {tr('titles.nestedReports')}
         </CardTitle>
         <CardDescription>{t('nested.reports.description')}</CardDescription>
       </CardHeader>
