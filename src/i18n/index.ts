@@ -4,13 +4,7 @@ import i18next from 'i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
 import { initReactI18next } from 'react-i18next'
 
-import {
-  DEFAULT_LOCALE,
-  normalizeLocale,
-  persistLocale,
-  SUPPORTED_LOCALES,
-  syncHtmlLanguage,
-} from './config'
+import { DEFAULT_LOCALE, normalizeLocale, SUPPORTED_LOCALES, syncHtmlLanguage } from './config'
 
 const localeModules = import.meta.glob<{ default: ResourceLanguage }>('./locales/*/*.json')
 
@@ -58,8 +52,10 @@ if (!i18next.isInitialized) {
     })
 }
 
+// 只同步 <html lang>。持久化不挂这里:init 阶段 i18next 会先 languageChanged(DEFAULT_LOCALE),
+// 若在此 persist 就把用户存的偏好覆盖成默认,盖过 LocaleSync 的恢复(刷新后回退 en-US)。
+// 持久化改由用户显式点选时做,见 components/language-switcher.tsx。
 void i18next.on('languageChanged', (language) => {
-  persistLocale(language)
   syncHtmlLanguage(language)
 })
 

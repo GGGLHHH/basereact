@@ -75,11 +75,22 @@ function CurrentPageBreadcrumb() {
   )
 }
 
+// 侧栏展开/收起持久化:SidebarProvider 切换时写 sidebar_state cookie,这里初始化读回。
+// admin 子树 ssr:false,恒在客户端渲染,document 可用。
+// ponytail: cookie 名对齐 ui/sidebar.tsx 的 SIDEBAR_COOKIE_NAME(未导出)。
+function readSidebarOpen(): boolean {
+  if (typeof document === 'undefined') {
+    return true
+  }
+  const match = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/)
+  return match ? match[1] === 'true' : true
+}
+
 function AdminShell() {
   const { me } = Route.useRouteContext()
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={readSidebarOpen()}>
       <AppSidebar user={{ avatar: '', email: me.email ?? '', name: me.username }} />
       <SidebarInset>
         <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
