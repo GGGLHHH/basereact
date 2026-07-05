@@ -5,6 +5,7 @@ import { openapiCodegen } from 'vite-plugin-openapi-codegen'
 import { devtools } from '@tanstack/devtools-vite'
 
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { nitro } from 'nitro/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -27,6 +28,10 @@ const config = defineConfig({
     tailwindcss(),
     UnoCSS(),
     tanstackStart(),
+    // Node/Docker 部署:官方要求经 Nitro 出自包含 server(.output/server/index.mjs,
+    // 自带静态资产 + SSR + 监听 PORT)。见 docs/framework/react/guide/hosting。
+    // 测试环境排除:nitro 会在 vitest teardown 时挂住句柄(close timed out)。
+    ...(process.env.VITEST === 'true' ? [] : [nitro()]),
     codeInspectorPlugin({
       bundler: 'vite',
       dev: () => process.env.NODE_ENV === 'development' && process.env.VITEST !== 'true',

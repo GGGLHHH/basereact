@@ -1,0 +1,24 @@
+# deps / build output — rebuilt inside the image
+node_modules
+.output
+dist
+dist-ssr
+
+# vcs / editor / os
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# logs / local env (never bake secrets into the image)
+*.log
+.env
+.env.*
+
+# docker + project tooling not needed to build
+Dockerfile
+.dockerignore
+.claude
+.gitnexus
+docs
