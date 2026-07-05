@@ -1,4 +1,11 @@
 export const queryKeys = {
+  // admin 与 frontend 两个 surface 的会话缓存隔离,互不失效。
+  admin: {
+    auth: {
+      all: ['admin', 'auth'] as const,
+      me: () => [...queryKeys.admin.auth.all, 'me'] as const,
+    },
+  },
   auth: {
     all: ['auth'] as const,
     me: () => [...queryKeys.auth.all, 'me'] as const,

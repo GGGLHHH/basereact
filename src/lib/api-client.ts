@@ -1,20 +1,30 @@
 // Runtime contract for vite-plugin-openapi-codegen generated clients.
-// Trimmed from xchangeai-web's api-client: same ky setup and error
-// normalization, minus auth refresh / i18n / toast — port those back
-// from xchangeai-web when this app grows auth.
+// Trimmed from xchangeai-web's api-client: same ky setup, error
+// normalization and 401 refresh ladder, minus i18n / toast — port those
+// back from xchangeai-web when this app grows them.
 
 import ky, { isNetworkError, isTimeoutError } from 'ky'
 
 import type { Options as KyOptions } from 'ky'
 import type { ErrorBody } from '#/generated/api-types'
 
+import { refresh as buildRefreshPath } from '#/generated/api'
+import { globalRouter } from '#/lib/global-router'
+
 const API_BASE_URL = '/api/v1'
+const LOGIN_ROUTE = '/admin/login'
+const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
+// auth 端点自身的 401 不进刷新梯:login 是凭证错误,logout/refresh 本身就是会话终点。
+const SKIP_REFRESH_SUFFIXES = ['/login', '/logout', '/logout-all', '/refresh']
 
 export type ApiRequestOptions = KyOptions & {
   contentType?: string
 }
 
 export type ApiErrorKind = 'abort' | 'http' | 'network' | 'timeout'
+
+let refreshPromise: Promise<void> | null = null
+let authFailureHandled = false
 
 export class ApiErrorClass extends Error {
   /** Machine-readable category from ErrorBody.code, e.g. not_found / validation / unauthorized */
@@ -40,11 +50,107 @@ export class ApiErrorClass extends Error {
   }
 }
 
+function shouldSkipRefresh(request: Request): boolean {
+  return SKIP_REFRESH_SUFFIXES.some((suffix) => request.url.endsWith(suffix))
+}
+
+function isAuthRecoveryRequest(request: Request): boolean {
+  return request.url.endsWith('/login') || request.url.endsWith('/refresh')
+}
+
+function handleAuthFailure() {
+  if (authFailureHandled) {
+    return
+  }
+  authFailureHandled = true
+
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  // ponytail: SPA 跳转不清 query 缓存;要 toast 提示 + 回跳来源页 + 清缓存时,
+  // 从 xchangeai-web 移植完整 handleAuthFailure。
+  const router = globalRouter.instance
+  if (router) {
+    if (router.state.location.pathname !== LOGIN_ROUTE) {
+      void router.navigate({ to: LOGIN_ROUTE })
+    }
+    return
+  }
+
+  // router 尚未登记(极早期请求):整页跳转兜底。
+  if (!window.location.pathname.startsWith(LOGIN_ROUTE)) {
+    window.location.assign(LOGIN_ROUTE)
+  }
+}
+
+async function ensureRefreshed(): Promise<void> {
+  // 并发 401 共享同一次刷新;失败即会话失效。
+  refreshPromise ??= api
+    .post(buildRefreshPath())
+    .then(
+      () => undefined,
+      (error: unknown) => {
+        handleAuthFailure()
+        throw error
+      },
+    )
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
+function retryAfterRefresh(request: Request) {
+  const headers = new Headers(request.headers)
+  headers.set(RETRIED_AFTER_REFRESH_HEADER, '1')
+  return ky.retry({
+    code: 'AUTH_REFRESHED',
+    delay: 0,
+    request: new Request(request, { headers }),
+  })
+}
+
 export const api = ky.create({
   credentials: 'include',
   hooks: {
     afterResponse: [
-      async ({ response }) => {
+      async ({ request, response }) => {
+        if (response.ok && isAuthRecoveryRequest(request)) {
+          // 登录/刷新成功 = 会话恢复,允许下一次失效再触发一次跳转。
+          authFailureHandled = false
+        }
+
+        // 401 处理顺序(每支必须先于下一支):
+        //   1. /login 响应       → 直接抛(凭证错误,调用方自己展示)
+        //   2. /logout, /refresh → 抛 + 会话失效处理(跳登录页,只跳一次)
+        //   3. 刷新后重试仍 401   → 终态失败,同上
+        //   4. 其余              → 刷新会话 + 重试一次
+        if (response.status === 401) {
+          if (request.url.endsWith('/login')) {
+            throw await createApiError(response)
+          }
+
+          if (shouldSkipRefresh(request)) {
+            handleAuthFailure()
+            throw await createApiError(response)
+          }
+
+          if (request.headers.get(RETRIED_AFTER_REFRESH_HEADER) === '1') {
+            handleAuthFailure()
+            throw await createApiError(response)
+          }
+
+          try {
+            await ensureRefreshed()
+          } catch {
+            throw await createApiError(response)
+          }
+
+          return retryAfterRefresh(request)
+        }
+
         if (!response.ok) {
           throw await createApiError(response)
         }

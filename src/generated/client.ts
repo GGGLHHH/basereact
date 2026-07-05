@@ -4,7 +4,7 @@
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
 import type { AdminListWidgetsQuery, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { login as buildLoginPath, logout as buildLogoutPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, refresh as buildRefreshPath, register as buildRegisterPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, adminListWidgets as buildAdminListWidgetsPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath } from "./api";
+import { adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -28,34 +28,49 @@ function buildSearchParams(query: Record<string, unknown> | undefined): URLSearc
     }
     return hasParams ? searchParams : undefined;
 }
-// Auth
-export interface LoginOptions {
+// Admin
+export interface AdminLoginOptions {
     query?: never;
     path?: never;
     body: LoginRequest;
     signal?: AbortSignal;
 }
-export function login(options: LoginOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
-    return requestJson<UserResponse>(buildLoginPath(), {
+export function adminLogin(options: AdminLoginOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildAdminLoginPath(), {
         ...requestOptions,
         method: "POST",
         json: options.body,
         signal: options.signal
     });
 }
-export interface LogoutOptions {
+export interface AdminGetMeOptions {
     query?: never;
     path?: never;
     body?: never;
     signal?: AbortSignal;
 }
-export function logout(options: LogoutOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
-    return requestVoid(buildLogoutPath(), {
+export function adminGetMe(options: AdminGetMeOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildAdminGetMePath(), {
         ...requestOptions,
-        method: "POST",
+        method: "GET",
         signal: options.signal
     });
 }
+export interface AdminListWidgetsOptions {
+    query?: AdminListWidgetsQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function adminListWidgets(options: AdminListWidgetsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_WidgetView> {
+    return requestJson<Page_WidgetView>(buildAdminListWidgetsPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+// Frontend
 export interface LogoutAllOptions {
     query?: never;
     path?: never;
@@ -124,34 +139,6 @@ export function changePassword(options: ChangePasswordOptions, requestOptions: R
         signal: options.signal
     });
 }
-export interface RefreshOptions {
-    query?: never;
-    path?: never;
-    body?: never;
-    signal?: AbortSignal;
-}
-export function refresh(options: RefreshOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
-    return requestJson<UserResponse>(buildRefreshPath(), {
-        ...requestOptions,
-        method: "POST",
-        signal: options.signal
-    });
-}
-export interface RegisterOptions {
-    query?: never;
-    path?: never;
-    body: RegisterRequest;
-    signal?: AbortSignal;
-}
-export function register(options: RegisterOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
-    return requestJson<UserResponse>(buildRegisterPath(), {
-        ...requestOptions,
-        method: "POST",
-        json: options.body,
-        signal: options.signal
-    });
-}
-// Contents
 export interface ListContentsOptions {
     query?: never;
     path?: never;
@@ -326,7 +313,6 @@ export function previewContent(options: PreviewContentOptions, requestOptions: R
         signal: options.signal
     });
 }
-// Profiles
 export interface GetProfileOptions {
     query?: never;
     path: GetProfilePath;
@@ -354,7 +340,6 @@ export function putProfile(options: PutProfileOptions, requestOptions: RuntimeRe
         signal: options.signal
     });
 }
-// Widgets
 export interface ListWidgetsOptions {
     query?: ListWidgetsQuery;
     path?: never;
@@ -383,20 +368,6 @@ export function createWidget(options: CreateWidgetOptions, requestOptions: Runti
         signal: options.signal
     });
 }
-export interface AdminListWidgetsOptions {
-    query?: AdminListWidgetsQuery;
-    path?: never;
-    body?: never;
-    signal?: AbortSignal;
-}
-export function adminListWidgets(options: AdminListWidgetsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_WidgetView> {
-    return requestJson<Page_WidgetView>(buildAdminListWidgetsPath(), {
-        ...requestOptions,
-        method: "GET",
-        searchParams: buildSearchParams(options.query),
-        signal: options.signal
-    });
-}
 export interface WidgetEventsOptions {
     query?: never;
     path?: never;
@@ -418,19 +389,6 @@ export interface MyWidgetCountOptions {
 }
 export function myWidgetCount(options: MyWidgetCountOptions, requestOptions: RuntimeRequestOptions = {}): Promise<WidgetStats> {
     return requestJson<WidgetStats>(buildMyWidgetCountPath(), {
-        ...requestOptions,
-        method: "GET",
-        signal: options.signal
-    });
-}
-export interface WidgetStatsOptions {
-    query?: never;
-    path?: never;
-    body?: never;
-    signal?: AbortSignal;
-}
-export function widgetStats(options: WidgetStatsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<WidgetStats> {
-    return requestJson<WidgetStats>(buildWidgetStatsPath(), {
         ...requestOptions,
         method: "GET",
         signal: options.signal
@@ -473,6 +431,74 @@ export function deleteWidget(options: DeleteWidgetOptions, requestOptions: Runti
     return requestVoid(buildDeleteWidgetPath(options.path), {
         ...requestOptions,
         method: "DELETE",
+        signal: options.signal
+    });
+}
+// Public
+export interface LoginOptions {
+    query?: never;
+    path?: never;
+    body: LoginRequest;
+    signal?: AbortSignal;
+}
+export function login(options: LoginOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildLoginPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface LogoutOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function logout(options: LogoutOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
+    return requestVoid(buildLogoutPath(), {
+        ...requestOptions,
+        method: "POST",
+        signal: options.signal
+    });
+}
+export interface RefreshOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function refresh(options: RefreshOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildRefreshPath(), {
+        ...requestOptions,
+        method: "POST",
+        signal: options.signal
+    });
+}
+export interface RegisterOptions {
+    query?: never;
+    path?: never;
+    body: RegisterRequest;
+    signal?: AbortSignal;
+}
+export function register(options: RegisterOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildRegisterPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface WidgetStatsOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function widgetStats(options: WidgetStatsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<WidgetStats> {
+    return requestJson<WidgetStats>(buildWidgetStatsPath(), {
+        ...requestOptions,
+        method: "GET",
         signal: options.signal
     });
 }

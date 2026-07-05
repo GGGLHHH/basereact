@@ -9,6 +9,8 @@ import type {
 } from '#/generated/api-types'
 
 import {
+  adminGetMe as adminGetMeApi,
+  adminLogin as adminLoginApi,
   changePassword as changePasswordApi,
   deleteMe as deleteMeApi,
   getMe as getMeApi,
@@ -19,6 +21,28 @@ import {
   updateMe as updateMeApi,
 } from '#/generated/client'
 import { queryKeys } from '#/lib/query-keys'
+
+// ---- admin surface (admin/auth/*) ----
+
+export function useAdminMe(options?: { enabled?: boolean }) {
+  return useQuery({
+    enabled: options?.enabled ?? true,
+    queryFn: () => adminGetMeApi({}),
+    queryKey: queryKeys.admin.auth.me(),
+  })
+}
+
+export function useAdminLogin() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: LoginRequest) => adminLoginApi({ body: request }),
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.admin.auth.me(), user)
+    },
+  })
+}
+
+// ---- frontend/public surface ----
 
 export function useMe(options?: { enabled?: boolean }) {
   return useQuery({

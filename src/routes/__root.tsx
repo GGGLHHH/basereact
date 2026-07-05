@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 
 import i18next from '#/i18n'
 import { detectInitialLocale } from '#/i18n/config'
+import { NotFoundScreen } from '#/components/error-state'
 
 import appCss from '../styles.css?url'
 
@@ -31,6 +32,7 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  notFoundComponent: NotFoundScreen,
   shellComponent: RootDocument,
 })
 

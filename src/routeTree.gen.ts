@@ -9,38 +9,169 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as R404RouteImport } from './routes/404'
+import { Route as R403RouteImport } from './routes/403'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminShellRouteImport } from './routes/admin/_shell'
+import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
+import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
+import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
+import { Route as AdminShell403RouteImport } from './routes/admin/_shell/403'
 
+const R404Route = R404RouteImport.update({
+  id: '/404',
+  path: '/404',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const R403Route = R403RouteImport.update({
+  id: '/403',
+  path: '/403',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminShellRoute = AdminShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
+  id: '/widgets',
+  path: '/widgets',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellHomeRoute = AdminShellHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShell404Route = AdminShell404RouteImport.update({
+  id: '/404',
+  path: '/404',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShell403Route = AdminShell403RouteImport.update({
+  id: '/403',
+  path: '/403',
+  getParentRoute: () => AdminShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/403': typeof R403Route
+  '/404': typeof R404Route
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/403': typeof AdminShell403Route
+  '/admin/404': typeof AdminShell404Route
+  '/admin/home': typeof AdminShellHomeRoute
+  '/admin/widgets': typeof AdminShellWidgetsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/403': typeof R403Route
+  '/404': typeof R404Route
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/403': typeof AdminShell403Route
+  '/admin/404': typeof AdminShell404Route
+  '/admin/home': typeof AdminShellHomeRoute
+  '/admin/widgets': typeof AdminShellWidgetsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/403': typeof R403Route
+  '/404': typeof R404Route
+  '/admin/_shell': typeof AdminShellRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/_shell/403': typeof AdminShell403Route
+  '/admin/_shell/404': typeof AdminShell404Route
+  '/admin/_shell/home': typeof AdminShellHomeRoute
+  '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/403'
+    | '/404'
+    | '/admin/login'
+    | '/admin/403'
+    | '/admin/404'
+    | '/admin/home'
+    | '/admin/widgets'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/403'
+    | '/404'
+    | '/admin/login'
+    | '/admin/403'
+    | '/admin/404'
+    | '/admin/home'
+    | '/admin/widgets'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/403'
+    | '/404'
+    | '/admin/_shell'
+    | '/admin/login'
+    | '/admin/_shell/403'
+    | '/admin/_shell/404'
+    | '/admin/_shell/home'
+    | '/admin/_shell/widgets'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  R403Route: typeof R403Route
+  R404Route: typeof R404Route
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/404': {
+      id: '/404'
+      path: '/404'
+      fullPath: '/404'
+      preLoaderRoute: typeof R404RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/403': {
+      id: '/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof R403RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +179,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_shell': {
+      id: '/admin/_shell'
+      path: ''
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminShellRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_shell/widgets': {
+      id: '/admin/_shell/widgets'
+      path: '/widgets'
+      fullPath: '/admin/widgets'
+      preLoaderRoute: typeof AdminShellWidgetsRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/home': {
+      id: '/admin/_shell/home'
+      path: '/home'
+      fullPath: '/admin/home'
+      preLoaderRoute: typeof AdminShellHomeRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/404': {
+      id: '/admin/_shell/404'
+      path: '/404'
+      fullPath: '/admin/404'
+      preLoaderRoute: typeof AdminShell404RouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/403': {
+      id: '/admin/_shell/403'
+      path: '/403'
+      fullPath: '/admin/403'
+      preLoaderRoute: typeof AdminShell403RouteImport
+      parentRoute: typeof AdminShellRoute
+    }
   }
 }
 
+interface AdminShellRouteChildren {
+  AdminShell403Route: typeof AdminShell403Route
+  AdminShell404Route: typeof AdminShell404Route
+  AdminShellHomeRoute: typeof AdminShellHomeRoute
+  AdminShellWidgetsRoute: typeof AdminShellWidgetsRoute
+}
+
+const AdminShellRouteChildren: AdminShellRouteChildren = {
+  AdminShell403Route: AdminShell403Route,
+  AdminShell404Route: AdminShell404Route,
+  AdminShellHomeRoute: AdminShellHomeRoute,
+  AdminShellWidgetsRoute: AdminShellWidgetsRoute,
+}
+
+const AdminShellRouteWithChildren = AdminShellRoute._addFileChildren(
+  AdminShellRouteChildren,
+)
+
+interface AdminRouteRouteChildren {
+  AdminShellRoute: typeof AdminShellRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminShellRoute: AdminShellRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  R403Route: R403Route,
+  R404Route: R404Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -123,6 +123,37 @@ describe('TanStack app form fields', () => {
     expect(nameInput.getAttribute('aria-invalid')).toBe('true')
     expect(categoryTrigger.getAttribute('aria-invalid')).toBe('false')
     expect(screen.queryByText('Category is required')).toBeNull()
+  })
+
+  it('does not surface errors when a field is only tabbed through without input', () => {
+    function DemoForm() {
+      const form = useAppForm({
+        defaultValues: {
+          name: '',
+        },
+        validators: {
+          onChange: z.object({
+            name: z.string().min(1, 'Name is required'),
+          }),
+        },
+        onSubmit: vi.fn(),
+      })
+
+      return (
+        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+          <form.AppField name='name'>{(field) => <field.TextField label='Name' />}</form.AppField>
+        </form>
+      )
+    }
+
+    render(<DemoForm />)
+
+    const nameInput = screen.getByLabelText('Name')
+
+    fireEvent.blur(nameInput)
+
+    expect(screen.queryByText('Name is required')).toBeNull()
+    expect(nameInput.getAttribute('aria-invalid')).toBe('false')
   })
 
   it('focuses the first invalid control after a failed submit', async () => {

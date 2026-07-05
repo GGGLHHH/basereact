@@ -1,3 +1,9 @@
 {
-  "home": "Home"
+  "admin": "Admin",
+  "adminHome": "Home",
+  "adminLogin": "Login",
+  "adminWidgets": "Widgets",
+  "forbidden": "Access denied",
+  "home": "Home",
+  "notFound": "Page not found"
 }

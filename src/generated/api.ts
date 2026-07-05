@@ -2,106 +2,111 @@
 // Do not edit manually. Changes will be overwritten on next build.
 
 import type { ConfirmUploadPath, DeleteContentPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetWidgetPath, ListContentObjectsPath, PreviewContentPath, PutProfilePath, SetContentMetadataPath, UpdateContentPath, UpdateWidgetPath } from "./api-types";
-// Auth
-export function login(): string {
-    return "auth/login";
+// Admin
+export function adminLogin(): string {
+    return "admin/auth/login";
 }
-export function logout(): string {
-    return "auth/logout";
-}
-export function logoutAll(): string {
-    return "auth/logout-all";
-}
-export function getMe(): string {
-    return "auth/me";
-}
-export function updateMe(): string {
-    return "auth/me";
-}
-export function deleteMe(): string {
-    return "auth/me";
-}
-export function changePassword(): string {
-    return "auth/me/password";
-}
-export function refresh(): string {
-    return "auth/refresh";
-}
-export function register(): string {
-    return "auth/register";
-}
-// Contents
-export function listContents(): string {
-    return "contents";
-}
-export function createContent(): string {
-    return "contents";
-}
-export function uploadContent(): string {
-    return "contents/upload";
-}
-export function prepareUpload(): string {
-    return "contents/upload-url";
-}
-export function getContent(params: GetContentPath): string {
-    return `contents/${params.id}`;
-}
-export function updateContent(params: UpdateContentPath): string {
-    return `contents/${params.id}`;
-}
-export function deleteContent(params: DeleteContentPath): string {
-    return `contents/${params.id}`;
-}
-export function confirmUpload(params: ConfirmUploadPath): string {
-    return `contents/${params.id}/confirm-upload`;
-}
-export function downloadContent(params: DownloadContentPath): string {
-    return `contents/${params.id}/download`;
-}
-export function getContentMetadata(params: GetContentMetadataPath): string {
-    return `contents/${params.id}/metadata`;
-}
-export function setContentMetadata(params: SetContentMetadataPath): string {
-    return `contents/${params.id}/metadata`;
-}
-export function listContentObjects(params: ListContentObjectsPath): string {
-    return `contents/${params.id}/objects`;
-}
-export function previewContent(params: PreviewContentPath): string {
-    return `contents/${params.id}/preview`;
-}
-// Profiles
-export function getProfile(params: GetProfilePath): string {
-    return `profiles/${params.user_id}`;
-}
-export function putProfile(params: PutProfilePath): string {
-    return `profiles/${params.user_id}`;
-}
-// Widgets
-export function listWidgets(): string {
-    return "widgets";
-}
-export function createWidget(): string {
-    return "widgets";
+export function adminGetMe(): string {
+    return "admin/auth/me";
 }
 export function adminListWidgets(): string {
-    return "widgets/admin/all";
+    return "admin/widgets";
+}
+// Frontend
+export function logoutAll(): string {
+    return "frontend/auth/logout-all";
+}
+export function getMe(): string {
+    return "frontend/auth/me";
+}
+export function updateMe(): string {
+    return "frontend/auth/me";
+}
+export function deleteMe(): string {
+    return "frontend/auth/me";
+}
+export function changePassword(): string {
+    return "frontend/auth/me/password";
+}
+export function listContents(): string {
+    return "frontend/contents";
+}
+export function createContent(): string {
+    return "frontend/contents";
+}
+export function uploadContent(): string {
+    return "frontend/contents/upload";
+}
+export function prepareUpload(): string {
+    return "frontend/contents/upload-url";
+}
+export function getContent(params: GetContentPath): string {
+    return `frontend/contents/${params.id}`;
+}
+export function updateContent(params: UpdateContentPath): string {
+    return `frontend/contents/${params.id}`;
+}
+export function deleteContent(params: DeleteContentPath): string {
+    return `frontend/contents/${params.id}`;
+}
+export function confirmUpload(params: ConfirmUploadPath): string {
+    return `frontend/contents/${params.id}/confirm-upload`;
+}
+export function downloadContent(params: DownloadContentPath): string {
+    return `frontend/contents/${params.id}/download`;
+}
+export function getContentMetadata(params: GetContentMetadataPath): string {
+    return `frontend/contents/${params.id}/metadata`;
+}
+export function setContentMetadata(params: SetContentMetadataPath): string {
+    return `frontend/contents/${params.id}/metadata`;
+}
+export function listContentObjects(params: ListContentObjectsPath): string {
+    return `frontend/contents/${params.id}/objects`;
+}
+export function previewContent(params: PreviewContentPath): string {
+    return `frontend/contents/${params.id}/preview`;
+}
+export function getProfile(params: GetProfilePath): string {
+    return `frontend/profiles/${params.user_id}`;
+}
+export function putProfile(params: PutProfilePath): string {
+    return `frontend/profiles/${params.user_id}`;
+}
+export function listWidgets(): string {
+    return "frontend/widgets";
+}
+export function createWidget(): string {
+    return "frontend/widgets";
 }
 export function widgetEvents(): string {
-    return "widgets/events";
+    return "frontend/widgets/events";
 }
 export function myWidgetCount(): string {
-    return "widgets/my-count";
-}
-export function widgetStats(): string {
-    return "widgets/stats";
+    return "frontend/widgets/my-count";
 }
 export function getWidget(params: GetWidgetPath): string {
-    return `widgets/${params.id}`;
+    return `frontend/widgets/${params.id}`;
 }
 export function updateWidget(params: UpdateWidgetPath): string {
-    return `widgets/${params.id}`;
+    return `frontend/widgets/${params.id}`;
 }
 export function deleteWidget(params: DeleteWidgetPath): string {
-    return `widgets/${params.id}`;
+    return `frontend/widgets/${params.id}`;
+}
+// Public
+export function login(): string {
+    return "public/auth/login";
+}
+export function logout(): string {
+    return "public/auth/logout";
+}
+export function refresh(): string {
+    return "public/auth/refresh";
+}
+export function register(): string {
+    return "public/auth/register";
+}
+export function widgetStats(): string {
+    return "public/widgets/stats";
 }

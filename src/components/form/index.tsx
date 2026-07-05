@@ -185,7 +185,9 @@ export function fieldErrorMessage(field: AnyFieldApi): string | undefined {
 }
 
 export function fieldShouldShowError(field: AnyFieldApi): boolean {
-  return field.state.meta.isBlurred || field.form.state.submissionAttempts > 0
+  // 纯 tab 穿过(blur 但没输入过)不算:isDirty 是 sticky 的,输过又清空仍会报。
+  const { isBlurred, isDirty } = field.state.meta
+  return (isDirty && isBlurred) || field.form.state.submissionAttempts > 0
 }
 
 export function fieldErrorId(fieldName: string): string {

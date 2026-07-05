@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
+import { globalRouter } from './lib/global-router'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
@@ -31,6 +32,10 @@ export function getRouter() {
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient })
+
+  if (typeof window !== 'undefined') {
+    globalRouter.instance = router
+  }
 
   return router
 }

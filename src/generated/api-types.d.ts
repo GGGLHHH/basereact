@@ -2,7 +2,7 @@
 // Do not edit manually. Changes will be overwritten on next build.
 
 export interface paths {
-    "/api/v1/auth/login": {
+    "/api/v1/admin/auth/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -11,30 +11,50 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["login"];
+        post: operations["admin_login"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/logout": {
+    "/api/v1/admin/auth/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["admin_get_me"];
         put?: never;
-        post: operations["logout"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/logout-all": {
+    "/api/v1/admin/widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * **superadmin-only**:跨所有人列出全部 widget。gate 在 `users:admin`(seed 里只 superadmin 持有)。
+         *     演示"role 限制 = gate 一个该 role 专属的 perm";注意 admin 虽有 `read:all`,无 `users:admin` 仍 403。
+         */
+        get: operations["admin_list_widgets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/auth/logout-all": {
         parameters: {
             query?: never;
             header?: never;
@@ -50,7 +70,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/me": {
+    "/api/v1/frontend/auth/me": {
         parameters: {
             query?: never;
             header?: never;
@@ -66,7 +86,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/me/password": {
+    "/api/v1/frontend/auth/me/password": {
         parameters: {
             query?: never;
             header?: never;
@@ -82,39 +102,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/contents": {
+    "/api/v1/frontend/contents": {
         parameters: {
             query?: never;
             header?: never;
@@ -135,7 +123,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/upload": {
+    "/api/v1/frontend/contents/upload": {
         parameters: {
             query?: never;
             header?: never;
@@ -155,7 +143,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/upload-url": {
+    "/api/v1/frontend/contents/upload-url": {
         parameters: {
             query?: never;
             header?: never;
@@ -175,7 +163,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}": {
+    "/api/v1/frontend/contents/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -194,7 +182,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}/confirm-upload": {
+    "/api/v1/frontend/contents/{id}/confirm-upload": {
         parameters: {
             query?: never;
             header?: never;
@@ -214,7 +202,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}/download": {
+    "/api/v1/frontend/contents/{id}/download": {
         parameters: {
             query?: never;
             header?: never;
@@ -234,7 +222,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}/metadata": {
+    "/api/v1/frontend/contents/{id}/metadata": {
         parameters: {
             query?: never;
             header?: never;
@@ -252,7 +240,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}/objects": {
+    "/api/v1/frontend/contents/{id}/objects": {
         parameters: {
             query?: never;
             header?: never;
@@ -269,7 +257,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contents/{id}/preview": {
+    "/api/v1/frontend/contents/{id}/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -290,7 +278,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/profiles/{user_id}": {
+    "/api/v1/frontend/profiles/{user_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -314,7 +302,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/widgets": {
+    "/api/v1/frontend/widgets": {
         parameters: {
             query?: never;
             header?: never;
@@ -332,27 +320,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/widgets/admin/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * **superadmin-only**:跨所有人列出全部 widget。gate 在 `users:admin`(seed 里只 superadmin 持有)。
-         *     演示"role 限制 = gate 一个该 role 专属的 perm";注意 admin 虽有 `read:all`,无 `users:admin` 仍 403。
-         */
-        get: operations["admin_list_widgets"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/widgets/events": {
+    "/api/v1/frontend/widgets/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -375,7 +343,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/widgets/my-count": {
+    "/api/v1/frontend/widgets/my-count": {
         parameters: {
             query?: never;
             header?: never;
@@ -395,7 +363,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/widgets/stats": {
+    "/api/v1/frontend/widgets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按 id 取一个存活 widget。**user 只能取自己创建的**:不是自己的 / 不存在 / 已软删 → 404。 */
+        get: operations["get_widget"];
+        /** 更新 widget(改名,需 `widgets:write`);updated_by 来自 `AuditContext`,updated_at 由触发器自动盖。 */
+        put: operations["update_widget"];
+        post?: never;
+        /** 软删除 widget(盖 deleted_at,需 `widgets:delete`)。 */
+        delete: operations["delete_widget"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/widgets/stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -410,25 +461,6 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/widgets/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 按 id 取一个存活 widget。**user 只能取自己创建的**:不是自己的 / 不存在 / 已软删 → 404。 */
-        get: operations["get_widget"];
-        /** 更新 widget(改名,需 `widgets:write`);updated_by 来自 `AuditContext`,updated_at 由触发器自动盖。 */
-        put: operations["update_widget"];
-        post?: never;
-        /** 软删除 widget(盖 deleted_at,需 `widgets:delete`)。 */
-        delete: operations["delete_widget"];
         options?: never;
         head?: never;
         patch?: never;
@@ -655,7 +687,7 @@ export interface components {
         ProfileResponse: {
             /** Format: uuid */
             avatar_content_id?: string | null;
-            /** @description 相对路径 `/api/v1/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
+            /** @description 相对路径 `/api/v1/frontend/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
             avatar_url?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -825,7 +857,7 @@ export type WidgetStats = components['schemas']['WidgetStats'];
 export type WidgetView = components['schemas']['WidgetView'];
 export type $defs = Record<string, never>;
 export interface operations {
-    login: {
+    admin_login: {
         parameters: {
             query?: never;
             header?: never;
@@ -838,7 +870,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 登录成功,token 写入 httponly cookie */
+            /** @description 后台登录成功,token 写入 httponly cookie */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -856,9 +888,18 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 凭据正确但无后台权限(users:admin),不发 token 不设 cookie */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
-    logout: {
+    admin_get_me: {
         parameters: {
             query?: never;
             header?: never;
@@ -867,12 +908,77 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 已登出,清除 cookie(幂等) */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 组闸:无 users:admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    admin_list_widgets: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 全部 widget(跨所有人,富化) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_WidgetView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限(仅 superadmin) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
         };
     };
@@ -1022,77 +1128,6 @@ export interface operations {
             };
             /** @description 旧密码错 */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
-    refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 刷新成功,新 token 写入 cookie */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description refresh cookie 无效/过期/已撤销 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
-    register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description 注册成功,token 写入 httponly cookie */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description 用户名或邮箱已占用 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description 校验失败 */
-            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2029,53 +2064,6 @@ export interface operations {
             };
         };
     };
-    admin_list_widgets: {
-        parameters: {
-            query?: {
-                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
-                page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
-                cursor?: string;
-                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
-                size?: number;
-                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
-                with_total?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 全部 widget(跨所有人,富化) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Page_WidgetView"];
-                };
-            };
-            /** @description 未认证 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description 无 users:admin 权限(仅 superadmin) */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
     widget_events: {
         parameters: {
             query?: never;
@@ -2139,26 +2127,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
-    widget_stats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 全站 widget 计数(公开) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WidgetStats"];
                 };
             };
         };
@@ -2329,6 +2297,148 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description 登录成功,token 写入 httponly cookie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 用户名/邮箱或密码错误(同码同文案,防枚举) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已登出,清除 cookie(幂等) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 刷新成功,新 token 写入 cookie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description refresh cookie 无效/过期/已撤销 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description 注册成功,token 写入 httponly cookie */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 用户名或邮箱已占用 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    widget_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 全站 widget 计数(公开) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetStats"];
                 };
             };
         };
