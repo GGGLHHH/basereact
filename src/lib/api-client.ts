@@ -4,6 +4,7 @@
 // back from xchangeai-web when this app grows them.
 
 import ky, { isNetworkError, isTimeoutError } from 'ky'
+import { toast } from 'sonner'
 
 import type { Options as KyOptions } from 'ky'
 import type { ErrorBody } from '#/generated/api-types'
@@ -89,7 +90,10 @@ function handleAuthFailure() {
   // 不再在 staleTime 窗口内信任尸体缓存(否则 guest 闸会把用户弹回后台壳)。
   router?.options.context.queryClient.setQueryData(queryKeys.admin.auth.me(), null)
 
-  // ponytail: 要 toast 提示 + 回跳来源页时,从 xchangeai-web 移植完整 handleAuthFailure。
+  // 会话终态失效:提示一次(authFailureHandled 已挡重复),再交给守卫/下面的跳转。
+  toast.error('Your session has expired. Please sign in again.')
+
+  // ponytail: 要"回跳来源页"时,从 xchangeai-web 移植完整 handleAuthFailure。
   if (router) {
     if (router.state.location.pathname !== LOGIN_ROUTE) {
       void router.navigate({ to: LOGIN_ROUTE })
@@ -229,6 +233,12 @@ async function createApiError(response: Response): Promise<ApiErrorClass> {
     kind: 'http',
     status: response.status,
   })
+}
+
+// 面向用户的错误文案:ApiErrorClass/Error 的 message 已是规范化后端文案(见
+// createApiError),否则回退。给表单 toast 等调用方提取消息用。
+export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+  return error instanceof Error && error.message ? error.message : fallback
 }
 
 function createClientError(error: unknown): ApiErrorClass {

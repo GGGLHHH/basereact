@@ -10,6 +10,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import i18next from '#/i18n'
 import { detectInitialLocale } from '#/i18n/config'
 import { NotFoundScreen } from '#/components/error-state'
+import { Toaster } from '#/components/feedback/toaster'
 
 import appCss from '../styles.css?url'
 
@@ -60,6 +61,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <LocaleSync />
         {children}
+        <Toaster />
         <TanStackDevtools
           config={{
             position: 'bottom-right',

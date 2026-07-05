@@ -1,16 +1,17 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import type { ChangeEvent } from 'react'
 
 import { useMyProfile, useUpdateProfile, useUploadAvatar } from '@/api/profile'
 import { formSubmitHandler, useAppForm } from '@/components/form'
-import { FieldError } from '@/components/field'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldGroup } from '@/components/field'
+import { Field, FieldGroup } from '@/components/field'
 import { Spinner } from '@/components/ui/spinner'
+import { getErrorMessage } from '@/lib/api-client'
 import { nameInitials } from '@/lib/display-name'
 
 // 页面组件独立成非路由文件(`-` 前缀不进路由生成),路由文件保持薄:既能
@@ -54,11 +55,12 @@ export function ProfilePage() {
       }
       localUrlRef.current = nextUrl
       setAvatarContentId(content.id)
-    } catch {
+    } catch (error) {
       // 失败:撤销这枚失败 URL,预览与 id 一起回退到选前状态。
       URL.revokeObjectURL(nextUrl)
       setPreview(prevPreview)
       setAvatarContentId(prevContentId)
+      toast.error(getErrorMessage(error, 'Avatar upload failed'))
     }
   }
 
@@ -72,14 +74,19 @@ export function ProfilePage() {
         return
       }
       // PUT 全量替换:空串按清空(→ null)提交,avatar_content_id 带当前选择。
-      await update.mutateAsync({
-        userId: profile.user_id,
-        request: {
-          display_name: value.display_name.trim() || null,
-          phone: value.phone.trim() || null,
-          avatar_content_id: avatarContentId,
-        },
-      })
+      try {
+        await update.mutateAsync({
+          userId: profile.user_id,
+          request: {
+            display_name: value.display_name.trim() || null,
+            phone: value.phone.trim() || null,
+            avatar_content_id: avatarContentId,
+          },
+        })
+        toast.success('Profile saved')
+      } catch (error) {
+        toast.error(getErrorMessage(error))
+      }
     },
   })
 
@@ -88,86 +95,79 @@ export function ProfilePage() {
   }
 
   return (
-    <div className='flex flex-1 flex-col gap-4'>
-      <h1 className='text-2xl font-semibold'>{t('profile')}</h1>
-      <Card className='max-w-2xl'>
-        <CardHeader>
-          <CardTitle>Personal information</CardTitle>
-          <CardDescription>Update your name, phone and avatar.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='mb-6 flex items-center gap-4'>
-            <div className='relative'>
-              <Avatar size='lg'>
-                <AvatarImage
-                  src={preview ?? undefined}
-                  alt={profile.display_name ?? ''}
-                />
-                <AvatarFallback>{nameInitials(profile.display_name)}</AvatarFallback>
-              </Avatar>
-              {uploadAvatar.isPending ? (
-                <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
-                  <Spinner className='size-4' />
-                </span>
-              ) : null}
-            </div>
-            <div className='flex flex-col gap-1'>
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                disabled={uploadAvatar.isPending}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Change avatar
-              </Button>
-              <p className='text-xs text-muted-foreground'>PNG/JPG, up to a few MB.</p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='image/*'
-              className='hidden'
-              onChange={onPickFile}
-            />
+    <Card className='flex-1'>
+      <CardHeader>
+        <CardTitle>Personal information</CardTitle>
+        <CardDescription>Update your name, phone and avatar.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className='mb-6 flex items-center gap-4'>
+          <div className='relative'>
+            <Avatar size='lg'>
+              <AvatarImage
+                src={preview ?? undefined}
+                alt={profile.display_name ?? ''}
+              />
+              <AvatarFallback>{nameInitials(profile.display_name)}</AvatarFallback>
+            </Avatar>
+            {uploadAvatar.isPending ? (
+              <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
+                <Spinner className='size-4' />
+              </span>
+            ) : null}
           </div>
+          <div className='flex flex-col gap-1'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={uploadAvatar.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Change avatar
+            </Button>
+            <p className='text-xs text-muted-foreground'>PNG/JPG, up to a few MB.</p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            className='hidden'
+            onChange={onPickFile}
+          />
+        </div>
 
-          <form onSubmit={formSubmitHandler(form.handleSubmit)}>
-            <FieldGroup>
-              <form.AppField name='display_name'>
-                {(field) => (
-                  <field.TextField
-                    label='Display name'
-                    placeholder='Jane Doe'
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name='phone'>
-                {(field) => (
-                  <field.TextField
-                    label='Phone'
-                    placeholder='+1 555 0100'
-                  />
-                )}
-              </form.AppField>
-              <Field>
-                {update.isError ? <FieldError errors={[update.error]} /> : null}
-                {update.isSuccess ? (
-                  <FieldDescription className='text-emerald-600'>Saved.</FieldDescription>
-                ) : null}
-                <form.AppForm>
-                  <form.SubmitButton
-                    disabled={uploadAvatar.isPending}
-                    pendingLabel='Saving...'
-                  >
-                    Save changes
-                  </form.SubmitButton>
-                </form.AppForm>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+          <FieldGroup>
+            <form.AppField name='display_name'>
+              {(field) => (
+                <field.TextField
+                  label='Display name'
+                  placeholder='Jane Doe'
+                />
+              )}
+            </form.AppField>
+            <form.AppField name='phone'>
+              {(field) => (
+                <field.TextField
+                  label='Phone'
+                  placeholder='+1 555 0100'
+                />
+              )}
+            </form.AppField>
+            <Field>
+              <form.AppForm>
+                <form.SubmitButton
+                  disabled={uploadAvatar.isPending}
+                  pendingLabel='Saving...'
+                >
+                  Save changes
+                </form.SubmitButton>
+              </form.AppForm>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

@@ -10,6 +10,11 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
+// 提交/上传后走 toast;mock 掉,断言不依赖真实 sonner store。
+vi.mock('sonner', () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
+}))
+
 // 三个 api hook 全 mock:数据/挂起态由测试控制,不触真网络。
 const h = vi.hoisted(() => ({
   mutateUpdate: vi.fn(),

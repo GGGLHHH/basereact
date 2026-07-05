@@ -1,13 +1,14 @@
 import { useNavigate } from '@tanstack/react-router'
 import type { ComponentProps } from 'react'
+import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { useAdminLogin, useLogin } from '@/api/auth'
-import { FieldError } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldGroup } from '@/components/ui/field'
+import { getErrorMessage } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 
 const loginSchema = z.object({
@@ -36,7 +37,12 @@ export function LoginForm({
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      await login.mutateAsync(value)
+      try {
+        await login.mutateAsync(value)
+      } catch (error) {
+        toast.error(getErrorMessage(error))
+        return
+      }
       // ponytail: 登录后固定去 surface 首页;要"回跳来源页"时加 redirect search param。
       await navigate({ to: redirectTo })
     },
@@ -81,7 +87,6 @@ export function LoginForm({
                 )}
               </form.AppField>
               <Field>
-                {login.isError ? <FieldError errors={[login.error]} /> : null}
                 <form.AppForm>
                   <form.SubmitButton pendingLabel='Logging in...'>Login</form.SubmitButton>
                 </form.AppForm>
