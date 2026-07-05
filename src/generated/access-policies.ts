@@ -3,9 +3,13 @@
 
 export type AccessPolicyKind = "authenticated" | "internal" | "public" | "permission";
 
+// Grant check: anyOf ? anyOf.some((group) => group.every(has)) : (permissions ?? []).every(has)
 export interface AccessPolicy {
   kind: AccessPolicyKind;
+  /** All required (AND). Absent when `anyOf` is present. */
   permissions?: readonly string[];
+  /** OR of AND-groups: any fully-held group grants access. */
+  anyOf?: readonly (readonly string[])[];
 }
 
 export interface OperationAccessPolicy extends AccessPolicy {
@@ -171,6 +175,20 @@ export const accessPolicies = {
     path: "frontend/contents/{id}/preview",
     permissions: ["contents:read"],
   },
+  getMyPermissions: {
+    apiPath: "/api/v1/frontend/permissions/me",
+    kind: "authenticated",
+    method: "GET",
+    operationId: "get_my_permissions",
+    path: "frontend/permissions/me",
+  },
+  getMyProfile: {
+    apiPath: "/api/v1/frontend/profiles/me",
+    kind: "authenticated",
+    method: "GET",
+    operationId: "get_my_profile",
+    path: "frontend/profiles/me",
+  },
   getProfile: {
     apiPath: "/api/v1/frontend/profiles/{user_id}",
     kind: "permission",
@@ -217,6 +235,22 @@ export const accessPolicies = {
     method: "GET",
     operationId: "my_widget_count",
     path: "frontend/widgets/my-count",
+  },
+  widgetOverview: {
+    apiPath: "/api/v1/frontend/widgets/overview",
+    kind: "permission",
+    method: "GET",
+    operationId: "widget_overview",
+    path: "frontend/widgets/overview",
+    anyOf: [["widgets:read"], ["users:admin"]],
+  },
+  purgePreview: {
+    apiPath: "/api/v1/frontend/widgets/purge-preview",
+    kind: "permission",
+    method: "GET",
+    operationId: "purge_preview",
+    path: "frontend/widgets/purge-preview",
+    permissions: ["widgets:read", "widgets:delete"],
   },
   getWidget: {
     apiPath: "/api/v1/frontend/widgets/{id}",

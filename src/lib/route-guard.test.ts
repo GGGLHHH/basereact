@@ -8,11 +8,33 @@ import { requireAdmin, requireAdminGuest } from './route-guard'
 
 const mocks = vi.hoisted(() => ({
   adminGetMe: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  getMyPermissions: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  matchRoutes: vi.fn<(...args: unknown[]) => unknown>(),
 }))
 
+// route-guard 经 #/api/auth 引 myPermissionsQueryOptions,auth.ts 的其余
+// generated 导入也走这个 mock,缺一个命名导出就是 import 期报错——全部补上。
 vi.mock('#/generated/client', () => ({
   adminGetMe: mocks.adminGetMe,
+  adminLogin: vi.fn(),
+  changePassword: vi.fn(),
+  deleteMe: vi.fn(),
+  getMe: vi.fn(),
+  getMyPermissions: mocks.getMyPermissions,
+  login: vi.fn(),
+  logout: vi.fn(),
+  logoutAll: vi.fn(),
+  register: vi.fn(),
+  updateMe: vi.fn(),
 }))
+
+// 守卫在模块内用 matchRoutes 现算匹配链;测试注入假体控制链上的 staticData。
+vi.mock('#/lib/global-router', () => ({
+  globalRouter: { instance: { matchRoutes: mocks.matchRoutes } },
+}))
+
+// GuardLocation 只要 pathname/search;匹配结果全由 mock 的 matchRoutes 决定。
+const adminHome = { pathname: '/admin/home', search: {} }
 
 // 镜像 getRouter 的默认值:staleTime 决定探针复用,retry 决定失败即终态。
 function freshClient() {
@@ -39,6 +61,9 @@ function redirectTarget(error: unknown): string | undefined {
 
 beforeEach(() => {
   mocks.adminGetMe.mockReset()
+  mocks.getMyPermissions.mockReset()
+  mocks.matchRoutes.mockReset()
+  mocks.matchRoutes.mockReturnValue([])
 })
 
 describe('requireAdmin', () => {
@@ -47,8 +72,8 @@ describe('requireAdmin', () => {
     mocks.adminGetMe.mockResolvedValue(me)
     const queryClient = freshClient()
 
-    await expect(requireAdmin(queryClient)).resolves.toEqual({ me })
-    await expect(requireAdmin(queryClient)).resolves.toEqual({ me })
+    await expect(requireAdmin(queryClient, adminHome)).resolves.toEqual({ me })
+    await expect(requireAdmin(queryClient, adminHome)).resolves.toEqual({ me })
 
     // 第二次命中新鲜缓存,探针只发一次;探针必须带 AUTH_PROBE_HEADER
     // (刷新梯终态 401 才不会命令式跳转)。
@@ -63,12 +88,12 @@ describe('requireAdmin', () => {
     mocks.adminGetMe.mockRejectedValue(new ApiErrorClass('unauthorized', { status: 401 }))
     const queryClient = freshClient()
 
-    const error = await caught(requireAdmin(queryClient))
+    const error = await caught(requireAdmin(queryClient, adminHome))
     expect(redirectTarget(error)).toBe('/admin/login')
     expect(queryClient.getQueryData(queryKeys.admin.auth.me())).toBeNull()
 
     // 后续访问零网络直转登录。
-    const again = await caught(requireAdmin(queryClient))
+    const again = await caught(requireAdmin(queryClient, adminHome))
     expect(redirectTarget(again)).toBe('/admin/login')
     expect(mocks.adminGetMe).toHaveBeenCalledTimes(1)
   })
@@ -76,7 +101,7 @@ describe('requireAdmin', () => {
   it('redirects to the fullscreen 403 page on 403', async () => {
     mocks.adminGetMe.mockRejectedValue(new ApiErrorClass('forbidden', { status: 403 }))
 
-    const error = await caught(requireAdmin(freshClient()))
+    const error = await caught(requireAdmin(freshClient(), adminHome))
     expect(redirectTarget(error)).toBe('/403')
   })
 
@@ -84,7 +109,7 @@ describe('requireAdmin', () => {
     const queryClient = freshClient()
     queryClient.setQueryData(queryKeys.admin.auth.me(), null)
 
-    const error = await caught(requireAdmin(queryClient))
+    const error = await caught(requireAdmin(queryClient, adminHome))
     expect(redirectTarget(error)).toBe('/admin/login')
     expect(mocks.adminGetMe).not.toHaveBeenCalled()
   })
@@ -93,8 +118,64 @@ describe('requireAdmin', () => {
     const boom = new ApiErrorClass('server exploded', { status: 500 })
     mocks.adminGetMe.mockRejectedValue(boom)
 
-    const error = await caught(requireAdmin(freshClient()))
+    const error = await caught(requireAdmin(freshClient(), adminHome))
     expect(error).toBe(boom)
+  })
+
+  it('never fetches permissions when no matched route declares access', async () => {
+    mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
+    mocks.matchRoutes.mockReturnValue([{ staticData: { titleKey: 'adminHome' } }])
+
+    // 懒取:未声明的路由零额外请求。
+    await requireAdmin(freshClient(), adminHome)
+    expect(mocks.getMyPermissions).not.toHaveBeenCalled()
+  })
+
+  it('fetches permissions with the probe header and passes a granted chain', async () => {
+    mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
+    mocks.getMyPermissions.mockResolvedValue({ permissions: ['users:admin'], roles: ['admin'] })
+    mocks.matchRoutes.mockReturnValue([
+      { staticData: {} },
+      { staticData: { accessPolicyKeys: ['adminListWidgets'] } },
+    ])
+    const queryClient = freshClient()
+    const adminWidgets = { pathname: '/admin/widgets', search: {} }
+
+    await expect(requireAdmin(queryClient, adminWidgets)).resolves.toMatchObject({
+      me: { id: 'u1' },
+    })
+
+    // 匹配链按目标 location 现算(非弃用重载:pathname + search)。
+    expect(mocks.matchRoutes).toHaveBeenCalledWith('/admin/widgets', {})
+    expect(mocks.getMyPermissions).toHaveBeenCalledTimes(1)
+    const requestOptions = mocks.getMyPermissions.mock.calls[0]?.[1] as
+      | { headers?: Record<string, string> }
+      | undefined
+    expect(requestOptions?.headers?.[AUTH_PROBE_HEADER]).toBe('1')
+
+    // 新鲜缓存复用:第二次导航不重发权限请求。
+    await requireAdmin(queryClient, adminWidgets)
+    expect(mocks.getMyPermissions).toHaveBeenCalledTimes(1)
+  })
+
+  it('redirects to the in-shell 403 when a declared policy is not granted', async () => {
+    mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
+    mocks.getMyPermissions.mockResolvedValue({ permissions: ['contents:read'], roles: ['ops'] })
+    mocks.matchRoutes.mockReturnValue([{ staticData: { accessPolicyKeys: ['adminListWidgets'] } }])
+
+    const error = await caught(requireAdmin(freshClient(), adminHome))
+    expect(redirectTarget(error)).toBe('/admin/403')
+  })
+
+  it('treats a 401 from the permissions fetch as session death', async () => {
+    mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
+    mocks.getMyPermissions.mockRejectedValue(new ApiErrorClass('unauthorized', { status: 401 }))
+    mocks.matchRoutes.mockReturnValue([{ staticData: { accessPolicyKeys: ['adminListWidgets'] } }])
+    const queryClient = freshClient()
+
+    const error = await caught(requireAdmin(queryClient, adminHome))
+    expect(redirectTarget(error)).toBe('/admin/login')
+    expect(queryClient.getQueryData(queryKeys.admin.auth.me())).toBeNull()
   })
 })
 

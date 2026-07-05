@@ -1,3 +1,5 @@
+import { isStaticDataGranted } from '#/lib/access-control'
+
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 
 export interface AdminMenuEntry<TPath extends string = string> {
@@ -30,8 +32,16 @@ export interface MenuSourceRoute<TPath extends string = string> {
 // 数据源用 router.routesById(拍平路由表)而非递归走 routeTree。
 // 入菜单的判据是"显式给了菜单标题"(menuTitleKey / menuTitle),
 // 只有 titleKey 的路由(登录页、面包屑专用)不进菜单。
+// permissions = 有效权限集,声明了准入的条目按 access-control 公式裁剪;
+// fail-closed:权限集未加载(默认 [])时声明条目先不出现,加载后补上。
+//
+// 裁剪只看每条路由自身 staticData,不合并祖先——守卫(requireAdmin)按完整
+// 匹配链 AND。当前所有策略都声明在叶子(widgets),两者判定一致;若将来给
+// layout/父路由(如 _shell)加策略,菜单不会隐藏其子项,守卫却会 403——
+// 那时需在此按 fullPath 前缀合并祖先策略。ponytail: 无此类路由前不预造。
 export function buildAdminMenu<TPath extends string>(
   routesById: Record<string, MenuSourceRoute<TPath>>,
+  permissions: readonly string[] = [],
 ): AdminMenuGroup<TPath>[] {
   const collected: (AdminMenuEntry<TPath> & { group: string })[] = []
 
@@ -41,7 +51,8 @@ export function buildAdminMenu<TPath extends string>(
     if (
       route.fullPath.startsWith('/admin/') &&
       !staticData.hideInMenu &&
-      (staticData.menuTitleKey || staticData.menuTitle)
+      (staticData.menuTitleKey || staticData.menuTitle) &&
+      isStaticDataGranted(staticData, permissions)
     ) {
       collected.push({
         group: staticData.group ?? DEFAULT_GROUP,

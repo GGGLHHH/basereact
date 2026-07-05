@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type {
   ChangePasswordRequest,
@@ -14,16 +14,25 @@ import {
   changePassword as changePasswordApi,
   deleteMe as deleteMeApi,
   getMe as getMeApi,
+  getMyPermissions as getMyPermissionsApi,
   login as loginApi,
   logout as logoutApi,
   logoutAll as logoutAllApi,
   register as registerApi,
   updateMe as updateMeApi,
 } from '#/generated/client'
+import { AUTH_PROBE_HEADER } from '#/lib/api-client'
 import { queryKeys } from '#/lib/query-keys'
 
 // ---- admin surface (admin/auth/*) ----
 // beforeLoad 守卫的探针在 lib/route-guard.ts(带 AUTH_PROBE_HEADER,不走 hook)。
+
+// 有效权限集(role 展开 ∩ scope,wire 串)。守卫(ensureQueryData)与菜单裁剪
+// (useQuery)共用同一份缓存。探针头:会话死亡时终态 401 只抛错,跳转归守卫。
+export const myPermissionsQueryOptions = queryOptions({
+  queryFn: () => getMyPermissionsApi({}, { headers: { [AUTH_PROBE_HEADER]: '1' } }),
+  queryKey: queryKeys.admin.auth.permissions(),
+})
 
 export function useAdminMe(options?: { enabled?: boolean }) {
   return useQuery({

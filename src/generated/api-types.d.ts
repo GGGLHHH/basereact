@@ -278,6 +278,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/frontend/permissions/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 当前令牌能干什么(仅登录零 perm —— 自我操作范式;问"能干什么"本身不需要先有权限)。
+         *     逐 perm 走 [`Policy::require_scoped`] 过滤:与所有闸同一评估路径,零漂移;
+         *     降权令牌得到 scope 收窄后的真实集。
+         */
+        get: operations["get_my_permissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/profiles/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 读**请求者自己**的资料(仅登录,零 perm —— "自己"是身份事实不是授权决策,
+         *     对齐 `get_me`/`my_widget_count` 的自我操作范式;`profiles:read` 留给"读任意人")。
+         *     静态段 `/profiles/me` 与参数段 `/profiles/{user_id}` 共存,axum 静态优先。
+         */
+        get: operations["get_my_profile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/frontend/profiles/{user_id}": {
         parameters: {
             query?: never;
@@ -355,6 +397,46 @@ export interface paths {
          *     (`OP_PERMS` 标 `None` → 文档 `security:[{"oauth2":[]}]`)。演示"只需登录"形态。
          */
         get: operations["my_widget_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/widgets/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * **多权限 OR 样板**:概览 —— 普通读权**或**管理员任一即可。
+         *     `require_any` 全败才 403;文档 = 多 requirement 各一 scope(`PermReq::Any`)。
+         */
+        get: operations["widget_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/widgets/purge-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * **多权限 AND 样板**:删除预检 —— 读得见**且**删得动才允许看"可删多少"。
+         *     `require_all` 缺任一 perm 即 403;文档 = 单 requirement 多 scope(`OP_PERMS` 的 `PermReq::All`)。
+         */
+        get: operations["purge_preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -600,6 +682,16 @@ export interface components {
             identifier: string;
             password: string;
         };
+        /**
+         * @description `GET /permissions/me` 响应。`roles` 来自 token claim;`permissions` 是**有效**集:
+         *     role 展开(含 implies)∩ scope 收窄,wire 串排序输出。
+         */
+        MyPermissionsResponse: {
+            /** @description 有效权限 wire 串(排序)。前端按钮显隐 / codegen accessPolicies `has()` 的数据源。 */
+            permissions: string[];
+            /** @description token claim 里的角色名。 */
+            roles: string[];
+        };
         /** @description 存储对象的对外响应(投影 `content::Object`)。 */
         ObjectResponse: {
             /** Format: uuid */
@@ -836,6 +928,7 @@ export type CreateWidget = components['schemas']['CreateWidget'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
 export type ErrorBody = components['schemas']['ErrorBody'];
 export type LoginRequest = components['schemas']['LoginRequest'];
+export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
@@ -1844,6 +1937,73 @@ export interface operations {
             };
         };
     };
+    get_my_permissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 当前令牌的角色与有效权限(role ∩ scope,排序) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyPermissionsResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_my_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 自己的资料(avatar_url 为相对 preview 路径) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 尚未建资料(前端以此引导建资料) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_profile: {
         parameters: {
             query?: never;
@@ -2122,6 +2282,82 @@ export interface operations {
             };
             /** @description 未认证 */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    widget_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 全站 widget 计数(读权或管理员) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetStats"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description widgets:read 与 users:admin 皆无 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    purge_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 本人可见域内可删 widget 计数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetStats"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 缺 widgets:read 或 widgets:delete 任一 */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

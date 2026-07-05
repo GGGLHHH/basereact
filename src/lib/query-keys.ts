@@ -4,6 +4,9 @@ export const queryKeys = {
     auth: {
       all: ['admin', 'auth'] as const,
       me: () => [...queryKeys.admin.auth.all, 'me'] as const,
+      // 有效权限集(getMyPermissions)。挂在 admin.auth 前缀下:
+      // 登录 removeQueries(all) / 登出 clear() 自动连带失效,无独立生命周期。
+      permissions: () => [...queryKeys.admin.auth.all, 'permissions'] as const,
     },
   },
   auth: {

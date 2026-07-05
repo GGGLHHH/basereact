@@ -7,9 +7,15 @@ type RouteTitleKey = Extract<keyof typeof route, string>
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
-    // 路由准入按 codegen 的操作策略走:key 指向 accessPolicies 表项,
-    // kind=permission 时以该操作声明的 permissions 判定。
-    accessPolicyKey?: AccessPolicyKey
+    // 路由准入按 codegen 的操作策略走,key 指向 accessPolicies 表项,
+    // 形状与 AccessPolicy 同构(permissions/anyOf),判定公式一致:
+    //   accessPolicyAnyOf ? anyOf.some((group) => group.every(granted))
+    //                     : (accessPolicyKeys ?? []).every(granted)
+    // 单个 key 授权与否由该操作自身策略(permissions AND / anyOf)决定。
+    /** 全部需通过(AND)。给了 accessPolicyAnyOf 时不要再给这个。 */
+    accessPolicyKeys?: readonly AccessPolicyKey[]
+    /** AND 组的 OR:任一组全过即放行。 */
+    accessPolicyAnyOf?: readonly (readonly AccessPolicyKey[])[]
     // 匿名访问显式白名单。无任何 access 元数据的路由按拒绝处理(fail closed)。
     accessPublic?: boolean
     // 菜单/面包屑元数据。嵌套路由继承由消费端(菜单树)决定,类型层不强约束。

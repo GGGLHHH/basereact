@@ -67,6 +67,12 @@ export function listContentObjects(params: ListContentObjectsPath): string {
 export function previewContent(params: PreviewContentPath): string {
     return `frontend/contents/${params.id}/preview`;
 }
+export function getMyPermissions(): string {
+    return "frontend/permissions/me";
+}
+export function getMyProfile(): string {
+    return "frontend/profiles/me";
+}
 export function getProfile(params: GetProfilePath): string {
     return `frontend/profiles/${params.user_id}`;
 }
@@ -84,6 +90,12 @@ export function widgetEvents(): string {
 }
 export function myWidgetCount(): string {
     return "frontend/widgets/my-count";
+}
+export function widgetOverview(): string {
+    return "frontend/widgets/overview";
+}
+export function purgePreview(): string {
+    return "frontend/widgets/purge-preview";
 }
 export function getWidget(params: GetWidgetPath): string {
     return `frontend/widgets/${params.id}`;

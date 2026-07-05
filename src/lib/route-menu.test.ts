@@ -43,11 +43,20 @@ describe('buildAdminMenu with the real route tree', () => {
     history: createMemoryHistory(),
     routeTree,
   })
-  const groups = buildAdminMenu({ ...router.routesById })
+  // widgets 声明了 accessPolicyKeys: ['adminListWidgets'](users:admin),
+  // 完整菜单断言要携带该权限。
+  const groups = buildAdminMenu({ ...router.routesById }, ['users:admin'])
   const urls = groups.flatMap((group) => group.entries.map((entry) => entry.url))
 
   it('exposes exactly the admin pages that declare menu titles', () => {
     expect(urls).toEqual(['/admin/home', '/admin/widgets'])
+  })
+
+  it('hides policy-declaring entries until permissions are known (fail closed)', () => {
+    const trimmed = buildAdminMenu({ ...router.routesById })
+    expect(trimmed.flatMap((group) => group.entries.map((entry) => entry.url))).toEqual([
+      '/admin/home',
+    ])
   })
 
   it('keeps login and error pages out of the menu', () => {

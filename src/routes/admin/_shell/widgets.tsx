@@ -22,6 +22,8 @@ export const Route = createFileRoute('/admin/_shell/widgets')({
     menuTitleKey: 'adminWidgets',
     icon: 'i-tabler-box',
     group: 'Admin',
+    // 页面主数据就是这个操作,准入随它:缺 users:admin 时菜单不出现、直连进壳内 403。
+    accessPolicyKeys: ['adminListWidgets'],
   },
 })
 

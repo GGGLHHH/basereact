@@ -1,9 +1,11 @@
 'use client'
 
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { myPermissionsQueryOptions } from '@/api/auth'
 import { NavUser } from '@/components/nav-user'
 import { TeamSwitcher } from '@/components/team-switcher'
 import {
@@ -49,9 +51,17 @@ function NavAdminRoutes() {
   const router = useRouter()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { t } = useTranslation('route')
+  // 权限集与守卫共用一份缓存(同 queryKey);守卫若已按需取过则零请求。
+  // 未加载时 permissions 为 [],声明了准入的条目 fail-closed 先隐藏。
+  const { data: myPermissions } = useQuery(myPermissionsQueryOptions)
+  const permissions = myPermissions?.permissions
   // spread:FileRoutesById 是 interface(无隐式索引签名),摊成对象字面量
   // 才能零 cast 匹配 Record<string, MenuSourceRoute>。
-  const groups = React.useMemo(() => buildAdminMenu({ ...router.routesById }), [router])
+  // permissions 为 undefined 时落 buildAdminMenu 的 `= []` 默认参(fail-closed)。
+  const groups = React.useMemo(
+    () => buildAdminMenu({ ...router.routesById }, permissions),
+    [router, permissions],
+  )
 
   return (
     <>
