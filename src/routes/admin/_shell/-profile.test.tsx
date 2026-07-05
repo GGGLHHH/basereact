@@ -5,10 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ProfileResponse } from '#/generated/api-types'
 
-// react-i18next 只在 h1 取 route 标题,mock 成 identity,免拉整套 i18n。
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+// i18n 走全局测试实例(vitest-setup 内联 en 资源),文案按英文断言,不再 mock。
 
 // 提交/上传后走 toast;mock 掉,断言不依赖真实 sonner store。
 vi.mock('sonner', () => ({

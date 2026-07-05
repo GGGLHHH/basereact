@@ -15,12 +15,16 @@ export const Route = createFileRoute('/admin/_shell/nested/reports/regions')({
 })
 
 function RegionsLayout() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation()
+  const { t: tr } = useTranslation('route')
   return (
     <Card className='flex-1'>
       <CardHeader>
-        <CardTitle>Level 3 · {t('nestedRegions')}</CardTitle>
-        <CardDescription>Parent layout — renders &lt;Outlet /&gt; below.</CardDescription>
+        <CardTitle>
+          {t('nested.reports.regions.level3Prefix')}
+          {tr('nestedRegions')}
+        </CardTitle>
+        <CardDescription>{t('nested.reports.regions.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Outlet />

@@ -14,12 +14,13 @@ export const Route = createFileRoute('/admin/_shell/nested/overview')({
 })
 
 function NestedOverview() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation()
+  const { t: tr } = useTranslation('route')
   return (
     <Card size='sm'>
       <CardHeader>
-        <CardTitle>{t('nestedOverview')}</CardTitle>
-        <CardDescription>Level 2 · leaf under Nested.</CardDescription>
+        <CardTitle>{tr('nestedOverview')}</CardTitle>
+        <CardDescription>{t('nested.overviewDescription')}</CardDescription>
       </CardHeader>
     </Card>
   )

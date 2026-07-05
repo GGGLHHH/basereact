@@ -10,6 +10,8 @@ import {
   updateContent,
   uploadContent,
 } from '#/generated/client'
+import i18next from 'i18next'
+
 import { queryKeys } from '#/lib/query-keys'
 
 export type ContentUploadPhase =
@@ -36,7 +38,7 @@ async function putUploadFile(uploadUrl: string, file: File, contentType: string)
   })
 
   if (!response.ok) {
-    throw new Error(`Upload failed with status ${response.status}`)
+    throw new Error(i18next.t('upload.failedWithStatus', { status: response.status }))
   }
 }
 

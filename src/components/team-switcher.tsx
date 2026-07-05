@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ export function TeamSwitcher({
     plan: string
   }[]
 }) {
+  const { t } = useTranslation()
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
   if (!activeTeam) {
@@ -62,7 +64,9 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className='text-xs text-muted-foreground'>Teams</DropdownMenuLabel>
+              <DropdownMenuLabel className='text-xs text-muted-foreground'>
+                {t('teamSwitcher.teams')}
+              </DropdownMenuLabel>
               {teams.map((team, index) => (
                 <DropdownMenuItem
                   key={team.name}
@@ -83,7 +87,7 @@ export function TeamSwitcher({
                 <div className='flex size-6 items-center justify-center rounded-md border bg-transparent'>
                   <IconPlus className='size-4' />
                 </div>
-                <div className='font-medium text-muted-foreground'>Add team</div>
+                <div className='font-medium text-muted-foreground'>{t('teamSwitcher.addTeam')}</div>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { IconDots, IconFolder, IconArrowForward, IconTrash } from '@tabler/icons-react'
+import { useTranslation } from 'react-i18next'
 
 export function NavProjects({
   projects,
@@ -28,9 +29,10 @@ export function NavProjects({
   }[]
 }) {
   const { isMobile } = useSidebar()
+  const { t } = useTranslation()
   return (
     <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>{t('nav.projects.title')}</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -48,7 +50,7 @@ export function NavProjects({
                 }
               >
                 <IconDots />
-                <span className='sr-only'>More</span>
+                <span className='sr-only'>{t('nav.projects.moreActions')}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className='w-fit'
@@ -57,16 +59,16 @@ export function NavProjects({
               >
                 <DropdownMenuItem>
                   <IconFolder />
-                  <span>View Project</span>
+                  <span>{t('nav.projects.view')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <IconArrowForward />
-                  <span>Share Project</span>
+                  <span>{t('nav.projects.share')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant='destructive'>
                   <IconTrash />
-                  <span>Delete Project</span>
+                  <span>{t('nav.projects.delete')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -75,7 +77,7 @@ export function NavProjects({
         <SidebarMenuItem>
           <SidebarMenuButton className='text-sidebar-foreground/70'>
             <IconDots className='text-sidebar-foreground/70' />
-            <span>More</span>
+            <span>{t('nav.projects.more')}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

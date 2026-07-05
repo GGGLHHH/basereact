@@ -21,6 +21,8 @@ import {
 } from '@tabler/icons-react'
 import { useControllableValue } from 'ahooks'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { ReactNode } from 'react'
 
 const DEFAULT_LIMIT_OPTIONS = [10, 20, 50, 100]
 const NAV_BUTTON_CLASS =
@@ -31,6 +33,7 @@ const TEXT_CLASS = 'whitespace-nowrap text-sm font-medium text-foreground'
 
 interface DataPaginationProps {
   className?: string
+  count?: number
   onLimitChange?: (limit: number) => void
   onPageChange?: (page: number) => void
   showLimitChanger?: boolean
@@ -40,10 +43,23 @@ interface DataPaginationProps {
   limit?: number
   total: number
   page?: number
+  // 摘要文案(如「N of total」)收敛进分页器内:摘要在左、控件在右(justify-between)。
+  // count 由外部给(如当前页行数 / 总数),分页器自身不知数据。
+  summary?: (state: { count: number; limit: number; page: number; total: number }) => ReactNode
+  summaryClassName?: string
 }
 
 export function DataPagination(props: DataPaginationProps) {
-  const { total, limitOptions = DEFAULT_LIMIT_OPTIONS, showLimitChanger = true, className } = props
+  const {
+    total,
+    limitOptions = DEFAULT_LIMIT_OPTIONS,
+    showLimitChanger = true,
+    className,
+    summary,
+    summaryClassName,
+    count,
+  } = props
+  const { t } = useTranslation('common')
 
   const [limit, setLimit] = useControllableValue<number>(props, {
     defaultValue: 20,
@@ -91,90 +107,99 @@ export function DataPagination(props: DataPaginationProps) {
   }
 
   return (
-    <div className={cn('flex items-center gap-8', className)}>
-      {showLimitChanger && (
-        <div className='flex items-center gap-2'>
-          <span className={cn(TEXT_CLASS, 'pr-2')}>Rows per page</span>
-          <Select
-            value={String(limit)}
-            onValueChange={(value) => {
-              if (value) handleLimitChange(value)
-            }}
-          >
-            <SelectTrigger
-              aria-label='Rows per page'
-              className={SELECT_TRIGGER_CLASS}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {limitOptions.map((size: number) => (
-                  <SelectItem
-                    key={size}
-                    value={String(size)}
-                  >
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+    <div className={cn('flex items-center justify-between gap-4', className)}>
+      {summary ? (
+        <div className={cn('text-sm text-muted-foreground', summaryClassName)}>
+          {summary({ count: count ?? 0, limit, page, total })}
         </div>
+      ) : (
+        <div />
       )}
+      <div className='flex items-center gap-8'>
+        {showLimitChanger && (
+          <div className='flex items-center gap-2'>
+            <span className={cn(TEXT_CLASS, 'pr-2')}>{t('pagination.rowsPerPage')}</span>
+            <Select
+              value={String(limit)}
+              onValueChange={(value) => {
+                if (value) handleLimitChange(value)
+              }}
+            >
+              <SelectTrigger
+                aria-label={t('pagination.rowsPerPage')}
+                className={SELECT_TRIGGER_CLASS}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {limitOptions.map((size: number) => (
+                    <SelectItem
+                      key={size}
+                      value={String(size)}
+                    >
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
-      <span className={cn(TEXT_CLASS, 'pr-2')}>
-        Page {page} of {totalPages}
-      </span>
+        <span className={cn(TEXT_CLASS, 'pr-2')}>
+          {t('pagination.pageOf', { page, totalPages })}
+        </span>
 
-      <Pagination className='mx-0 w-auto'>
-        <PaginationContent className='gap-2'>
-          <PaginationItem>
-            <PaginationLink
-              aria-label='Previous page'
-              aria-disabled={!canPrevious}
-              className={cn(NAV_BUTTON_CLASS, !canPrevious && 'pointer-events-none opacity-50')}
-              onClick={goPrevious}
-              size='icon'
-            >
-              <IconChevronLeft />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink
-              aria-label='First page'
-              aria-disabled={!canPrevious}
-              className={cn(NAV_BUTTON_CLASS, !canPrevious && 'pointer-events-none opacity-50')}
-              onClick={goFirst}
-              size='icon'
-            >
-              <IconChevronsLeft />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink
-              aria-label='Next page'
-              aria-disabled={!canNext}
-              className={cn(NAV_BUTTON_CLASS, !canNext && 'pointer-events-none opacity-50')}
-              onClick={goNext}
-              size='icon'
-            >
-              <IconChevronRight />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink
-              aria-label='Last page'
-              aria-disabled={!canNext}
-              className={cn(NAV_BUTTON_CLASS, !canNext && 'pointer-events-none opacity-50')}
-              onClick={goLast}
-              size='icon'
-            >
-              <IconChevronsRight />
-            </PaginationLink>
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+        <Pagination className='mx-0 w-auto'>
+          <PaginationContent className='gap-2'>
+            <PaginationItem>
+              <PaginationLink
+                aria-label={t('pagination.previousPage')}
+                aria-disabled={!canPrevious}
+                className={cn(NAV_BUTTON_CLASS, !canPrevious && 'pointer-events-none opacity-50')}
+                onClick={goPrevious}
+                size='icon'
+              >
+                <IconChevronLeft />
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                aria-label={t('pagination.firstPage')}
+                aria-disabled={!canPrevious}
+                className={cn(NAV_BUTTON_CLASS, !canPrevious && 'pointer-events-none opacity-50')}
+                onClick={goFirst}
+                size='icon'
+              >
+                <IconChevronsLeft />
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                aria-label={t('pagination.nextPage')}
+                aria-disabled={!canNext}
+                className={cn(NAV_BUTTON_CLASS, !canNext && 'pointer-events-none opacity-50')}
+                onClick={goNext}
+                size='icon'
+              >
+                <IconChevronRight />
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                aria-label={t('pagination.lastPage')}
+                aria-disabled={!canNext}
+                className={cn(NAV_BUTTON_CLASS, !canNext && 'pointer-events-none opacity-50')}
+                onClick={goLast}
+                size='icon'
+              >
+                <IconChevronsRight />
+              </PaginationLink>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   )
 }

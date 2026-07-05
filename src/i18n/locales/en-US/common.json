@@ -1,4 +1,5 @@
 {
+  "appTitle": "TanStack Start Starter",
   "home": {
     "editHint": "Edit <code>{{path}}</code> to get started.",
     "welcome": "Welcome to TanStack Start"
@@ -8,8 +9,13 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "edit": "Edit",
+    "goBack": "Go back",
+    "home": "Home",
+    "logout": "Log out",
     "retry": "Retry",
     "save": "Save",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
     "search": "Search"
   },
   "loading": {
@@ -24,13 +30,132 @@
     "nextPage": "Next page",
     "pageOf": "Page {{page}} of {{totalPages}}",
     "previousPage": "Previous page",
-    "rowsPerPage": "Rows per page"
+    "rowsPerPage": "Rows per page",
+    "summary": "Showing {{count}} of {{total}}"
   },
   "upload": {
     "confirming": "Confirming...",
     "done": "Upload complete",
     "error": "Upload failed",
+    "failedWithStatus": "Upload failed with status {{status}}",
     "preparing": "Preparing...",
     "uploading": "Uploading..."
+  },
+  "form": {
+    "togglePassword": "Toggle password visibility"
+  },
+  "errors": {
+    "canceled": "The request was canceled.",
+    "forbidden": {
+      "description": "You do not have permission to view this page.",
+      "title": "Access denied"
+    },
+    "generic": "Something went wrong",
+    "network": "Unable to reach the server. Check your connection and try again.",
+    "notFound": {
+      "description": "The page you are looking for does not exist.",
+      "title": "Page not found"
+    },
+    "requestFailedRetry": "Request failed. Please try again.",
+    "requestFailedStatus": "Request failed ({{status}})",
+    "timeout": "The request timed out. Please try again."
+  },
+  "auth": {
+    "login": {
+      "description": "Enter your email below to login to your account",
+      "forgotPassword": "Forgot your password?",
+      "google": "Login with Google",
+      "identifierLabel": "Email or username",
+      "identifierPlaceholder": "m@example.com",
+      "identifierRequired": "Email or username is required",
+      "noAccount": "Don't have an account?",
+      "passwordLabel": "Password",
+      "passwordRequired": "Password is required",
+      "signUp": "Sign up",
+      "submit": "Login",
+      "submitting": "Logging in...",
+      "title": "Login to your account"
+    },
+    "session": {
+      "expired": "Your session has expired. Please sign in again."
+    }
+  },
+  "profile": {
+    "avatarHint": "PNG/JPG, up to a few MB.",
+    "avatarUploadFailed": "Avatar upload failed",
+    "changeAvatar": "Change avatar",
+    "description": "Update your name, phone and avatar.",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "Jane Doe",
+    "phone": "Phone",
+    "phonePlaceholder": "+1 555 0100",
+    "saved": "Profile saved",
+    "title": "Personal information"
+  },
+  "widgets": {
+    "columns": {
+      "createdAt": "Created at",
+      "createdBy": "Created by",
+      "name": "Name",
+      "updatedAt": "Updated at"
+    },
+    "empty": "No widgets yet"
+  },
+  "nav": {
+    "main": {
+      "platform": "Platform"
+    },
+    "projects": {
+      "delete": "Delete Project",
+      "more": "More",
+      "moreActions": "More",
+      "share": "Share Project",
+      "title": "Projects",
+      "view": "View Project"
+    },
+    "user": {
+      "logout": "Log out",
+      "profile": "Profile"
+    }
+  },
+  "teamSwitcher": {
+    "addTeam": "Add team",
+    "teams": "Teams"
+  },
+  "admin": {
+    "home": {
+      "welcome": "Welcome to the admin console."
+    },
+    "menu": {
+      "groups": {
+        "general": "General"
+      }
+    }
+  },
+  "frontend": {
+    "about": {
+      "signedIn": "Signed in as {{username}}. Members only."
+    },
+    "home": {
+      "subtitle": "Public landing page — anyone can view."
+    },
+    "logout": "Logout"
+  },
+  "nested": {
+    "landing": "Nested landing (index). Pick Overview or Reports from the sidebar.",
+    "level1Prefix": "Level 1 · ",
+    "overviewDescription": "Level 2 · leaf under Nested.",
+    "parentLayoutDescription": "Parent layout — renders <Outlet /> below.",
+    "reports": {
+      "dailyDescription": "Level 3 · leaf under Reports.",
+      "description": "Child of Nested, parent of Level 3 — renders <Outlet />.",
+      "landing": "Reports landing (index). Pick Daily or Regions from the sidebar.",
+      "level2Prefix": "Level 2 · ",
+      "regions": {
+        "description": "Parent layout — renders <Outlet /> below.",
+        "landing": "Regions landing (index). Deepest level in this demo.",
+        "level3Prefix": "Level 3 · "
+      }
+    }
   }
 }

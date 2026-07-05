@@ -19,12 +19,16 @@ export const Route = createFileRoute('/admin/_shell/nested')({
 })
 
 function NestedLayout() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation()
+  const { t: tr } = useTranslation('route')
   return (
     <Card className='flex-1'>
       <CardHeader>
-        <CardTitle>Level 1 · {t('nested')}</CardTitle>
-        <CardDescription>Parent layout — renders &lt;Outlet /&gt; below.</CardDescription>
+        <CardTitle>
+          {t('nested.level1Prefix')}
+          {tr('nested')}
+        </CardTitle>
+        <CardDescription>{t('nested.parentLayoutDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Outlet />

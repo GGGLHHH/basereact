@@ -1,4 +1,5 @@
 {
+  "appTitle": "TanStack Start 脚手架",
   "home": {
     "editHint": "编辑 <code>{{path}}</code> 开始开发。",
     "welcome": "欢迎使用 TanStack Start"
@@ -8,8 +9,13 @@
     "confirm": "确认",
     "delete": "删除",
     "edit": "编辑",
+    "goBack": "返回",
+    "home": "首页",
+    "logout": "退出登录",
     "retry": "重试",
     "save": "保存",
+    "saveChanges": "保存修改",
+    "saving": "保存中...",
     "search": "搜索"
   },
   "loading": {
@@ -24,13 +30,132 @@
     "nextPage": "下一页",
     "pageOf": "第 {{page}} / {{totalPages}} 页",
     "previousPage": "上一页",
-    "rowsPerPage": "每页行数"
+    "rowsPerPage": "每页行数",
+    "summary": "本页 {{count}} · 共 {{total}} 条"
   },
   "upload": {
     "confirming": "确认中...",
     "done": "上传完成",
     "error": "上传失败",
+    "failedWithStatus": "上传失败,状态码 {{status}}",
     "preparing": "准备中...",
     "uploading": "上传中..."
+  },
+  "form": {
+    "togglePassword": "切换密码可见"
+  },
+  "errors": {
+    "canceled": "请求已取消。",
+    "forbidden": {
+      "description": "你没有权限查看此页面。",
+      "title": "无权访问"
+    },
+    "generic": "出错了",
+    "network": "无法连接服务器,请检查网络后重试。",
+    "notFound": {
+      "description": "你访问的页面不存在。",
+      "title": "页面不存在"
+    },
+    "requestFailedRetry": "请求失败,请重试。",
+    "requestFailedStatus": "请求失败({{status}})",
+    "timeout": "请求超时,请重试。"
+  },
+  "auth": {
+    "login": {
+      "description": "在下方输入邮箱登录账号",
+      "forgotPassword": "忘记密码?",
+      "google": "使用 Google 登录",
+      "identifierLabel": "邮箱或用户名",
+      "identifierPlaceholder": "m@example.com",
+      "identifierRequired": "请输入邮箱或用户名",
+      "noAccount": "还没有账号?",
+      "passwordLabel": "密码",
+      "passwordRequired": "请输入密码",
+      "signUp": "注册",
+      "submit": "登录",
+      "submitting": "登录中...",
+      "title": "登录账号"
+    },
+    "session": {
+      "expired": "登录状态已过期,请重新登录。"
+    }
+  },
+  "profile": {
+    "avatarHint": "PNG/JPG,最大几 MB。",
+    "avatarUploadFailed": "头像上传失败",
+    "changeAvatar": "更换头像",
+    "description": "更新你的姓名、电话和头像。",
+    "displayName": "显示名称",
+    "displayNamePlaceholder": "Jane Doe",
+    "phone": "电话",
+    "phonePlaceholder": "+1 555 0100",
+    "saved": "资料已保存",
+    "title": "个人信息"
+  },
+  "widgets": {
+    "columns": {
+      "createdAt": "创建时间",
+      "createdBy": "创建人",
+      "name": "名称",
+      "updatedAt": "更新时间"
+    },
+    "empty": "暂无组件"
+  },
+  "nav": {
+    "main": {
+      "platform": "平台"
+    },
+    "projects": {
+      "delete": "删除项目",
+      "more": "更多",
+      "moreActions": "更多",
+      "share": "分享项目",
+      "title": "项目",
+      "view": "查看项目"
+    },
+    "user": {
+      "logout": "退出登录",
+      "profile": "个人信息"
+    }
+  },
+  "teamSwitcher": {
+    "addTeam": "添加团队",
+    "teams": "团队"
+  },
+  "admin": {
+    "home": {
+      "welcome": "欢迎使用管理后台。"
+    },
+    "menu": {
+      "groups": {
+        "general": "常规"
+      }
+    }
+  },
+  "frontend": {
+    "about": {
+      "signedIn": "已登录:{{username}}。仅会员可见。"
+    },
+    "home": {
+      "subtitle": "公开落地页 —— 任何人都能查看。"
+    },
+    "logout": "退出登录"
+  },
+  "nested": {
+    "landing": "多级演示落地页(index)。从侧边栏选择「概览」或「报表」。",
+    "level1Prefix": "第 1 级 · ",
+    "overviewDescription": "第 2 级 · Nested 下的叶子。",
+    "parentLayoutDescription": "父级布局 —— 下方渲染 <Outlet />。",
+    "reports": {
+      "dailyDescription": "第 3 级 · Reports 下的叶子。",
+      "description": "Nested 的子级、第 3 级的父级 —— 渲染 <Outlet />。",
+      "landing": "报表落地页(index)。从侧边栏选择「每日」或「地区」。",
+      "level2Prefix": "第 2 级 · ",
+      "regions": {
+        "description": "父级布局 —— 下方渲染 <Outlet />。",
+        "landing": "地区落地页(index)。本演示的最深层。",
+        "level3Prefix": "第 3 级 · "
+      }
+    }
   }
 }

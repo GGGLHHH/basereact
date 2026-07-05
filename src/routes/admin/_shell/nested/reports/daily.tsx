@@ -14,12 +14,13 @@ export const Route = createFileRoute('/admin/_shell/nested/reports/daily')({
 })
 
 function ReportsDaily() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation()
+  const { t: tr } = useTranslation('route')
   return (
     <Card size='sm'>
       <CardHeader>
-        <CardTitle>{t('nestedDaily')}</CardTitle>
-        <CardDescription>Level 3 · leaf under Reports.</CardDescription>
+        <CardTitle>{tr('nestedDaily')}</CardTitle>
+        <CardDescription>{t('nested.reports.dailyDescription')}</CardDescription>
       </CardHeader>
     </Card>
   )

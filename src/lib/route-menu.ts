@@ -1,3 +1,4 @@
+import i18next from 'i18next'
 import { isStaticDataGranted } from '#/lib/access-control'
 
 import type { StaticDataRouteOption } from '@tanstack/react-router'
@@ -18,7 +19,6 @@ export interface AdminMenuGroup<TPath extends string = string> {
   label: string
 }
 
-const DEFAULT_GROUP = 'General'
 const DEFAULT_ORDER = Number.MAX_SAFE_INTEGER
 
 // 菜单构建只需要每条路由的这两块;结构化最小类型而非 RegisteredRouter['routesById']:
@@ -68,7 +68,7 @@ export function buildAdminMenu<TPath extends string>(
       nodes.push({
         children: [],
         fullPath: route.fullPath,
-        group: staticData.group ?? DEFAULT_GROUP,
+        group: staticData.group ?? i18next.t('admin.menu.groups.general'),
         icon: staticData.icon,
         label: staticData.menuTitle ?? staticData.title,
         labelKey: staticData.menuTitleKey,

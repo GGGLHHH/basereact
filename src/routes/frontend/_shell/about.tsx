@@ -26,13 +26,16 @@ function AboutPending() {
 }
 
 function AboutPage() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation()
+  const { t: tr } = useTranslation('route')
   const { me } = Route.useRouteContext()
 
   return (
     <div className='flex flex-1 flex-col gap-4'>
-      <h1 className='text-2xl font-semibold'>{t('frontendAbout')}</h1>
-      <p className='text-sm text-muted-foreground'>Signed in as {me.username}. Members only.</p>
+      <h1 className='text-2xl font-semibold'>{tr('frontendAbout')}</h1>
+      <p className='text-sm text-muted-foreground'>
+        {t('frontend.about.signedIn', { username: me.username })}
+      </p>
     </div>
   )
 }

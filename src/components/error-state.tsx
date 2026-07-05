@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 import type { LinkProps } from '@tanstack/react-router'
 
@@ -15,6 +16,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({ className, code, description, homeTo = '/', title }: ErrorStateProps) {
+  const { t } = useTranslation()
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3 text-center', className)}>
       <p className='font-heading text-7xl font-bold text-muted-foreground/40'>{code}</p>
@@ -25,9 +27,9 @@ export function ErrorState({ className, code, description, homeTo = '/', title }
           variant='outline'
           onClick={() => window.history.back()}
         >
-          Go back
+          {t('action.goBack')}
         </Button>
-        <Button render={<Link to={homeTo} />}>Home</Button>
+        <Button render={<Link to={homeTo} />}>{t('action.home')}</Button>
       </div>
     </div>
   )
@@ -36,23 +38,25 @@ export function ErrorState({ className, code, description, homeTo = '/', title }
 // 全屏变体给独立路由(/403、/404)和根路由 notFoundComponent 用;
 // 带 layout 的版本直接在 _shell 子路由里用 ErrorState + flex-1。
 export function NotFoundScreen() {
+  const { t } = useTranslation()
   return (
     <ErrorState
       className='min-h-svh'
       code='404'
-      title='Page not found'
-      description='The page you are looking for does not exist.'
+      title={t('errors.notFound.title')}
+      description={t('errors.notFound.description')}
     />
   )
 }
 
 export function ForbiddenScreen() {
+  const { t } = useTranslation()
   return (
     <ErrorState
       className='min-h-svh'
       code='403'
-      title='Access denied'
-      description='You do not have permission to view this page.'
+      title={t('errors.forbidden.title')}
+      description={t('errors.forbidden.description')}
     />
   )
 }

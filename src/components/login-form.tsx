@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import type { ComponentProps } from 'react'
+import { useMemo, type ComponentProps } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -11,11 +12,6 @@ import { Field, FieldDescription, FieldGroup } from '@/components/ui/field'
 import { getErrorMessage } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 
-const loginSchema = z.object({
-  identifier: z.string().min(1, 'Email or username is required'),
-  password: z.string().min(1, 'Password is required'),
-})
-
 // surface 决定登录走哪个 surface 的端点与登录后落点。两个 hook 都无条件调用
 // (rules-of-hooks),未选中的那个只是空闲 mutation,不发请求。
 export function LoginForm({
@@ -23,11 +19,20 @@ export function LoginForm({
   surface = 'admin',
   ...props
 }: ComponentProps<'div'> & { surface?: 'admin' | 'frontend' }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const adminLogin = useAdminLogin()
   const userLogin = useLogin()
   const login = surface === 'admin' ? adminLogin : userLogin
   const redirectTo = surface === 'admin' ? '/admin/home' : '/frontend/home'
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        identifier: z.string().min(1, t('auth.login.identifierRequired')),
+        password: z.string().min(1, t('auth.login.passwordRequired')),
+      }),
+    [t],
+  )
   const form = useAppForm({
     defaultValues: {
       identifier: '',
@@ -55,8 +60,8 @@ export function LoginForm({
     >
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardTitle>{t('auth.login.title')}</CardTitle>
+          <CardDescription>{t('auth.login.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={formSubmitHandler(form.handleSubmit)}>
@@ -64,8 +69,8 @@ export function LoginForm({
               <form.AppField name='identifier'>
                 {(field) => (
                   <field.TextField
-                    label='Email or username'
-                    placeholder='m@example.com'
+                    label={t('auth.login.identifierLabel')}
+                    placeholder={t('auth.login.identifierPlaceholder')}
                     required
                   />
                 )}
@@ -73,14 +78,14 @@ export function LoginForm({
               <form.AppField name='password'>
                 {(field) => (
                   <field.PasswordField
-                    label='Password'
+                    label={t('auth.login.passwordLabel')}
                     required
                     labelEnd={
                       <a
                         href='#'
                         className='ml-auto inline-block text-sm underline-offset-4 hover:underline'
                       >
-                        Forgot your password?
+                        {t('auth.login.forgotPassword')}
                       </a>
                     }
                   />
@@ -88,16 +93,18 @@ export function LoginForm({
               </form.AppField>
               <Field>
                 <form.AppForm>
-                  <form.SubmitButton pendingLabel='Logging in...'>Login</form.SubmitButton>
+                  <form.SubmitButton pendingLabel={t('auth.login.submitting')}>
+                    {t('auth.login.submit')}
+                  </form.SubmitButton>
                 </form.AppForm>
                 <Button
                   variant='outline'
                   type='button'
                 >
-                  Login with Google
+                  {t('auth.login.google')}
                 </Button>
                 <FieldDescription className='text-center'>
-                  Don&apos;t have an account? <a href='#'>Sign up</a>
+                  {t('auth.login.noAccount')} <a href='#'>{t('auth.login.signUp')}</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>

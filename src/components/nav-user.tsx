@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 import { useLogout } from '@/api/auth'
 import { useMyProfile } from '@/api/profile'
@@ -30,6 +31,7 @@ export function NavUser({
     avatar: string
   }
 }) {
+  const { t } = useTranslation()
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
   const logout = useLogout()
@@ -99,12 +101,12 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => void navigate({ to: '/admin/profile' })}>
               <IconUserCircle />
-              Profile
+              {t('nav.user.profile')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
-              Log out
+              {t('nav.user.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

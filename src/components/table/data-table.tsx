@@ -10,6 +10,7 @@ import type {
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { ScrollArea } from '@/components/scroll-area'
 import { Spinner } from '@/components/ui/spinner'
@@ -564,7 +565,7 @@ export function DataTable<TData>({
   className,
   columns,
   data,
-  emptyMessage = 'No data',
+  emptyMessage,
   infiniteScroll,
   loading,
   maxHeight,
@@ -576,6 +577,7 @@ export function DataTable<TData>({
   showScrollShadow = true,
   variant = 'default',
 }: DataTableProps<TData>) {
+  const { t } = useTranslation()
   const explicitlySizedColumnIds = useMemo(() => getExplicitlySizedColumnIds(columns), [columns])
   const table = useReactTable({
     data,
@@ -601,7 +603,7 @@ export function DataTable<TData>({
   const tableContent = (
     <DataTableSurface
       className={chromeClassName}
-      emptyMessage={emptyMessage}
+      emptyMessage={emptyMessage ?? t('loading.empty')}
       explicitlySizedColumnIds={explicitlySizedColumnIds}
       infiniteScroll={infiniteScroll}
       maxHeight={maxHeight}
@@ -624,29 +626,18 @@ export function DataTable<TData>({
         {tableContent}
       </TableLoadingOverlay>
       {pagination ? (
-        <div
-          className={cn('flex items-center justify-between gap-4', pagination.containerClassName)}
-        >
-          {pagination.summary ? (
-            <div className={cn('text-sm text-muted-foreground', pagination.summaryClassName)}>
-              {pagination.summary({
-                count,
-                limit: pagination.limit,
-                page: pagination.page,
-                total: pagination.total,
-              })}
-            </div>
-          ) : null}
-          <DataPagination
-            className={pagination.className}
-            limit={pagination.limit}
-            page={pagination.page}
-            showLimitChanger={pagination.showLimitChanger}
-            total={pagination.total}
-            onLimitChange={pagination.onLimitChange}
-            onPageChange={pagination.onPageChange}
-          />
-        </div>
+        <DataPagination
+          className={cn(pagination.containerClassName, pagination.className)}
+          count={count}
+          limit={pagination.limit}
+          page={pagination.page}
+          showLimitChanger={pagination.showLimitChanger}
+          summary={pagination.summary}
+          summaryClassName={pagination.summaryClassName}
+          total={pagination.total}
+          onLimitChange={pagination.onLimitChange}
+          onPageChange={pagination.onPageChange}
+        />
       ) : null}
     </>
   )

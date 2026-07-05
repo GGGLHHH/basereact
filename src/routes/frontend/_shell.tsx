@@ -12,7 +12,7 @@ export const Route = createFileRoute('/frontend/_shell')({
 })
 
 function FrontendShell() {
-  const { t } = useTranslation('route')
+  const { t } = useTranslation(['common', 'route'])
   const navigate = useNavigate()
   const { data: me } = useQuery(meSoftQueryOptions)
   const logout = useLogout()
@@ -25,13 +25,13 @@ function FrontendShell() {
             to='/frontend/home'
             className='[&.active]:font-semibold'
           >
-            {t('frontendHome')}
+            {t('route:frontendHome')}
           </Link>
           <Link
             to='/frontend/about'
             className='[&.active]:font-semibold'
           >
-            {t('frontendAbout')}
+            {t('route:frontendAbout')}
           </Link>
         </nav>
         <div className='ml-auto flex items-center gap-3 text-sm'>
@@ -48,7 +48,7 @@ function FrontendShell() {
                   })
                 }
               >
-                Logout
+                {t('frontend.logout')}
               </Button>
             </>
           ) : (
@@ -56,7 +56,7 @@ function FrontendShell() {
               to='/frontend/login'
               className='[&.active]:font-semibold'
             >
-              {t('frontendLogin')}
+              {t('route:frontendLogin')}
             </Link>
           )}
         </div>

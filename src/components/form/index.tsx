@@ -7,6 +7,7 @@ import {
 import { useSelector as useFormStore } from '@tanstack/react-store'
 import type { ComponentProps, ReactNode, SubmitEvent } from 'react'
 import { useId, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldLabel } from '@/components/field'
@@ -377,12 +378,8 @@ function TextField({
   )
 }
 
-function PasswordField({
-  className,
-  controlClassName,
-  toggleLabel = 'Toggle password visibility',
-  ...props
-}: PasswordFieldProps) {
+function PasswordField({ className, controlClassName, toggleLabel, ...props }: PasswordFieldProps) {
+  const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(false)
 
   return (
@@ -393,7 +390,7 @@ function PasswordField({
       endAdornment={
         <button
           type='button'
-          aria-label={toggleLabel}
+          aria-label={toggleLabel ?? t('form.togglePassword')}
           aria-pressed={isVisible}
           className='absolute top-1/2 right-1 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[min(var(--radius-md),10px)] text-muted-foreground transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50'
           onClick={() => setIsVisible((value) => !value)}

@@ -10,6 +10,7 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import { IconChevronRight } from '@tabler/icons-react'
+import { useTranslation } from 'react-i18next'
 
 export function NavMain({
   items,
@@ -25,9 +26,10 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const { t } = useTranslation()
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{t('nav.main.platform')}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import type { ChangeEvent } from 'react'
@@ -16,6 +17,7 @@ import { nameInitials } from '@/lib/display-name'
 // 页面组件独立成非路由文件(`-` 前缀不进路由生成),路由文件保持薄:既能
 // 被测试直接 import,又不触发 tanstack-router 的"路由文件多导出破坏代码分割"告警。
 export function ProfilePage() {
+  const { t } = useTranslation()
   // loader 已 ensure,首帧即有数据。
   const { data: profile } = useMyProfile()
   const update = useUpdateProfile()
@@ -58,7 +60,7 @@ export function ProfilePage() {
       URL.revokeObjectURL(nextUrl)
       setPreview(prevPreview)
       setAvatarContentId(prevContentId)
-      toast.error(getErrorMessage(error, 'Avatar upload failed'))
+      toast.error(getErrorMessage(error, t('profile.avatarUploadFailed')))
     }
   }
 
@@ -81,7 +83,7 @@ export function ProfilePage() {
             avatar_content_id: avatarContentId,
           },
         })
-        toast.success('Profile saved')
+        toast.success(t('profile.saved'))
       } catch (error) {
         toast.error(getErrorMessage(error))
       }
@@ -95,8 +97,8 @@ export function ProfilePage() {
   return (
     <Card className='flex-1'>
       <CardHeader>
-        <CardTitle>Personal information</CardTitle>
-        <CardDescription>Update your name, phone and avatar.</CardDescription>
+        <CardTitle>{t('profile.title')}</CardTitle>
+        <CardDescription>{t('profile.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className='mb-6 flex items-center gap-4'>
@@ -122,9 +124,9 @@ export function ProfilePage() {
               disabled={uploadAvatar.isPending}
               onClick={() => fileInputRef.current?.click()}
             >
-              Change avatar
+              {t('profile.changeAvatar')}
             </Button>
-            <p className='text-xs text-muted-foreground'>PNG/JPG, up to a few MB.</p>
+            <p className='text-xs text-muted-foreground'>{t('profile.avatarHint')}</p>
           </div>
           <input
             ref={fileInputRef}
@@ -140,16 +142,16 @@ export function ProfilePage() {
             <form.AppField name='display_name'>
               {(field) => (
                 <field.TextField
-                  label='Display name'
-                  placeholder='Jane Doe'
+                  label={t('profile.displayName')}
+                  placeholder={t('profile.displayNamePlaceholder')}
                 />
               )}
             </form.AppField>
             <form.AppField name='phone'>
               {(field) => (
                 <field.TextField
-                  label='Phone'
-                  placeholder='+1 555 0100'
+                  label={t('profile.phone')}
+                  placeholder={t('profile.phonePlaceholder')}
                 />
               )}
             </form.AppField>
@@ -157,9 +159,9 @@ export function ProfilePage() {
               <form.AppForm>
                 <form.SubmitButton
                   disabled={uploadAvatar.isPending}
-                  pendingLabel='Saving...'
+                  pendingLabel={t('action.saving')}
                 >
-                  Save changes
+                  {t('action.saveChanges')}
                 </form.SubmitButton>
               </form.AppForm>
             </Field>

@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
+import { useTranslation } from 'react-i18next'
+
 import { ErrorState } from './components/error-state'
 import { globalRouter } from './lib/global-router'
 import { routeTree } from './routeTree.gen'
@@ -46,11 +48,12 @@ export function getRouter() {
 }
 
 function RouterError({ error }: { error: Error }) {
+  const { t } = useTranslation()
   return (
     <ErrorState
       className='min-h-svh'
       code='Error'
-      title='Something went wrong'
+      title={t('errors.generic')}
       description={error.message}
     />
   )

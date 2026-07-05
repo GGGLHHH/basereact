@@ -3,6 +3,7 @@
 // normalization and 401 refresh ladder, minus i18n / toast — port those
 // back from xchangeai-web when this app grows them.
 
+import i18next from 'i18next'
 import ky, { isNetworkError, isTimeoutError } from 'ky'
 import { toast } from 'sonner'
 
@@ -95,7 +96,7 @@ function handleAuthFailure() {
   // sonner 的 toast 是同步 setState,此刻 Toaster 尚未 commit 会报
   // "update on a not-yet-mounted component"。推到 commit 之后的宏任务再弹。
   setTimeout(() => {
-    toast.error('Your session has expired. Please sign in again.')
+    toast.error(i18next.t('auth.session.expired'))
   }, 0)
 
   // ponytail: 要"回跳来源页"时,从 xchangeai-web 移植完整 handleAuthFailure。
@@ -221,7 +222,7 @@ export async function requestVoid(path: string, options: ApiRequestOptions): Pro
 }
 
 async function createApiError(response: Response): Promise<ApiErrorClass> {
-  let errorMessage = `Request failed (${response.status})`
+  let errorMessage = i18next.t('errors.requestFailedStatus', { status: response.status })
   let errorCode: string | undefined
 
   try {
@@ -242,7 +243,7 @@ async function createApiError(response: Response): Promise<ApiErrorClass> {
 
 // 面向用户的错误文案:ApiErrorClass/Error 的 message 已是规范化后端文案(见
 // createApiError),否则回退。给表单 toast 等调用方提取消息用。
-export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+export function getErrorMessage(error: unknown, fallback = i18next.t('errors.generic')): string {
   return error instanceof Error && error.message ? error.message : fallback
 }
 
@@ -252,24 +253,24 @@ function createClientError(error: unknown): ApiErrorClass {
   }
 
   if (isTimeoutError(error)) {
-    return new ApiErrorClass('The request timed out. Please try again.', {
+    return new ApiErrorClass(i18next.t('errors.timeout'), {
       kind: 'timeout',
     })
   }
 
   if (isAbortError(error)) {
-    return new ApiErrorClass('The request was canceled.', {
+    return new ApiErrorClass(i18next.t('errors.canceled'), {
       kind: 'abort',
     })
   }
 
   if (isNetworkError(error)) {
-    return new ApiErrorClass('Unable to reach the server. Check your connection and try again.', {
+    return new ApiErrorClass(i18next.t('errors.network'), {
       kind: 'network',
     })
   }
 
-  return new ApiErrorClass('Request failed. Please try again.', {
+  return new ApiErrorClass(i18next.t('errors.requestFailedRetry'), {
     kind: 'network',
   })
 }
