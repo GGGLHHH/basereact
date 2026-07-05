@@ -1,6 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
 
 import { useLogout } from '@/api/auth'
+import { useMyProfile } from '@/api/profile'
+import { nameInitials } from '@/lib/display-name'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -17,14 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import {
-  IconSelector,
-  IconSparkles,
-  IconRosetteDiscountCheck,
-  IconCreditCard,
-  IconBell,
-  IconLogout,
-} from '@tabler/icons-react'
+import { IconSelector, IconUserCircle, IconLogout } from '@tabler/icons-react'
 
 export function NavUser({
   user,
@@ -38,6 +33,12 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
   const logout = useLogout()
+  // 头像来自个人资料(与 profile 页共用 profile.me 缓存);未取到时回退传入头像。
+  const { data: profile } = useMyProfile()
+
+  const avatarSrc = profile?.avatar_url ?? user.avatar
+  // 首字母兜底:优先 display_name,空则回退登录名(nameInitials 空名→'?')。
+  const fallback = nameInitials(profile?.display_name || user.name)
 
   function handleLogout() {
     // 登出接口失败也照样去登录页:本地会话状态已不可信。
@@ -61,10 +62,10 @@ export function NavUser({
           >
             <Avatar>
               <AvatarImage
-                src={user.avatar}
+                src={avatarSrc || undefined}
                 alt={user.name}
               />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <div className='grid flex-1 text-left text-sm/tight'>
               <span className='truncate font-medium'>{user.name}</span>
@@ -83,10 +84,10 @@ export function NavUser({
                 <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                   <Avatar>
                     <AvatarImage
-                      src={user.avatar}
+                      src={avatarSrc || undefined}
                       alt={user.name}
                     />
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarFallback>{fallback}</AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-left text-sm/tight'>
                     <span className='truncate font-medium'>{user.name}</span>
@@ -96,27 +97,10 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconSparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconRosetteDiscountCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconBell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => void navigate({ to: '/admin/profile' })}>
+              <IconUserCircle />
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />

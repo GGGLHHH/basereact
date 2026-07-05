@@ -783,9 +783,7 @@ export interface components {
             avatar_url?: string | null;
             /** Format: date-time */
             created_at: string;
-            first_name?: string | null;
-            last_name?: string | null;
-            middle_name?: string | null;
+            display_name?: string | null;
             phone?: string | null;
             /** Format: date-time */
             updated_at: string;
@@ -802,9 +800,7 @@ export interface components {
              * @description 绑定头像:必须指向**已 confirm** 的 image/* content(service 写前经端口三查)。
              */
             avatar_content_id?: string | null;
-            first_name?: string | null;
-            last_name?: string | null;
-            middle_name?: string | null;
+            display_name?: string | null;
             phone?: string | null;
         };
         /** @description 注册请求(公开)。username 必填、唯一;email 可选;password 至少 3 位。 */

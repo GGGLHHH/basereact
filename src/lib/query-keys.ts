@@ -13,6 +13,10 @@ export const queryKeys = {
     all: ['auth'] as const,
     me: () => [...queryKeys.auth.all, 'me'] as const,
   },
+  profile: {
+    all: ['profile'] as const,
+    me: () => [...queryKeys.profile.all, 'me'] as const,
+  },
   contents: {
     all: ['contents'] as const,
     list: () => [...queryKeys.contents.all, 'list'] as const,
