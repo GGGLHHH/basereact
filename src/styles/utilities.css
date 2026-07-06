@@ -10,3 +10,162 @@
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* DataTable edge fade — a superset of shadcn's scroll-fade (imported from
+   shadcn/tailwind.css, still available for single-edge / single-axis use). It
+   adds the two things that util can't do: (1) OFFSET — the fade is parked past
+   the sticky header (--scroll-fade-head) and the pinned columns
+   (--scroll-fade-pin-l / -r) so those stay crisp; (2) BOTH AXES at once (the
+   stock util drives one axis per element, since two of its utilities collide on
+   `animation`). It reuses shadcn's public knobs verbatim, so the stock size
+   utilities compose for free — `class="scroll-fade-inset scroll-fade-8"` sets
+   the fade size, `scroll-fade-t-4` sets it per-edge — plus --scroll-fade-reveal
+   for the reveal distance and an RTL flip. Self-contained @property/@keyframes
+   (private --sfi-*) so nothing depends on the stock util being emitted. Where
+   scroll() timelines are unsupported (older Firefox), the @supports-not branch
+   pins every edge fade on: a graceful, if static, degradation. */
+@property --sfi-s {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --sfi-e {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --sfi-t {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --sfi-b {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes sfi-reveal-s {
+  from {
+    --sfi-s: 0px;
+  }
+  to {
+    --sfi-s: var(--_sfi-size-s);
+  }
+}
+@keyframes sfi-reveal-e {
+  from {
+    --sfi-e: var(--_sfi-size-e);
+  }
+  to {
+    --sfi-e: 0px;
+  }
+}
+@keyframes sfi-reveal-t {
+  from {
+    --sfi-t: 0px;
+  }
+  to {
+    --sfi-t: var(--_sfi-size-t);
+  }
+}
+@keyframes sfi-reveal-b {
+  from {
+    --sfi-b: var(--_sfi-size-b);
+  }
+  to {
+    --sfi-b: 0px;
+  }
+}
+
+.scroll-fade-inset {
+  /* offset (our extension) */
+  --scroll-fade-pin-l: 0px;
+  --scroll-fade-pin-r: 0px;
+  --scroll-fade-head: 0px;
+
+  /* per-edge fade size, resolved exactly like shadcn: per-edge → global → default */
+  --_sfi-size-s: var(
+    --scroll-fade-s-size,
+    var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)))
+  );
+  --_sfi-size-e: var(
+    --scroll-fade-e-size,
+    var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)))
+  );
+  --_sfi-size-t: var(
+    --scroll-fade-t-size,
+    var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)))
+  );
+  --_sfi-size-b: var(
+    --scroll-fade-b-size,
+    var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)))
+  );
+
+  --_sfi-inline: linear-gradient(
+    to right,
+    #000 0,
+    #000 var(--scroll-fade-pin-l),
+    transparent var(--scroll-fade-pin-l),
+    #000 calc(var(--scroll-fade-pin-l) + var(--sfi-s)),
+    #000 calc(100% - var(--scroll-fade-pin-r) - var(--sfi-e)),
+    transparent calc(100% - var(--scroll-fade-pin-r)),
+    #000 calc(100% - var(--scroll-fade-pin-r)),
+    #000 100%
+  );
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    --_sfi-inline: linear-gradient(
+      to left,
+      #000 0,
+      #000 var(--scroll-fade-pin-l),
+      transparent var(--scroll-fade-pin-l),
+      #000 calc(var(--scroll-fade-pin-l) + var(--sfi-s)),
+      #000 calc(100% - var(--scroll-fade-pin-r) - var(--sfi-e)),
+      transparent calc(100% - var(--scroll-fade-pin-r)),
+      #000 calc(100% - var(--scroll-fade-pin-r)),
+      #000 100%
+    );
+  }
+  --_sfi-block: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 var(--scroll-fade-head),
+    transparent var(--scroll-fade-head),
+    #000 calc(var(--scroll-fade-head) + var(--sfi-t)),
+    #000 calc(100% - var(--sfi-b)),
+    transparent 100%
+  );
+
+  -webkit-mask-image: var(--_sfi-inline), var(--_sfi-block);
+  mask-image: var(--_sfi-inline), var(--_sfi-block);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-fade-inset {
+    animation:
+      sfi-reveal-s 1ms ease-in-out,
+      sfi-reveal-e 1ms ease-in-out,
+      sfi-reveal-t 1ms ease-in-out,
+      sfi-reveal-b 1ms ease-in-out;
+    animation-timeline: scroll(self inline), scroll(self inline), scroll(self y), scroll(self y);
+    animation-range:
+      0 var(--scroll-fade-reveal, calc(var(--spacing) * 24)),
+      calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%,
+      0 var(--scroll-fade-reveal, calc(var(--spacing) * 24)),
+      calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%;
+    animation-fill-mode: both;
+  }
+}
+
+@supports not (animation-timeline: scroll()) {
+  .scroll-fade-inset {
+    --sfi-s: var(--_sfi-size-s);
+    --sfi-e: var(--_sfi-size-e);
+    --sfi-t: var(--_sfi-size-t);
+    --sfi-b: var(--_sfi-size-b);
+  }
+}

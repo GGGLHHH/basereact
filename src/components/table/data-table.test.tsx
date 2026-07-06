@@ -13,11 +13,6 @@ vi.mock('@tanstack/react-virtual', () => ({
   }),
 }))
 
-// scroll-shadow reads useTheme(); there is no ThemeProvider in tests.
-vi.mock('next-themes', () => ({
-  useTheme: () => ({ resolvedTheme: 'light' }),
-}))
-
 interface RowData {
   id: string
   name: string
@@ -130,14 +125,18 @@ describe('DataTable', () => {
     expect(actionHeader.style.position).toBe('sticky')
     expect(actionHeader.style.right).toBe('0px')
 
+    // Edge fade is a scroll-driven CSS mask on the viewport (.scroll-fade-inset,
+    // utilities.css). The pinned-column widths surface as the horizontal offsets
+    // that park the fade past them (left 720, right 80), header height as the top.
     await waitFor(() => {
-      const shadowStyle = Array.from(document.head.querySelectorAll('style')).find((style) =>
-        style.textContent?.includes('show-right-shadow'),
-      )
-      const styleText = shadowStyle?.textContent ?? ''
+      const viewport = container.querySelector(
+        '[data-slot="scroll-area-viewport"]',
+      ) as HTMLElement
 
-      expect(styleText).toMatch(/::before\s*\{[\s\S]*left: 720px;/)
-      expect(styleText).toMatch(/::after\s*\{[\s\S]*right: 80px;/)
+      expect(viewport.classList.contains('scroll-fade-inset')).toBe(true)
+      expect(viewport.style.getPropertyValue('--scroll-fade-pin-l')).toBe('720px')
+      expect(viewport.style.getPropertyValue('--scroll-fade-pin-r')).toBe('80px')
+      expect(viewport.style.getPropertyValue('--scroll-fade-head')).toBe('40px')
     })
   })
 

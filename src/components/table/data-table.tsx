@@ -9,7 +9,7 @@ import type {
 } from '@tanstack/react-table'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ScrollArea } from '@/components/scroll-area'
@@ -17,7 +17,6 @@ import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table'
 
 import { DataPagination } from './data-pagination'
-import { useScrollShadow } from './scroll-shadow'
 
 const TABLE_ROW_HEIGHT = 53
 const TABLE_HEADER_HEIGHT = 40
@@ -70,7 +69,7 @@ export interface DataTableProps<TData> {
   pagination?: DataTablePaginationState
   pinnedColumns?: ColumnPinningState
   rowHeight?: number
-  showScrollShadow?: boolean
+  showEdgeFade?: boolean
   variant?: DataTableVariant
 }
 
@@ -305,7 +304,7 @@ interface DataTableSurfaceProps<TData> {
   maxHeight?: number
   onRowClick?: (row: TData) => void
   rowHeight: number
-  showScrollShadow: boolean
+  showEdgeFade: boolean
   table: TableType<TData>
 }
 
@@ -317,7 +316,7 @@ function DataTableSurface<TData>({
   maxHeight,
   onRowClick,
   rowHeight,
-  showScrollShadow,
+  showEdgeFade,
   table,
 }: DataTableSurfaceProps<TData>) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -333,25 +332,18 @@ function DataTableSurface<TData>({
   const rightPinnedWidth = table
     .getRightLeafColumns()
     .reduce((total, column) => total + column.getSize(), 0)
-  const shadowWrapperRef = useScrollShadow({
-    horizontalShadowOffset: {
-      left: leftPinnedWidth,
-      right: rightPinnedWidth,
-    },
-    scrollContainerSelector: '[data-slot="scroll-area-viewport"]',
-    showVerticalShadows: true,
-    topShadowOffset: TABLE_HEADER_HEIGHT,
-  })
 
-  const setContainerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      containerRef.current = node
-      if (showScrollShadow) {
-        shadowWrapperRef(node)
-      }
-    },
-    [shadowWrapperRef, showScrollShadow],
-  )
+  // Edge fade is a pure-CSS scroll-driven mask on the viewport (see the
+  // .scroll-fade-inset util). These offsets park the fade past the sticky header
+  // and the pinned columns so those stay crisp; setting them on the scroll
+  // viewport is the whole integration — no scroll listeners, no JS state.
+  const fadeStyle = showEdgeFade
+    ? ({
+        '--scroll-fade-pin-l': `${leftPinnedWidth}px`,
+        '--scroll-fade-pin-r': `${rightPinnedWidth}px`,
+        '--scroll-fade-head': `${TABLE_HEADER_HEIGHT}px`,
+      } as CSSProperties)
+    : undefined
 
   const isAutoFit = maxHeight === undefined
   const autoFitHeight = useAutoFitHeight(containerRef, {
@@ -428,7 +420,7 @@ function DataTableSurface<TData>({
 
   return (
     <div
-      ref={setContainerRef}
+      ref={containerRef}
       className={cn('relative overflow-hidden', className)}
       data-slot='data-table-container'
     >
@@ -436,12 +428,13 @@ function DataTableSurface<TData>({
         className='size-full'
         orientation='both'
         showScrollbars={false}
-        viewportClassName='scrollbar-hidden overflow-auto'
+        viewportClassName={cn('scrollbar-hidden overflow-auto', showEdgeFade && 'scroll-fade-inset')}
         viewportRef={scrollContainerRef}
         viewportStyle={{
           maxHeight: `${effectiveHeight}px`,
           overflowX: 'auto',
           overflowY: 'auto',
+          ...fadeStyle,
         }}
       >
         <Table containerClassName='overflow-visible'>
@@ -574,7 +567,7 @@ export function DataTable<TData>({
   pagination,
   pinnedColumns,
   rowHeight = TABLE_ROW_HEIGHT,
-  showScrollShadow = true,
+  showEdgeFade = true,
   variant = 'default',
 }: DataTableProps<TData>) {
   const { t } = useTranslation()
@@ -608,7 +601,7 @@ export function DataTable<TData>({
       infiniteScroll={infiniteScroll}
       maxHeight={maxHeight}
       rowHeight={rowHeight}
-      showScrollShadow={showScrollShadow}
+      showEdgeFade={showEdgeFade}
       table={table}
       onRowClick={onRowClick}
     />
