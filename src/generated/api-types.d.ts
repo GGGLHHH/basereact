@@ -34,6 +34,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 分页列出用户(过滤 + 排序 + 富化)。默认 offset;带 `cursor` 切 keyset。
+         *     cursor + 非默认 sort_by → 422(keyset 恒按 id 序,非默认排序只能配 offset)。
+         *     `q`(用户名 + 显示名模糊)与 `sort_by=display_name` 仅在接了 search 投影后端时可用;
+         *     未接后端时二者 → 422(回退路只能 idm 直查,不具备搜索能力)。
+         */
+        get: operations["list_users"];
+        put?: never;
+        /** 建号(原子含角色)。`by` = 当前 superadmin。 */
+        post: operations["create_user"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 详情。不存在/软删 → 404(superadmin 看全部,不 404-隐藏 ownership)。 */
+        get: operations["get_user"];
+        /** 改身份(PUT 全量)。`email=None` 即清空(替换 email 重置 email_verified)。 */
+        put: operations["update_user"];
+        post?: never;
+        /** 软删(注销)。幂等(已删/不存在 → 404)+ best-effort 撤会话。 */
+        delete: operations["delete_user"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员重置密码(无需旧密码)+ best-effort 撤会话(强制重新登录)。 */
+        post: operations["reset_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 全量设角色(原子替换)。未知角色名 → 422。 */
+        put: operations["set_user_roles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/widgets": {
         parameters: {
             query?: never;
@@ -606,6 +682,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description 后台用户视图:身份(idm.users)+ 角色(idm)+ 富化的资料(app.profiles;缺/分进程降级 → null)。 */
+        AdminUserView: {
+            /** @description 富化:相对 preview 路径(悬空/分进程 → null)。 */
+            avatar_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** @description 富化:app.profiles 的显示名(悬空/分进程 → null)。 */
+            display_name?: string | null;
+            email?: string | null;
+            email_verified: boolean;
+            /** Format: uuid */
+            id: string;
+            /** @description idm 角色名(全量)。 */
+            roles: string[];
+            username: string;
+        };
         /** @description 修改密码。 */
         ChangePasswordRequest: {
             current_password: string;
@@ -661,6 +753,14 @@ export interface components {
              * @description 单租户脚手架:省略 → `Uuid::nil()`(多租户隔离是 app authz 的职责,见 routes.rs)。
              */
             tenant_id?: string | null;
+        };
+        /** @description 建号(原子含角色)。`password` 复用 `RegisterRequest` 的长度口径(auth/types.rs `length(min=3)`)。 */
+        CreateUserRequest: {
+            email?: string | null;
+            password: string;
+            /** @description 角色名(空 = 不授角色);未知名 → 422。 */
+            roles: string[];
+            username: string;
         };
         /** @description 创建 widget 的入参。审计字段绝不入参(由 `AuditContext` 提供 created_by/updated_by)。 */
         CreateWidget: {
@@ -738,6 +838,28 @@ export interface components {
          * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
          *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
          */
+        Page_AdminUserView: {
+            items: {
+                /** @description 富化:相对 preview 路径(悬空/分进程 → null)。 */
+                avatar_url?: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** @description 富化:app.profiles 的显示名(悬空/分进程 → null)。 */
+                display_name?: string | null;
+                email?: string | null;
+                email_verified: boolean;
+                /** Format: uuid */
+                id: string;
+                /** @description idm 角色名(全量)。 */
+                roles: string[];
+                username: string;
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         */
         Page_WidgetView: {
             items: {
                 /** Format: date-time */
@@ -809,6 +931,10 @@ export interface components {
             password: string;
             username: string;
         };
+        /** @description 管理员重置密码(无需旧密码)。 */
+        ResetPasswordRequest: {
+            new_password: string;
+        };
         /** @description 设置内容元数据(全量替换,upsert)。 */
         SetContentMetadataRequest: {
             checksum?: string | null;
@@ -821,6 +947,15 @@ export interface components {
             mime_type?: string | null;
             tags: string[];
         };
+        /** @description 全量设角色(原子替换)。 */
+        SetRolesRequest: {
+            roles: string[];
+        };
+        /**
+         * @description 排序方向。默认 `Desc`(最新/最大在前)。query 解析 `"asc"`/`"desc"`。
+         * @enum {string}
+         */
+        SortOrder: "asc" | "desc";
         /** @description **全量更新**内容可编辑字段(PUT 语义:都替换;tenant/owner/status/derivation 不动)。 */
         UpdateContentRequest: {
             description?: string | null;
@@ -830,6 +965,11 @@ export interface components {
         };
         /** @description **全量更新**当前用户(PUT 语义)。username 必填;email 给值=设置、给 null 或缺省=清空。 */
         UpdateMeRequest: {
+            email?: string | null;
+            username: string;
+        };
+        /** @description 改身份(PUT 全量)。`email=None` 即清空(替换 email 会重置 email_verified,idm 语义)。 */
+        UpdateUserRequest: {
             email?: string | null;
             username: string;
         };
@@ -858,6 +998,11 @@ export interface components {
             roles: string[];
             username: string;
         };
+        /**
+         * @description 排序字段(白名单,防注入)。只排 primary-schema(idm.users)自己的列。
+         * @enum {string}
+         */
+        UserSortField: "created_at" | "username" | "email" | "display_name";
         /**
          * @description 一个 widget(示例资源)+ **基础审计字段**(供后续业务 DTO 照抄)。
          *     范式:出参 DTO derive `Serialize` + `ToSchema`;`FromRow` 让 sqlx/sea-query 直接映射。
@@ -890,6 +1035,12 @@ export interface components {
             /** @enum {string} */
             type: "deleted";
         };
+        /**
+         * @description 列表排序字段(**白名单** —— 只暴露可排的列,防注入)。默认 `created_at`(配 `SortOrder::Desc` = 最新在前)。
+         *     范式:排序方向共享(`infra::sort::SortOrder`),可排字段各 feature 自己圈定。
+         * @enum {string}
+         */
+        WidgetSortField: "created_at" | "name";
         /** @description 计数响应(公开 stats / 我的计数 共用)。 */
         WidgetStats: {
             /** Format: int64 */
@@ -916,10 +1067,12 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type AdminUserView = components['schemas']['AdminUserView'];
 export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 export type ContentMetadataResponse = components['schemas']['ContentMetadataResponse'];
 export type ContentResponse = components['schemas']['ContentResponse'];
 export type CreateContentRequest = components['schemas']['CreateContentRequest'];
+export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
 export type ErrorBody = components['schemas']['ErrorBody'];
@@ -927,21 +1080,28 @@ export type LoginRequest = components['schemas']['LoginRequest'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type PageInfo = components['schemas']['PageInfo'];
+export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
 export type ProfileResponse = components['schemas']['ProfileResponse'];
 export type PutProfileRequest = components['schemas']['PutProfileRequest'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
+export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
+export type SetRolesRequest = components['schemas']['SetRolesRequest'];
+export type SortOrder = components['schemas']['SortOrder'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
 export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
+export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
 export type UpdateWidget = components['schemas']['UpdateWidget'];
 export type UploadResponse = components['schemas']['UploadResponse'];
 export type UserBrief = components['schemas']['UserBrief'];
 export type UserResponse = components['schemas']['UserResponse'];
+export type UserSortField = components['schemas']['UserSortField'];
 export type Widget = components['schemas']['Widget'];
 export type WidgetEvent = components['schemas']['WidgetEvent'];
+export type WidgetSortField = components['schemas']['WidgetSortField'];
 export type WidgetStats = components['schemas']['WidgetStats'];
 export type WidgetView = components['schemas']['WidgetView'];
 export type $defs = Record<string, never>;
@@ -1024,6 +1184,428 @@ export interface operations {
             };
         };
     };
+    list_users: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+                /** @description 用户名模糊(ILIKE 子串)。 */
+                username?: string;
+                /** @description 用户名 + 显示名模糊搜索(仅投影/search 后端支持;无后端 → 422)。 */
+                q?: string;
+                /** @description 正选:含任一角色(逗号分隔,如 `?role=admin,editor`)。 */
+                role?: string;
+                /** @description 反选:不含任一角色(逗号分隔)。 */
+                role_not?: string;
+                created_from?: string;
+                created_to?: string;
+                sort_by?: components["schemas"]["UserSortField"];
+                order?: components["schemas"]["SortOrder"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 用户分页列表(display_name/avatar 富化,缺则 null) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AdminUserView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限(仅 superadmin) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description cursor 分页 + 非默认 sort_by;或 q/sort_by=display_name 但无 search 投影后端 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description 已创建(新号 display_name=null) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description username/email 已占用 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 / 未知角色名 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 找到 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 / 已软删 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description username/email 已占用 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已软删 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 / 已软删 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    reset_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description 已重置密码,撤销既有会话 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 用户不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_user_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRolesRequest"];
+            };
+        };
+        responses: {
+            /** @description 已设角色 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 用户不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 未知角色名 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     admin_list_widgets: {
         parameters: {
             query?: {
@@ -1035,6 +1617,8 @@ export interface operations {
                 size?: number;
                 /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
                 with_total?: boolean;
+                sort_by?: components["schemas"]["WidgetSortField"];
+                order?: components["schemas"]["SortOrder"];
             };
             header?: never;
             path?: never;
@@ -1062,6 +1646,15 @@ export interface operations {
             };
             /** @description 无 users:admin 权限(仅 superadmin) */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description cursor 分页 + 非默认 sort_by(仅 offset 支持排序) */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2124,6 +2717,8 @@ export interface operations {
                 size?: number;
                 /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
                 with_total?: boolean;
+                sort_by?: components["schemas"]["WidgetSortField"];
+                order?: components["schemas"]["SortOrder"];
             };
             header?: never;
             path?: never;
@@ -2151,6 +2746,15 @@ export interface operations {
             };
             /** @description 无 widgets:read 权限 */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description cursor 分页 + 非默认 sort_by(仅 offset 支持排序) */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2742,19 +3346,25 @@ export interface operations {
 export type AdminListWidgetsQuery = operations['admin_list_widgets']['parameters']['query'];
 export type ConfirmUploadPath = operations['confirm_upload']['parameters']['path'];
 export type DeleteContentPath = operations['delete_content']['parameters']['path'];
+export type DeleteUserPath = operations['delete_user']['parameters']['path'];
 export type DeleteWidgetPath = operations['delete_widget']['parameters']['path'];
 export type DownloadContentPath = operations['download_content']['parameters']['path'];
 export type GetContentMetadataPath = operations['get_content_metadata']['parameters']['path'];
 export type GetContentPath = operations['get_content']['parameters']['path'];
 export type GetProfilePath = operations['get_profile']['parameters']['path'];
+export type GetUserPath = operations['get_user']['parameters']['path'];
 export type GetWidgetPath = operations['get_widget']['parameters']['path'];
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListUsersQuery = operations['list_users']['parameters']['query'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
 export type PutProfilePath = operations['put_profile']['parameters']['path'];
+export type ResetUserPasswordPath = operations['reset_user_password']['parameters']['path'];
 export type SetContentMetadataPath = operations['set_content_metadata']['parameters']['path'];
+export type SetUserRolesPath = operations['set_user_roles']['parameters']['path'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
+export type UpdateUserPath = operations['update_user']['parameters']['path'];
 export type UpdateWidgetPath = operations['update_widget']['parameters']['path'];
 export type UploadContentRequest = FormData;

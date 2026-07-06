@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
-import type { AdminListWidgetsQuery, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListWidgetsQuery, LoginRequest, MyPermissionsResponse, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, SetContentMetadataPath, SetContentMetadataRequest, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
+import type { AdminListWidgetsQuery, AdminUserView, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetUserPath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListUsersQuery, ListWidgetsQuery, LoginRequest, MyPermissionsResponse, Page_AdminUserView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserRolesPath, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, resetUserPassword as buildResetUserPasswordPath, setUserRoles as buildSetUserRolesPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -53,6 +53,102 @@ export function adminGetMe(options: AdminGetMeOptions, requestOptions: RuntimeRe
     return requestJson<UserResponse>(buildAdminGetMePath(), {
         ...requestOptions,
         method: "GET",
+        signal: options.signal
+    });
+}
+export interface ListUsersOptions {
+    query?: ListUsersQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listUsers(options: ListUsersOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_AdminUserView> {
+    return requestJson<Page_AdminUserView>(buildListUsersPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+export interface CreateUserOptions {
+    query?: never;
+    path?: never;
+    body: CreateUserRequest;
+    signal?: AbortSignal;
+}
+export function createUser(options: CreateUserOptions, requestOptions: RuntimeRequestOptions = {}): Promise<AdminUserView> {
+    return requestJson<AdminUserView>(buildCreateUserPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface GetUserOptions {
+    query?: never;
+    path: GetUserPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getUser(options: GetUserOptions, requestOptions: RuntimeRequestOptions = {}): Promise<AdminUserView> {
+    return requestJson<AdminUserView>(buildGetUserPath(options.path), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
+export interface UpdateUserOptions {
+    query?: never;
+    path: UpdateUserPath;
+    body: UpdateUserRequest;
+    signal?: AbortSignal;
+}
+export function updateUser(options: UpdateUserOptions, requestOptions: RuntimeRequestOptions = {}): Promise<AdminUserView> {
+    return requestJson<AdminUserView>(buildUpdateUserPath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface DeleteUserOptions {
+    query?: never;
+    path: DeleteUserPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function deleteUser(options: DeleteUserOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
+    return requestVoid(buildDeleteUserPath(options.path), {
+        ...requestOptions,
+        method: "DELETE",
+        signal: options.signal
+    });
+}
+export interface ResetUserPasswordOptions {
+    query?: never;
+    path: ResetUserPasswordPath;
+    body: ResetPasswordRequest;
+    signal?: AbortSignal;
+}
+export function resetUserPassword(options: ResetUserPasswordOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
+    return requestVoid(buildResetUserPasswordPath(options.path), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface SetUserRolesOptions {
+    query?: never;
+    path: SetUserRolesPath;
+    body: SetRolesRequest;
+    signal?: AbortSignal;
+}
+export function setUserRoles(options: SetUserRolesOptions, requestOptions: RuntimeRequestOptions = {}): Promise<AdminUserView> {
+    return requestJson<AdminUserView>(buildSetUserRolesPath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
         signal: options.signal
     });
 }
