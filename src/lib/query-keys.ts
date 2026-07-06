@@ -37,5 +37,7 @@ export const queryKeys = {
     all: ['users'] as const,
     list: (request?: unknown) => [...queryKeys.users.all, 'list', request ?? {}] as const,
     detail: (id: string) => [...queryKeys.users.all, 'detail', id] as const,
+    optionsInfiniteList: (request?: unknown) =>
+      [...queryKeys.users.all, 'options-infinite', request ?? {}] as const,
   },
 }

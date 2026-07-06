@@ -193,8 +193,8 @@ importers:
         specifier: ^8.0.0
         version: 8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0)
       vite-plugin-openapi-codegen:
-        specifier: ^5.0.1
-        version: 5.0.1(vite-plus@0.2.2(@types/node@22.20.0)(happy-dom@20.10.6)(jiti@2.7.0)(jsdom@29.1.1)(typescript@6.0.3)(vite@8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0))
+        specifier: ^5.0.2
+        version: 5.0.2(vite-plus@0.2.2(@types/node@22.20.0)(happy-dom@20.10.6)(jiti@2.7.0)(jsdom@29.1.1)(typescript@6.0.3)(vite@8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0))
       vitest:
         specifier: ^4.1.5
         version: 4.1.9(@types/node@22.20.0)(@vitest/browser-preview@4.1.9)(happy-dom@20.10.6)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0))
@@ -4437,8 +4437,8 @@ packages:
   victory-vendor@37.3.6:
     resolution: {integrity: sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==}
 
-  vite-plugin-openapi-codegen@5.0.1:
-    resolution: {integrity: sha512-Oi0H7fB2+ROVPV5SZ7X5YsJelzVo8V1XUiaHAccvTLy7GNgMNvNk5F5/Qo8A+O4j4biTbOdEBAfJvrwQclPTZw==}
+  vite-plugin-openapi-codegen@5.0.2:
+    resolution: {integrity: sha512-If64vWTBD55t8duVSRUM/laR8tj++E+Cov8QVU74px3xqKXvNIOmN8x6WvAj0CcJsk7fwL4ytx5wcc3bppdeiA==}
     hasBin: true
     peerDependencies:
       vite-plus: '>=0.1.0'
@@ -8609,7 +8609,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite-plugin-openapi-codegen@5.0.1(vite-plus@0.2.2(@types/node@22.20.0)(happy-dom@20.10.6)(jiti@2.7.0)(jsdom@29.1.1)(typescript@6.0.3)(vite@8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0)):
+  vite-plugin-openapi-codegen@5.0.2(vite-plus@0.2.2(@types/node@22.20.0)(happy-dom@20.10.6)(jiti@2.7.0)(jsdom@29.1.1)(typescript@6.0.3)(vite@8.1.3(@types/node@22.20.0)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0)):
     dependencies:
       openapi-typescript: 7.13.0(typescript@6.0.3)
       typescript: 6.0.3

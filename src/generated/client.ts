@@ -12,11 +12,11 @@ function buildSearchParams(query: Record<string, unknown> | undefined): URLSearc
     const searchParams = new URLSearchParams();
     let hasParams = false;
     for (const [key, value] of Object.entries(query)) {
-        if (value == null || value === "")
+        if (value == null)
             continue;
         if (Array.isArray(value)) {
             for (const item of value) {
-                if (item == null || item === "")
+                if (item == null)
                     continue;
                 searchParams.append(key, String(item));
                 hasParams = true;
