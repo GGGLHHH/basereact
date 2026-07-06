@@ -95,7 +95,9 @@ function AdminShell() {
         variant='inset'
         user={{ avatar: '', email: me.email ?? '', name: me.username }}
       />
-      <SidebarInset>
+      {/* min-w-0:让 inset(sidebar 的 flex peer)能缩到 flex 轨道以下,宽表(如 users 8 列)
+          转表格内部横滚,而非撑出页面级横滚。修复放调用方,ui/* 保持 vendored 不改。 */}
+      <SidebarInset className='min-w-0'>
         <header className='flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
           <div className='flex items-center gap-2 px-4'>
             <SidebarTrigger className='-ml-1' />
