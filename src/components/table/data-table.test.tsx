@@ -129,9 +129,7 @@ describe('DataTable', () => {
     // utilities.css). The pinned-column widths surface as the horizontal offsets
     // that park the fade past them (left 720, right 80), header height as the top.
     await waitFor(() => {
-      const viewport = container.querySelector(
-        '[data-slot="scroll-area-viewport"]',
-      ) as HTMLElement
+      const viewport = container.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement
 
       expect(viewport.classList.contains('scroll-fade-inset')).toBe(true)
       expect(viewport.style.getPropertyValue('--scroll-fade-pin-l')).toBe('720px')

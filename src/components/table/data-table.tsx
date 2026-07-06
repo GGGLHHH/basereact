@@ -428,7 +428,10 @@ function DataTableSurface<TData>({
         className='size-full'
         orientation='both'
         showScrollbars={false}
-        viewportClassName={cn('scrollbar-hidden overflow-auto', showEdgeFade && 'scroll-fade-inset')}
+        viewportClassName={cn(
+          'scrollbar-hidden overflow-auto',
+          showEdgeFade && 'scroll-fade-inset',
+        )}
         viewportRef={scrollContainerRef}
         viewportStyle={{
           maxHeight: `${effectiveHeight}px`,
