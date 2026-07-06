@@ -33,4 +33,9 @@ export const queryKeys = {
     stats: () => [...queryKeys.widgets.all, 'stats'] as const,
     myCount: () => [...queryKeys.widgets.all, 'my-count'] as const,
   },
+  users: {
+    all: ['users'] as const,
+    list: (request?: unknown) => [...queryKeys.users.all, 'list', request ?? {}] as const,
+    detail: (id: string) => [...queryKeys.users.all, 'detail', id] as const,
+  },
 }

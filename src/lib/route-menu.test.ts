@@ -59,6 +59,7 @@ describe('buildAdminMenu with the real route tree', () => {
   it('exposes the full nested tree of admin pages that declare menu titles', () => {
     expect(collectUrls(groups.flatMap((group) => group.entries))).toEqual([
       '/admin/home',
+      '/admin/users',
       '/admin/widgets',
       '/admin/nested',
       '/admin/nested/overview',

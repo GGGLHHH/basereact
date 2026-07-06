@@ -23,6 +23,7 @@ import { Route as AdminShellRouteImport } from './routes/admin/_shell'
 import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
 import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
+import { Route as AdminShellUsersRouteImport } from './routes/admin/_shell/users'
 import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
@@ -102,6 +103,11 @@ const FrontendShellAboutRoute = FrontendShellAboutRouteImport.update({
 const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
   id: '/widgets',
   path: '/widgets',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellUsersRoute = AdminShellUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AdminShellRoute,
 } as any)
 const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
+  '/admin/users': typeof AdminShellUsersRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
+  '/admin/users': typeof AdminShellUsersRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/admin/_shell/404': typeof AdminShell404Route
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/profile': typeof AdminShellProfileRoute
+  '/admin/_shell/users': typeof AdminShellUsersRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
   '/frontend/_shell/about': typeof FrontendShellAboutRoute
   '/frontend/_shell/home': typeof FrontendShellHomeRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/admin/404'
     | '/admin/home'
     | '/admin/profile'
+    | '/admin/users'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin/404'
     | '/admin/home'
     | '/admin/profile'
+    | '/admin/users'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/admin/_shell/404'
     | '/admin/_shell/home'
     | '/admin/_shell/profile'
+    | '/admin/_shell/users'
     | '/admin/_shell/widgets'
     | '/frontend/_shell/about'
     | '/frontend/_shell/home'
@@ -431,6 +443,13 @@ declare module '@tanstack/react-router' {
       path: '/widgets'
       fullPath: '/admin/widgets'
       preLoaderRoute: typeof AdminShellWidgetsRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/users': {
+      id: '/admin/_shell/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminShellUsersRouteImport
       parentRoute: typeof AdminShellRoute
     }
     '/admin/_shell/profile': {
@@ -578,6 +597,7 @@ interface AdminShellRouteChildren {
   AdminShell404Route: typeof AdminShell404Route
   AdminShellHomeRoute: typeof AdminShellHomeRoute
   AdminShellProfileRoute: typeof AdminShellProfileRoute
+  AdminShellUsersRoute: typeof AdminShellUsersRoute
   AdminShellWidgetsRoute: typeof AdminShellWidgetsRoute
 }
 
@@ -587,6 +607,7 @@ const AdminShellRouteChildren: AdminShellRouteChildren = {
   AdminShell404Route: AdminShell404Route,
   AdminShellHomeRoute: AdminShellHomeRoute,
   AdminShellProfileRoute: AdminShellProfileRoute,
+  AdminShellUsersRoute: AdminShellUsersRoute,
   AdminShellWidgetsRoute: AdminShellWidgetsRoute,
 }
 

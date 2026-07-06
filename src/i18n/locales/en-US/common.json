@@ -99,6 +99,19 @@
     "saved": "Profile saved",
     "title": "Personal information"
   },
+  "users": {
+    "columns": {
+      "avatarUrl": "Avatar URL",
+      "createdAt": "Created at",
+      "displayName": "Display name",
+      "email": "Email",
+      "emailVerified": "Email verified",
+      "id": "ID",
+      "roles": "Roles",
+      "username": "Username"
+    },
+    "empty": "No users yet"
+  },
   "widgets": {
     "columns": {
       "createdAt": "Created at",

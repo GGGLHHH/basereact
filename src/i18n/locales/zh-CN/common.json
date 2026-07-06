@@ -99,6 +99,19 @@
     "saved": "资料已保存",
     "title": "个人信息"
   },
+  "users": {
+    "columns": {
+      "avatarUrl": "头像地址",
+      "createdAt": "创建时间",
+      "displayName": "显示名称",
+      "email": "邮箱",
+      "emailVerified": "邮箱已验证",
+      "id": "ID",
+      "roles": "角色",
+      "username": "用户名"
+    },
+    "empty": "暂无用户"
+  },
   "widgets": {
     "columns": {
       "createdAt": "创建时间",
