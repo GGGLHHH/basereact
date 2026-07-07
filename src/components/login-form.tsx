@@ -6,9 +6,8 @@ import { z } from 'zod'
 
 import { useAdminLogin, useLogin } from '@/api/auth'
 import { formSubmitHandler, useAppForm } from '@/components/form'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldGroup } from '@/components/ui/field'
+import { Field, FieldGroup } from '@/components/field'
 import { getErrorMessage } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 
@@ -97,15 +96,6 @@ export function LoginForm({
                     {t('auth.login.submit')}
                   </form.SubmitButton>
                 </form.AppForm>
-                <Button
-                  variant='outline'
-                  type='button'
-                >
-                  {t('auth.login.google')}
-                </Button>
-                <FieldDescription className='text-center'>
-                  {t('auth.login.noAccount')} <a href='#'>{t('auth.login.signUp')}</a>
-                </FieldDescription>
               </Field>
             </FieldGroup>
           </form>

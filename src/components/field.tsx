@@ -1,24 +1,34 @@
 import { type ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { FieldLabel as UIFieldLabel } from '@/components/ui/field'
+import { FieldGroup as UIFieldGroup, FieldLabel as UIFieldLabel } from '@/components/ui/field'
 
 // Project field wrapper. `@/components/ui/field` stays byte-identical to the official shadcn
-// base-vega registry source. This wrapper keeps two project extensions:
+// base-vega registry source. This wrapper keeps three project extensions:
 //  - FieldLabel gains `require`/`required` props that append a destructive `*` RequiredMark.
 //  - FieldError reserves vertical space (stays mounted, min-h-5, invisible when empty) so the
 //    form layout does not jump as validation messages appear/disappear.
+//  - FieldGroup defaults to gap-0: with FieldError always reserving its own vertical space, the
+//    base gap-7 would double the spacing between fields. Callers can still pass a `gap-*`.
 // All other field parts are re-exported unchanged.
 export {
   Field,
   FieldDescription,
-  FieldGroup,
   FieldLegend,
   FieldSeparator,
   FieldSet,
   FieldContent,
   FieldTitle,
 } from '@/components/ui/field'
+
+function FieldGroup({ className, ...props }: ComponentProps<typeof UIFieldGroup>) {
+  return (
+    <UIFieldGroup
+      className={cn('gap-0', className)}
+      {...props}
+    />
+  )
+}
 
 function RequiredMark() {
   return (
@@ -78,4 +88,4 @@ function FieldError({
   )
 }
 
-export { FieldError, FieldLabel }
+export { FieldError, FieldGroup, FieldLabel }
