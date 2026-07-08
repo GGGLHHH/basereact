@@ -1,7 +1,13 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { ContentResponse, ProfileResponse, PutProfileRequest } from '#/generated/api-types'
+import type {
+  AdminUserView,
+  ContentResponse,
+  ProfileResponse,
+  PutProfileRequest,
+} from '#/generated/api-types'
 
+import { patchUserInLists } from '#/api/users'
 import { setUserAvatar as buildSetUserAvatarPath } from '#/generated/api'
 import {
   getMyProfile as getMyProfileApi,
@@ -12,6 +18,29 @@ import {
 import { uploadContentFlow } from '#/hooks/use-content-upload'
 import { requestJson } from '#/lib/api-client'
 import { queryKeys } from '#/lib/query-keys'
+
+// 资料/头像改动会改到 AdminUserView 的富化列(display_name/avatar_url),故也要让用户
+// 列表乐观反映 + 失活:补 detail(userId) 的同时补列表行、再 invalidate(users.all)。
+function syncUserListFromProfile(
+  queryClient: ReturnType<typeof useQueryClient>,
+  userId: string,
+  profile: ProfileResponse,
+): void {
+  const avatarUrl = profile.avatar_url ?? null
+  const displayName = profile.display_name ?? null
+  // 列表行 + detail(AdminUserView)都乐观补丁:资料/头像改了 display_name/avatar,
+  // 列表与详情即刻反映(用服务器返回真值)。
+  patchUserInLists(queryClient, userId, (u) => ({
+    ...u,
+    avatar_url: avatarUrl,
+    display_name: displayName,
+  }))
+  queryClient.setQueryData<AdminUserView>(queryKeys.users.detail(userId), (old) =>
+    old ? { ...old, avatar_url: avatarUrl, display_name: displayName } : old,
+  )
+  // 失活但不立即重取(留住乐观值),下次 mount/focus 再取校正。
+  void queryClient.invalidateQueries({ queryKey: queryKeys.users.all, refetchType: 'none' })
+}
 
 // 自己的资料(GET /frontend/profiles/me)。含富化的 avatar_url(相对 preview 路径)。
 export const profileQueryOptions = queryOptions({
@@ -64,6 +93,7 @@ export function useUpdateUserProfile() {
       setUserProfileApi({ body: request, path: { id: userId } }),
     onSuccess: (profile, { userId }) => {
       queryClient.setQueryData(queryKeys.profile.detail(userId), profile)
+      syncUserListFromProfile(queryClient, userId, profile)
     },
   })
 }
@@ -84,6 +114,7 @@ export function useUploadUserAvatar(userId: string) {
     },
     onSuccess: (profile) => {
       queryClient.setQueryData(queryKeys.profile.detail(userId), profile)
+      syncUserListFromProfile(queryClient, userId, profile)
     },
   })
 }
