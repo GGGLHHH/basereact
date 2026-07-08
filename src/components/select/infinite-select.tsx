@@ -186,7 +186,7 @@ function InfiniteSelectList<T>({
                 aria-hidden
                 data-slot='infinite-select-checkbox'
                 className={cn(
-                  'flex size-4 shrink-0 items-center justify-center rounded-lg border transition-colors',
+                  'flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors',
                   selected
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-input bg-background text-transparent',
