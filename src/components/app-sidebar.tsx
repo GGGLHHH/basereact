@@ -8,9 +8,11 @@ import { useTranslation } from 'react-i18next'
 import { myPermissionsQueryOptions } from '@/api/auth'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavUser } from '@/components/nav-user'
+import { movingHighlightItemProps } from '@/components/moving-highlight'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +22,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/dropdown-menu'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+} from '@/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -82,14 +83,15 @@ function MenuIcon({ icon }: { icon?: string }) {
 
 // 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
 // 只切了个不可见的 open。改走向右弹出的 DropdownMenu 飞出层:叶子=Link 直达,
-// 含子=递归 DropdownMenuSub,多级也能点到任意子页。竖向间隔 gap-1 由 @/components/dropdown-menu
-// wrapper 固化;高亮/激活/悬停即开是本组件自己的样式,写在下面。
+// 含子=递归 DropdownMenuSub,多级也能点到任意子页。飞出层用 vendored ui/dropdown-menu
+// (块流,不加容器间距);项间缝由下面的 pill 内缩给。
 //
-// 飞出项高亮走内缩 ::before pill(水平 inset-x,对齐官方 Base UI 菜单观感),而非满盒背景;
-// 竖向相邻两项的缝由容器 gap-1 给,故 pill 满高(inset-y-0)。z-0 让 item 成层叠上下文,
+// 飞出项高亮走内缩 ::before pill:pill 四周都内缩(inset-x-1 + inset-y-0.5),相邻两项的
+// 高亮之间自带缝,故 hover 与激活不贴死——且**容器不加任何间距**(gap/space-y 对 Base UI
+// 弹层脆:submenu 开合会增删父层子元素,容器间距随之抖动)。z-0 让 item 成层叠上下文,
 // pill(-z-10)沉到文字下、popup 背景上。满盒 bg 用 ! 顶掉(与展开态 highlightProps 同一手法)。
 const FLYOUT_PILL =
-  "z-0 before:absolute before:inset-x-1 before:inset-y-0 before:-z-10 before:rounded-sm before:content-['']"
+  "z-0 before:absolute before:inset-x-1 before:inset-y-0.5 before:-z-10 before:rounded-sm before:content-['']"
 // 叶子/自身项:hover 画 accent pill(顶掉 focus:bg-accent 满盒)。
 const FLYOUT_ITEM_CLASS = `${FLYOUT_PILL} focus:bg-transparent! focus:before:bg-accent`
 // 有子项的 SubTrigger:另带 data-open / data-popup-open 满盒 bg,一并顶掉再画 pill。
@@ -164,12 +166,11 @@ function MenuNodeItem({
   // (背景交给滑动 pill,见 SidebarNavHighlight)。收起态用飞出,不需要。
   const highlight = state === 'expanded'
   // pill 目标 = 覆盖当前页的最深菜单项(恰好一个)。不能用 isActive(startsWith):它把
-  // 整条父链都标上 data-nav-active,querySelector 取到最上层父项。当前页不入菜单时
+  // 整条父链都标上 data-mh-active,querySelector 取到最上层父项。当前页不入菜单时
   // (详情/建号)activeUrl 回落到父路由,故 pill 停在父项而非消失。
   const isCurrent = node.url === activeUrl
   const highlightProps = {
-    'data-nav-item': highlight ? '' : undefined,
-    'data-nav-active': highlight && isCurrent ? 'true' : undefined,
+    ...movingHighlightItemProps(isCurrent, highlight),
     className: cn(highlight && 'hover:bg-transparent! data-active:bg-transparent!'),
   }
 
@@ -338,7 +339,6 @@ function NavAdminRoutes() {
   const router = useRouter()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { t } = useTranslation('route')
-  const { state } = useSidebar()
   // 权限集与守卫共用一份缓存(同 queryKey);守卫若已按需取过则零请求。
   // 未加载时 permissions 为 [],声明了准入的条目 fail-closed 先隐藏。
   const { data: myPermissions } = useQuery(myPermissionsQueryOptions)
@@ -353,11 +353,9 @@ function NavAdminRoutes() {
   // 高亮目标 url:当前页入菜单则本身,否则回落到最近的入菜单祖先(见 pickActiveMenuUrl)。
   const activeUrl = pickActiveMenuUrl(groups, pathname)
 
+  // 高亮容器上提到 AppSidebar(包含头/内容/底),这里只出菜单分组。
   return (
-    <SidebarNavHighlight
-      enabled={state === 'expanded'}
-      activeKey={pathname}
-    >
+    <>
       {groups.map((group) => (
         <SidebarGroup key={group.labelKey}>
           <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
@@ -375,7 +373,7 @@ function NavAdminRoutes() {
           </SidebarMenu>
         </SidebarGroup>
       ))}
-    </SidebarNavHighlight>
+    </>
   )
 }
 
@@ -385,22 +383,48 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & {
   user: { avatar: string; email: string; name: string }
 }) {
+  const { state } = useSidebar()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const enabled = state === 'expanded'
+  // 头/底 chrome 项也纳入滑动高亮:包一层 data-mh-item 盒作 pill 目标(chrome 组件不透传
+  // props 到内层按钮,故在此外包);并抹掉内层 SidebarMenuButton 自身的 hover 底色——它与
+  // pill 同色会"瞬间填充"而非滑入,交给 pill。仅展开态生效,收起态保留原生 hover。
+  const chromeItem = {
+    ...movingHighlightItemProps(false, enabled),
+    className: enabled ? '[&_button]:hover:bg-transparent!' : undefined,
+  }
   return (
     <Sidebar
       collapsible='icon'
       {...props}
     >
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
-      <SidebarContent>
-        <NavAdminRoutes />
-      </SidebarContent>
-      <SidebarFooter>
-        <ThemeToggle />
-        <LanguageSwitcher />
-        <NavUser user={user} />
-      </SidebarFooter>
+      {/* 高亮容器上提到包住 头/内容/底,一枚 pill 滑过整条侧栏;撑满类顶替 sidebar-inner 的
+          flex 列不塌布局。Rail 留在外(定位元素,非高亮目标)。 */}
+      <SidebarNavHighlight
+        activeKey={pathname}
+        className='flex size-full flex-col'
+        enabled={enabled}
+      >
+        <SidebarHeader>
+          <div {...chromeItem}>
+            <TeamSwitcher teams={data.teams} />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <NavAdminRoutes />
+        </SidebarContent>
+        <SidebarFooter>
+          <div {...chromeItem}>
+            <ThemeToggle />
+          </div>
+          <div {...chromeItem}>
+            <LanguageSwitcher />
+          </div>
+          <div {...chromeItem}>
+            <NavUser user={user} />
+          </div>
+        </SidebarFooter>
+      </SidebarNavHighlight>
       <SidebarRail />
     </Sidebar>
   )
