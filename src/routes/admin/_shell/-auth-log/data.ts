@@ -1,5 +1,6 @@
-// 真数据接线:stats 聚合(轮询)+ 事件列表(表/流初始种子)+ 映射到本页领域类型。
-// 后端 snake_case → 组件用的 camelCase 领域类型在这层翻译,组件不动。
+// 真数据接线:stats 聚合 + 事件列表(表/流初始种子)各取一次快照 + 映射到本页领域类型。
+// 快照之后不再轮询——SSE 送来的每条事件本身就够把 KPI/图表/分布/列表继续往前滚
+// (见 use-live.ts 的 useLiveStats),大屏该有的样子:一次快照 + 纯推送,没有"定时问一遍"。
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
@@ -13,23 +14,20 @@ import type { AuthEvent } from './types'
 const STATS_KEY = ['auth-events', 'stats'] as const
 const LIST_KEY = ['auth-events', 'list'] as const
 
-/** dashboard 聚合(KPI/时序/分布)。轮询 truth-up;live 增量叠在其上(见 use-live)。 */
+/** dashboard 聚合(KPI/时序/分布)基线快照,取一次。之后的鲜度由 SSE 流叠加(useLiveStats)。 */
 export function useAuthEventsStats() {
   return useQuery({
     queryKey: STATS_KEY,
     queryFn: () => statsAuthEvents({}),
-    refetchInterval: 15_000,
-    staleTime: 10_000,
   })
 }
 
-/** 近期事件(表 + 事件流初始种子)。keyset 首页,size 条。 */
+/** 近期事件基线快照(表 + 事件流初始种子),取一次。keyset 首页,size 条。 */
 export function useAuthEventsList(size = 80) {
   return useQuery({
     queryKey: [...LIST_KEY, size],
     queryFn: () => listAuthEvents({ query: { size } }),
     placeholderData: keepPreviousData,
-    refetchInterval: 60_000,
   })
 }
 

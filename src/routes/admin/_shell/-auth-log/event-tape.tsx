@@ -60,6 +60,9 @@ export function EventTape({
   const rows = events.slice(0, CAP)
 
   return (
+    // lg 起:父层是 absolute inset-0 的壳,h-full 精确吃满那个高度(壳的高度 = 左栏
+    // 天然高度,见 auth-log.tsx 注释)。lg 以下父层退化成普通块,h-full 无 100% 可依附
+    // 的祖先、按 auto 处理,靠 min-h-105 兜底,自然高度堆叠。
     <Card className='flex h-full min-h-105 flex-col gap-0 overflow-hidden py-0'>
       <CardHeader className='flex-row items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5'>
         <CardTitle className='text-xs font-medium tracking-[0.12em] uppercase'>
