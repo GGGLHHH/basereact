@@ -4,11 +4,14 @@ import { useTranslation } from 'react-i18next'
 
 import { useUser } from '@/api/users'
 import { dash } from '@/business/common'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/datetime'
+import { nameInitials } from '@/lib/display-name'
 
 import { DeleteUserDialog } from './delete-user-dialog'
+import { AccountStamp, FieldRow, RoleBadges, VerifiedBadge } from './user-badges'
 
 export function UserDetailPage({ userId }: { userId: string }) {
   const { t } = useTranslation('common')
@@ -21,35 +24,57 @@ export function UserDetailPage({ userId }: { userId: string }) {
     return null
   }
 
-  const rows: [string, string][] = [
-    [t('users.columns.id'), user.id],
-    [t('users.columns.username'), user.username],
-    [t('users.columns.email'), dash(user.email)],
-    [t('users.columns.displayName'), dash(user.display_name)],
-    [t('users.columns.roles'), user.roles.join(', ') || '—'],
-    [t('users.columns.emailVerified'), String(user.email_verified)],
-    [t('users.columns.createdAt'), formatDateTime(user.created_at)],
-  ]
-
   return (
     <Card className='mx-auto w-full max-w-2xl'>
+      {/* 身份凭证头:头像 + 名 + 验证章 + 账号编号戳 + 角色权限 chips。 */}
       <CardHeader>
-        <CardTitle>{user.username}</CardTitle>
-        <CardDescription>{t('users.detail.title')}</CardDescription>
-      </CardHeader>
-      <CardContent className='flex flex-col gap-6'>
-        <dl className='grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-[10rem_1fr]'>
-          {rows.map(([label, value]) => (
-            <div
-              key={label}
-              className='grid grid-cols-subgrid sm:col-span-2'
-            >
-              <dt className='text-muted-foreground'>{label}</dt>
-              <dd className='wrap-break-word'>{value}</dd>
+        <div className='flex items-start gap-4'>
+          <Avatar
+            className='size-16'
+            size='lg'
+          >
+            <AvatarImage
+              alt={user.display_name ?? user.username}
+              src={user.avatar_url ?? undefined}
+            />
+            <AvatarFallback className='text-lg'>
+              {nameInitials(user.display_name || user.username)}
+            </AvatarFallback>
+          </Avatar>
+          <div className='flex min-w-0 flex-1 flex-col gap-1'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <h1 className='truncate text-xl font-semibold'>{user.username}</h1>
+              <VerifiedBadge verified={user.email_verified} />
             </div>
-          ))}
+            <p className='truncate text-sm text-muted-foreground'>
+              @{user.username}
+              {user.display_name ? ` · ${user.display_name}` : ''}
+            </p>
+            <AccountStamp
+              id={user.id}
+              label={t('users.detail.account')}
+            />
+            <RoleBadges
+              className='mt-1.5'
+              roles={user.roles}
+            />
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className='flex flex-col gap-6'>
+        <dl className='grid gap-4 sm:grid-cols-2'>
+          <FieldRow
+            label={t('users.columns.email')}
+            value={dash(user.email)}
+          />
+          <FieldRow
+            label={t('users.columns.createdAt')}
+            value={formatDateTime(user.created_at)}
+          />
         </dl>
-        <div className='flex justify-end gap-2'>
+
+        <div className='flex justify-end gap-2 border-t border-border pt-4'>
           <Button
             onClick={() => {
               void navigate({ to: '/admin/users' })
@@ -74,6 +99,7 @@ export function UserDetailPage({ userId }: { userId: string }) {
           </Button>
         </div>
       </CardContent>
+
       <DeleteUserDialog
         open={deleteOpen}
         user={user}

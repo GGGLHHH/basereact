@@ -125,6 +125,7 @@
       "title": "删除用户"
     },
     "detail": {
+      "account": "账号 ID",
       "notFound": "用户不存在",
       "title": "用户详情"
     },
@@ -165,10 +166,13 @@
       "usernamePlaceholder": "请输入用户名"
     },
     "new": "新建用户",
+    "noRoles": "无角色",
+    "unverified": "未验证",
     "validation": {
       "passwordMin": "密码至少 3 个字符",
       "usernameRequired": "用户名必填"
-    }
+    },
+    "verified": "已验证"
   },
   "widgets": {
     "columns": {

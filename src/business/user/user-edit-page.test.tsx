@@ -87,7 +87,7 @@ describe('UserEditPage composition', () => {
     // profile/avatar folded into users:admin → always shown on the admin edit page.
     expect(screen.getByText('Profile')).toBeTruthy()
     expect(screen.getByText('System')).toBeTruthy()
-    // read-only id surfaced
-    expect(screen.getByText('u1')).toBeTruthy()
+    // read-only id surfaced (identity header stamp + System reference)
+    expect(screen.getAllByText('u1').length).toBeGreaterThan(0)
   })
 })

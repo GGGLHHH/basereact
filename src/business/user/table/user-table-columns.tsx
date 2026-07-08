@@ -5,8 +5,12 @@ import type { ColumnDef } from '@tanstack/react-table'
 import type { AdminUserView } from '#/generated/api-types'
 
 import { dash } from '@/business/common'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/datetime'
+import { nameInitials } from '@/lib/display-name'
+
+import { RoleBadges, VerifiedBadge } from '../user-badges'
 
 const columnHelper = createColumnHelper<AdminUserView>()
 
@@ -72,37 +76,58 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
   })
 }
 
-// 原样展示 AdminUserView 全字段;传入 actions(任一 handler)时追加固定操作列。
+// 身份优先的用户列表:头像+用户名+邮箱合成一列,角色/验证走凭证词汇的 chips/印章。
+// (原来一列一字段的 id/avatar_url/email_verified 原样铺陈太密,收敛进身份列 + 徽章。)
 export function createUserColumns(
   t: TFunction<'common'>,
   actions?: UserRowActions,
 ): UserColumnDef[] {
   const columns: UserColumnDef[] = [
-    columnHelper.accessor('id', { header: t('users.columns.id') }),
-    columnHelper.accessor('username', { header: t('users.columns.username') }),
-    columnHelper.accessor('email', {
-      header: t('users.columns.email'),
-      cell: ({ getValue }) => dash(getValue()),
+    columnHelper.accessor('username', {
+      header: t('users.columns.username'),
+      cell: ({ row }) => {
+        const u = row.original
+        return (
+          <div className='flex items-center gap-3'>
+            <Avatar>
+              <AvatarImage
+                alt={u.display_name ?? u.username}
+                src={u.avatar_url ?? undefined}
+              />
+              <AvatarFallback>{nameInitials(u.display_name || u.username)}</AvatarFallback>
+            </Avatar>
+            <div className='flex min-w-0 flex-col'>
+              <span className='truncate font-medium'>{u.username}</span>
+              <span className='truncate text-xs text-muted-foreground'>{dash(u.email)}</span>
+            </div>
+          </div>
+        )
+      },
     }),
     columnHelper.accessor('display_name', {
       header: t('users.columns.displayName'),
       cell: ({ getValue }) => dash(getValue()),
     }),
-    columnHelper.accessor('avatar_url', {
-      header: t('users.columns.avatarUrl'),
-      cell: ({ getValue }) => dash(getValue()),
+    columnHelper.accessor('roles', {
+      header: t('users.columns.roles'),
+      size: 180,
+      cell: ({ getValue }) => (
+        <RoleBadges
+          className='flex-nowrap'
+          max={2}
+          roles={getValue()}
+        />
+      ),
     }),
     columnHelper.accessor('email_verified', {
       header: t('users.columns.emailVerified'),
-      cell: ({ getValue }) => String(getValue()),
-    }),
-    columnHelper.accessor('roles', {
-      header: t('users.columns.roles'),
-      cell: ({ getValue }) => getValue().join(', ') || '—',
+      cell: ({ getValue }) => <VerifiedBadge verified={getValue()} />,
     }),
     columnHelper.accessor('created_at', {
       header: t('users.columns.createdAt'),
-      cell: ({ getValue }) => formatDateTime(getValue()),
+      cell: ({ getValue }) => (
+        <span className='text-sm text-muted-foreground'>{formatDateTime(getValue())}</span>
+      ),
     }),
   ]
 

@@ -63,10 +63,11 @@ afterEach(() => {
 describe('UserDetailPage', () => {
   it('renders the loaded user fields', () => {
     render(<UserDetailPage userId='u1' />)
-    // 'ada' 出现在标题与字段两处,取全量断言存在即可。
     expect(screen.getAllByText('ada').length).toBeGreaterThan(0)
     expect(screen.getByText('ada@example.com')).toBeTruthy()
-    expect(screen.getByText('admin, editor')).toBeTruthy()
+    // 角色现为独立 chips(RoleBadges),不再是合并串。
+    expect(screen.getByText('admin')).toBeTruthy()
+    expect(screen.getByText('editor')).toBeTruthy()
   })
 
   it('navigates to the edit page from the Edit action', () => {

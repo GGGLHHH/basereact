@@ -125,6 +125,7 @@
       "title": "Delete user"
     },
     "detail": {
+      "account": "Account ID",
       "notFound": "User not found",
       "title": "User detail"
     },
@@ -165,10 +166,13 @@
       "usernamePlaceholder": "Enter a username"
     },
     "new": "New user",
+    "noRoles": "No roles",
+    "unverified": "Unverified",
     "validation": {
       "passwordMin": "Password must be at least 3 characters",
       "usernameRequired": "Username is required"
-    }
+    },
+    "verified": "Verified"
   },
   "widgets": {
     "columns": {
