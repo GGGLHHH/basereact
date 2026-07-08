@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import { getErrorMessage } from '@/lib/api-client'
 export function UserCreatePage() {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
+  const router = useRouter()
   const create = useCreateUser()
 
   // 角色改由 RoleInfiniteSelect 从目录选,提交角色 id(uuid)。onChange 同时给 items 供展示。
@@ -134,9 +135,7 @@ export function UserCreatePage() {
               orientation='horizontal'
             >
               <Button
-                onClick={() => {
-                  void navigate({ to: '/admin/users' })
-                }}
+                onClick={() => router.history.back()}
                 type='button'
                 variant='outline'
               >

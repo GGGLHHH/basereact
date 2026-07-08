@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import type { LinkProps } from '@tanstack/react-router'
@@ -17,6 +17,7 @@ interface ErrorStateProps {
 
 export function ErrorState({ className, code, description, homeTo = '/', title }: ErrorStateProps) {
   const { t } = useTranslation()
+  const router = useRouter()
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3 text-center', className)}>
       <p className='font-heading text-7xl font-bold text-muted-foreground/40'>{code}</p>
@@ -25,7 +26,7 @@ export function ErrorState({ className, code, description, homeTo = '/', title }
       <div className='mt-3 flex gap-2'>
         <Button
           variant='outline'
-          onClick={() => window.history.back()}
+          onClick={() => router.history.back()}
         >
           {t('action.goBack')}
         </Button>

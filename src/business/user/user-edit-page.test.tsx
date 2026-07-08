@@ -36,7 +36,10 @@ vi.mock('@/api/roles', () => ({
     onRetry: () => {},
   }),
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => h.navigate }))
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => h.navigate,
+  useRouter: () => ({ history: { back: () => {} } }),
+}))
 
 import { UserEditPage } from './user-edit-page'
 

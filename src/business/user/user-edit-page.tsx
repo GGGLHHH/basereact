@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import type { AdminUserView } from '#/generated/api-types'
@@ -21,7 +21,7 @@ import { EditSectionCard } from './edit/section-card'
 // 头像/display_name/phone → putProfile(需 profiles:write,无权限则整区不出现)。
 export function UserEditPage({ userId }: { userId: string }) {
   const { t } = useTranslation('common')
-  const navigate = useNavigate()
+  const router = useRouter()
   const { data: user } = useUser(userId)
 
   // loader 已 ensure,首帧即有;冷进兜底不渲染。
@@ -57,9 +57,7 @@ export function UserEditPage({ userId }: { userId: string }) {
         </div>
         <Button
           className='shrink-0'
-          onClick={() => {
-            void navigate({ params: { userId }, to: '/admin/users/$userId' })
-          }}
+          onClick={() => router.history.back()}
           variant='outline'
         >
           {t('action.goBack')}

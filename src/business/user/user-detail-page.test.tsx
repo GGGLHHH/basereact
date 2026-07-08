@@ -16,7 +16,10 @@ vi.mock('@/api/users', () => ({
   useDeleteUser: () => ({ isPending: false, mutateAsync: h.deleteMutate }),
   useUser: () => ({ data: h.user }),
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => h.navigate }))
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => h.navigate,
+  useRouter: () => ({ history: { back: () => {} } }),
+}))
 
 import { UserDetailPage } from './user-detail-page'
 

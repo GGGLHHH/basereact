@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +16,7 @@ import { AccountStamp, FieldRow, RoleBadges, VerifiedBadge } from './user-badges
 export function UserDetailPage({ userId }: { userId: string }) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
+  const router = useRouter()
   const { data: user } = useUser(userId)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -76,9 +77,7 @@ export function UserDetailPage({ userId }: { userId: string }) {
 
         <div className='flex justify-end gap-2 border-t border-border pt-4'>
           <Button
-            onClick={() => {
-              void navigate({ to: '/admin/users' })
-            }}
+            onClick={() => router.history.back()}
             variant='outline'
           >
             {t('action.goBack')}

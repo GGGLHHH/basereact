@@ -27,7 +27,10 @@ vi.mock('@/api/roles', () => ({
     onRetry: () => {},
   }),
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => h.navigate }))
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => h.navigate,
+  useRouter: () => ({ history: { back: () => {} } }),
+}))
 
 import { UserCreatePage } from './user-create-page'
 
