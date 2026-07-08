@@ -11,7 +11,6 @@ import { NavUser } from '@/components/nav-user'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +20,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/dropdown-menu'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -38,7 +38,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { buildAdminMenu } from '@/lib/route-menu'
+import { buildAdminMenu, pickActiveMenuUrl } from '@/lib/route-menu'
 import { cn } from '@/lib/utils'
 import { IconChevronRight, IconLayoutRows, IconWaveSine, IconCommand } from '@tabler/icons-react'
 
@@ -82,9 +82,20 @@ function MenuIcon({ icon }: { icon?: string }) {
 
 // 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
 // 只切了个不可见的 open。改走向右弹出的 DropdownMenu 飞出层:叶子=Link 直达,
-// 含子=递归 DropdownMenuSub,多级也能点到任意子页。
-// 激活态用与展开侧栏一致的 sidebar-accent(SidebarMenuButton 的 data-active 同款)。
-const FLYOUT_ACTIVE_CLASS = 'bg-sidebar-accent text-sidebar-accent-foreground'
+// 含子=递归 DropdownMenuSub,多级也能点到任意子页。竖向间隔 gap-1 由 @/components/dropdown-menu
+// wrapper 固化;高亮/激活/悬停即开是本组件自己的样式,写在下面。
+//
+// 飞出项高亮走内缩 ::before pill(水平 inset-x,对齐官方 Base UI 菜单观感),而非满盒背景;
+// 竖向相邻两项的缝由容器 gap-1 给,故 pill 满高(inset-y-0)。z-0 让 item 成层叠上下文,
+// pill(-z-10)沉到文字下、popup 背景上。满盒 bg 用 ! 顶掉(与展开态 highlightProps 同一手法)。
+const FLYOUT_PILL =
+  "z-0 before:absolute before:inset-x-1 before:inset-y-0 before:-z-10 before:rounded-sm before:content-['']"
+// 叶子/自身项:hover 画 accent pill(顶掉 focus:bg-accent 满盒)。
+const FLYOUT_ITEM_CLASS = `${FLYOUT_PILL} focus:bg-transparent! focus:before:bg-accent`
+// 有子项的 SubTrigger:另带 data-open / data-popup-open 满盒 bg,一并顶掉再画 pill。
+const FLYOUT_TRIGGER_CLASS = `${FLYOUT_PILL} focus:bg-transparent! data-open:bg-transparent! data-popup-open:bg-transparent! focus:before:bg-accent data-open:before:bg-accent data-popup-open:before:bg-accent`
+// 激活项:常驻 sidebar-accent pill + 前景色(与展开侧栏一致)。
+const FLYOUT_ACTIVE_PILL = 'text-sidebar-accent-foreground before:bg-sidebar-accent'
 
 function FlyoutMenuNode({
   node,
@@ -101,7 +112,7 @@ function FlyoutMenuNode({
     return (
       <DropdownMenuItem
         render={<Link to={node.url} />}
-        className={cn(isActive && FLYOUT_ACTIVE_CLASS)}
+        className={cn(FLYOUT_ITEM_CLASS, isActive && FLYOUT_ACTIVE_PILL)}
       >
         <MenuIcon icon={node.icon} />
         <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
@@ -110,7 +121,7 @@ function FlyoutMenuNode({
   }
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className={cn(isActive && FLYOUT_ACTIVE_CLASS)}>
+      <DropdownMenuSubTrigger className={cn(FLYOUT_TRIGGER_CLASS, isActive && FLYOUT_ACTIVE_PILL)}>
         <MenuIcon icon={node.icon} />
         <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
       </DropdownMenuSubTrigger>
@@ -135,11 +146,14 @@ function MenuNodeItem({
   node,
   depth,
   pathname,
+  activeUrl,
   t,
 }: {
   node: AdminMenuEntry
   depth: number
   pathname: string
+  // 当前 pathname 命中的最深菜单项 url(pickActiveMenuUrl 一次算好,全树共用)。
+  activeUrl: string | undefined
   t: TFunction<'route'>
 }) {
   const label = node.labelKey ? t(node.labelKey) : node.label
@@ -149,9 +163,10 @@ function MenuNodeItem({
   // 展开态才走滑动高亮:标记可 hover 项 + 激活项,并抹掉按钮自身 hover/active 背景
   // (背景交给滑动 pill,见 SidebarNavHighlight)。收起态用飞出,不需要。
   const highlight = state === 'expanded'
-  // pill 目标 = 当前页那一项(精确匹配)。用 isActive(startsWith)会把整条父链都标上
-  // data-nav-active,querySelector 取到最上层父项,离开菜单时 pill 就回不到子项。
-  const isCurrent = pathname === node.url
+  // pill 目标 = 覆盖当前页的最深菜单项(恰好一个)。不能用 isActive(startsWith):它把
+  // 整条父链都标上 data-nav-active,querySelector 取到最上层父项。当前页不入菜单时
+  // (详情/建号)activeUrl 回落到父路由,故 pill 停在父项而非消失。
+  const isCurrent = node.url === activeUrl
   const highlightProps = {
     'data-nav-item': highlight ? '' : undefined,
     'data-nav-active': highlight && isCurrent ? 'true' : undefined,
@@ -174,6 +189,7 @@ function MenuNodeItem({
         {node.children.map((child) => (
           <MenuNodeItem
             key={child.url}
+            activeUrl={activeUrl}
             depth={depth + 1}
             node={child}
             pathname={pathname}
@@ -209,7 +225,10 @@ function MenuNodeItem({
       return (
         <SidebarMenuItem>
           <DropdownMenu>
+            {/* 收起态图标悬停即弹飞出层(openOnHover 是 Menu.Trigger 的 prop,点击仍可开);
+                子层 SubmenuTrigger 默认 openOnHover,故多级也悬停展开。 */}
             <DropdownMenuTrigger
+              openOnHover
               render={
                 <SidebarMenuButton
                   isActive={isActive}
@@ -227,7 +246,7 @@ function MenuNodeItem({
             >
               <DropdownMenuItem
                 render={<Link to={node.url} />}
-                className={cn(pathname === node.url && FLYOUT_ACTIVE_CLASS)}
+                className={cn(FLYOUT_ITEM_CLASS, pathname === node.url && FLYOUT_ACTIVE_PILL)}
               >
                 <MenuIcon icon={node.icon} />
                 <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
@@ -331,6 +350,8 @@ function NavAdminRoutes() {
     () => buildAdminMenu({ ...router.routesById }, permissions),
     [router, permissions],
   )
+  // 高亮目标 url:当前页入菜单则本身,否则回落到最近的入菜单祖先(见 pickActiveMenuUrl)。
+  const activeUrl = pickActiveMenuUrl(groups, pathname)
 
   return (
     <SidebarNavHighlight
@@ -344,6 +365,7 @@ function NavAdminRoutes() {
             {group.entries.map((entry) => (
               <MenuNodeItem
                 key={entry.url}
+                activeUrl={activeUrl}
                 depth={0}
                 node={entry}
                 pathname={pathname}
