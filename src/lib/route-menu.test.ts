@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter } from '@tanstack/react-router'
 import { describe, expect, it } from 'vitest'
 
 import { routeTree } from '../routeTree.gen'
-import { buildAdminMenu } from './route-menu'
+import { buildAdminMenu, pickActiveMenuUrl } from './route-menu'
 
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 import type { AdminMenuEntry, MenuSourceRoute } from './route-menu'
@@ -129,6 +129,44 @@ describe('buildAdminMenu', () => {
     const widgets = groups[0].entries.find((entry) => entry.url === '/admin/widgets')
     expect(widgets?.icon).toBe('i-tabler-box')
     expect(widgets?.labelKey).toBe('titles.adminWidgets')
+  })
+})
+
+describe('pickActiveMenuUrl', () => {
+  // 顶层叶子 /admin/users(详情/建号不入菜单)+ 嵌套 section /admin/nested/*。
+  const groups = buildAdminMenu(
+    {
+      '/admin/_shell/users': route('/admin/users', { menuTitle: 'Users' }),
+      '/admin/_shell/users-archive': route('/admin/users-archive', { menuTitle: 'Archive' }),
+      '/admin/_shell/nested': route('/admin/nested', { menuTitle: 'Nested' }),
+      '/admin/_shell/nested/overview': route('/admin/nested/overview', { menuTitle: 'Overview' }),
+    },
+    [],
+  )
+
+  it('falls back to the nearest menu ancestor when the page is not itself a menu item', () => {
+    // 详情页不入菜单 → 激活态留在父路由 users。
+    expect(pickActiveMenuUrl(groups, '/admin/users/123')).toBe('/admin/users')
+    expect(pickActiveMenuUrl(groups, '/admin/users/123/edit')).toBe('/admin/users')
+  })
+
+  it('picks the exact item when the page is itself a menu item', () => {
+    expect(pickActiveMenuUrl(groups, '/admin/users')).toBe('/admin/users')
+  })
+
+  it('picks the deepest matching item, not an ancestor also in the menu', () => {
+    // overview 与父 nested 都是前缀 → 取最深的 overview。
+    expect(pickActiveMenuUrl(groups, '/admin/nested/overview')).toBe('/admin/nested/overview')
+    expect(pickActiveMenuUrl(groups, '/admin/nested')).toBe('/admin/nested')
+  })
+
+  it('respects the / boundary so a prefix sibling never matches', () => {
+    // users-archive 不能被 users 吞;archive 详情回落到 archive 自身。
+    expect(pickActiveMenuUrl(groups, '/admin/users-archive/9')).toBe('/admin/users-archive')
+  })
+
+  it('returns undefined when no menu item covers the path', () => {
+    expect(pickActiveMenuUrl(groups, '/admin/widgets/1')).toBeUndefined()
   })
 })
 

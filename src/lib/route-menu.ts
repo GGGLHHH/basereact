@@ -139,3 +139,29 @@ export function buildAdminMenu<TPath extends string>(
   }
   return result
 }
+
+// 侧栏高亮目标 = 覆盖当前 pathname 的最深菜单项 url(前缀最长的那个)。
+// 当前页本身入菜单时精确命中;不入菜单时(如详情 /admin/users/$id)回落到最近的
+// 入菜单祖先(/admin/users),激活态"留在父路由"。带 '/' 边界,防 /admin/users
+// 误配 /admin/users-archive。无覆盖者返回 undefined(pill 隐去)。
+export function pickActiveMenuUrl<TPath extends string>(
+  groups: AdminMenuGroup<TPath>[],
+  pathname: string,
+): TPath | undefined {
+  let best: TPath | undefined
+  const visit = (entries: AdminMenuEntry<TPath>[]): void => {
+    for (const entry of entries) {
+      if (
+        (pathname === entry.url || pathname.startsWith(`${entry.url}/`)) &&
+        (best === undefined || entry.url.length > best.length)
+      ) {
+        best = entry.url
+      }
+      visit(entry.children)
+    }
+  }
+  for (const group of groups) {
+    visit(group.entries)
+  }
+  return best
+}
