@@ -16,6 +16,8 @@ export const queryKeys = {
   profile: {
     all: ['profile'] as const,
     me: () => [...queryKeys.profile.all, 'me'] as const,
+    // 管理员按 user_id 查/改他人资料(GET/PUT /profiles/{user_id});与 me() 分开缓存。
+    detail: (userId: string) => [...queryKeys.profile.all, 'detail', userId] as const,
   },
   contents: {
     all: ['contents'] as const,
@@ -32,6 +34,11 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.widgets.all, 'detail', id] as const,
     stats: () => [...queryKeys.widgets.all, 'stats'] as const,
     myCount: () => [...queryKeys.widgets.all, 'my-count'] as const,
+  },
+  roles: {
+    all: ['roles'] as const,
+    list: () => [...queryKeys.roles.all, 'list'] as const,
+    optionsInfiniteList: () => [...queryKeys.roles.all, 'options-infinite'] as const,
   },
   users: {
     all: ['users'] as const,

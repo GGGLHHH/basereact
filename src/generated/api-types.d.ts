@@ -34,6 +34,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 角色目录(admin 分配角色的候选集)。全量存活角色,单页游标包络(has_more=false)。
+         *     供前端 role-select 拉候选;`name`=机器码,`display_name`=展示名。
+         */
+        get: operations["list_roles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -76,6 +96,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 后台传某用户头像(multipart 表单,`file` 部分为图片)。上传即绑定(auto-bind):
+         *     content owner = 目标用户,保留现有 display_name/phone,返回更新后的资料。归 `users:admin`。
+         */
+        post: operations["set_user_avatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users/{id}/password": {
         parameters: {
             query?: never;
@@ -87,6 +127,24 @@ export interface paths {
         put?: never;
         /** 管理员重置密码(无需旧密码)+ best-effort 撤会话(强制重新登录)。 */
         post: operations["reset_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 后台读某用户资料(display_name/phone/avatar)。归 `users:admin`。资料未建 → 404。 */
+        get: operations["get_user_profile"];
+        /** 后台改某用户资料(PUT 全量:display_name/phone/avatar_content_id)。归 `users:admin`。 */
+        put: operations["set_user_profile"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -758,7 +816,7 @@ export interface components {
         CreateUserRequest: {
             email?: string | null;
             password: string;
-            /** @description 角色名(空 = 不授角色);未知名 → 422。 */
+            /** @description 角色 id(空 = 不授角色);未知 id → 422。 */
             roles: string[];
             username: string;
         };
@@ -860,6 +918,19 @@ export interface components {
          * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
          *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
          */
+        Page_RoleView: {
+            items: {
+                display_name: string;
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         */
         Page_WidgetView: {
             items: {
                 /** Format: date-time */
@@ -935,6 +1006,16 @@ export interface components {
         ResetPasswordRequest: {
             new_password: string;
         };
+        /**
+         * @description 角色目录项(admin 分配角色的候选集;`GET /roles` 返回)。
+         *     `name`=机器码(唯一稳定,JWT/权限引用),`display_name`=展示名(UI,可改)。
+         */
+        RoleView: {
+            display_name: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         /** @description 设置内容元数据(全量替换,upsert)。 */
         SetContentMetadataRequest: {
             checksum?: string | null;
@@ -947,7 +1028,7 @@ export interface components {
             mime_type?: string | null;
             tags: string[];
         };
-        /** @description 全量设角色(原子替换)。 */
+        /** @description 全量设角色(原子替换)。传角色 id;未知 id → 422。 */
         SetRolesRequest: {
             roles: string[];
         };
@@ -1081,6 +1162,7 @@ export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
+export type Page_RoleView = components['schemas']['Page_RoleView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
@@ -1088,6 +1170,7 @@ export type ProfileResponse = components['schemas']['ProfileResponse'];
 export type PutProfileRequest = components['schemas']['PutProfileRequest'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
+export type RoleView = components['schemas']['RoleView'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
 export type SortOrder = components['schemas']['SortOrder'];
@@ -1174,6 +1257,53 @@ export interface operations {
                 };
             };
             /** @description 组闸:无 admin:login(后台准入) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_roles: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 角色目录(单页,全量存活角色) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RoleView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1482,6 +1612,82 @@ export interface operations {
             };
         };
     };
+    set_user_avatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: uuid */
+                    avatar_content_id?: string | null;
+                    /** @description 相对路径 `/api/v1/frontend/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
+                    avatar_url?: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                    display_name?: string | null;
+                    phone?: string | null;
+                    /** Format: date-time */
+                    updated_at: string;
+                    /** Format: uuid */
+                    user_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 头像已更新并绑定 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description multipart 解析失败 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 缺 file 部分 / 非 image */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     reset_user_password: {
         parameters: {
             query?: never;
@@ -1533,6 +1739,110 @@ export interface operations {
                 };
             };
             /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_user_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 用户资料 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 资料未建 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_user_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 / 头像非法 */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -3353,16 +3663,21 @@ export type GetContentMetadataPath = operations['get_content_metadata']['paramet
 export type GetContentPath = operations['get_content']['parameters']['path'];
 export type GetProfilePath = operations['get_profile']['parameters']['path'];
 export type GetUserPath = operations['get_user']['parameters']['path'];
+export type GetUserProfilePath = operations['get_user_profile']['parameters']['path'];
 export type GetWidgetPath = operations['get_widget']['parameters']['path'];
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListRolesQuery = operations['list_roles']['parameters']['query'];
 export type ListUsersQuery = operations['list_users']['parameters']['query'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
 export type PutProfilePath = operations['put_profile']['parameters']['path'];
 export type ResetUserPasswordPath = operations['reset_user_password']['parameters']['path'];
 export type SetContentMetadataPath = operations['set_content_metadata']['parameters']['path'];
+export type SetUserAvatarPath = operations['set_user_avatar']['parameters']['path'];
+export type SetUserAvatarRequest = FormData;
+export type SetUserProfilePath = operations['set_user_profile']['parameters']['path'];
 export type SetUserRolesPath = operations['set_user_roles']['parameters']['path'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
 export type UpdateUserPath = operations['update_user']['parameters']['path'];

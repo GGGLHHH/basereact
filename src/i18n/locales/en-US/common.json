@@ -23,7 +23,8 @@
     "save": "Save",
     "saveChanges": "Save changes",
     "saving": "Saving...",
-    "search": "Search"
+    "search": "Search",
+    "view": "View"
   },
   "loading": {
     "empty": "No data",
@@ -100,6 +101,7 @@
     "title": "Personal information"
   },
   "users": {
+    "actions": "Actions",
     "columns": {
       "avatarUrl": "Avatar URL",
       "createdAt": "Created at",
@@ -110,7 +112,63 @@
       "roles": "Roles",
       "username": "Username"
     },
-    "empty": "No users yet"
+    "create": {
+      "description": "Add a new account and assign roles.",
+      "submit": "Create user",
+      "success": "User created",
+      "title": "Create user"
+    },
+    "delete": {
+      "confirm": "Delete",
+      "description": "This permanently deletes {{name}} and can't be undone.",
+      "success": "User deleted",
+      "title": "Delete user"
+    },
+    "detail": {
+      "notFound": "User not found",
+      "title": "User detail"
+    },
+    "edit": {
+      "accountDescription": "Change the sign-in username and email address.",
+      "accountTitle": "Account",
+      "description": "Manage this account's identity, roles, password, and profile.",
+      "metaTitle": "System",
+      "passwordButton": "Reset password",
+      "passwordDescription": "Set a new password directly — the current one is not required.",
+      "passwordReset": "Password reset",
+      "passwordTitle": "Password",
+      "profileDescription": "Avatar, display name, and phone are stored on the user's profile.",
+      "profileSaved": "Profile saved",
+      "profileTitle": "Profile",
+      "rolesDescription": "Add or remove roles. Unknown role names are rejected on save.",
+      "rolesSaved": "Roles saved",
+      "rolesTitle": "Roles",
+      "success": "Changes saved",
+      "title": "Edit user"
+    },
+    "empty": "No users yet",
+    "form": {
+      "avatarHint": "JPG, PNG, or GIF.",
+      "avatarUploadFailed": "Avatar upload failed",
+      "changeAvatar": "Change avatar",
+      "displayNamePlaceholder": "Shown across the app",
+      "emailPlaceholder": "name@example.com",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "At least 3 characters",
+      "password": "Password",
+      "passwordPlaceholder": "At least 3 characters",
+      "phone": "Phone",
+      "phonePlaceholder": "Optional",
+      "rolesAddPlaceholder": "Add a role, then press Enter",
+      "rolesHint": "Comma-separated role names; leave blank for none.",
+      "rolesPlaceholder": "e.g. admin, editor",
+      "usernamePlaceholder": "Enter a username"
+    },
+    "new": "New user",
+    "validation": {
+      "passwordMin": "Password must be at least 3 characters",
+      "usernameRequired": "Username is required"
+    }
   },
   "widgets": {
     "columns": {

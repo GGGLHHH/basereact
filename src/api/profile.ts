@@ -1,9 +1,16 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { ContentResponse, PutProfileRequest } from '#/generated/api-types'
+import type { ContentResponse, ProfileResponse, PutProfileRequest } from '#/generated/api-types'
 
-import { getMyProfile as getMyProfileApi, putProfile as putProfileApi } from '#/generated/client'
+import { setUserAvatar as buildSetUserAvatarPath } from '#/generated/api'
+import {
+  getMyProfile as getMyProfileApi,
+  getUserProfile as getUserProfileApi,
+  putProfile as putProfileApi,
+  setUserProfile as setUserProfileApi,
+} from '#/generated/client'
 import { uploadContentFlow } from '#/hooks/use-content-upload'
+import { requestJson } from '#/lib/api-client'
 import { queryKeys } from '#/lib/query-keys'
 
 // 自己的资料(GET /frontend/profiles/me)。含富化的 avatar_url(相对 preview 路径)。
@@ -28,6 +35,55 @@ export function useUpdateProfile() {
       putProfileApi({ body: request, path: { user_id: userId } }),
     onSuccess: (profile) => {
       queryClient.setQueryData(queryKeys.profile.me(), profile)
+    },
+  })
+}
+
+// 后台管理员按 user_id 查他人资料 —— 走 admin 面(GET /admin/users/{id}/profile,users:admin),
+// 不再需要 profiles:read。资料/头像管理整条收进 users:admin(见 baserust 纳入)。
+export function userProfileQueryOptions(userId: string) {
+  return queryOptions({
+    queryFn: () => getUserProfileApi({ path: { id: userId } }),
+    queryKey: queryKeys.profile.detail(userId),
+  })
+}
+
+export function useUserProfile(userId: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    ...userProfileQueryOptions(userId),
+    enabled: options?.enabled ?? Boolean(userId),
+  })
+}
+
+// 后台改他人资料(PUT /admin/users/{id}/profile,users:admin)。种 detail(userId) 缓存,
+// 不碰 me()(避免管理员改别人时污染自己的侧栏头像/姓名)。
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, request }: { userId: string; request: PutProfileRequest }) =>
+      setUserProfileApi({ body: request, path: { id: userId } }),
+    onSuccess: (profile, { userId }) => {
+      queryClient.setQueryData(queryKeys.profile.detail(userId), profile)
+    },
+  })
+}
+
+// 后台传他人头像(POST /admin/users/{id}/avatar,users:admin,multipart)。上传即绑定
+// (auto-bind:后端上传 content(owner=目标用户)+ 立即绑资料),返回更新后的 ProfileResponse。
+// 生成的 setUserAvatar 把 multipart 误当 JSON,故绕过它直接用 requestJson 送 FormData(ky 原生支持)。
+export function useUploadUserAvatar(userId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      return requestJson<ProfileResponse>(buildSetUserAvatarPath({ id: userId }), {
+        body: form,
+        method: 'POST',
+      })
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.profile.detail(userId), profile)
     },
   })
 }

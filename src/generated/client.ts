@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
-import type { AdminListWidgetsQuery, AdminUserView, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetUserPath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListUsersQuery, ListWidgetsQuery, LoginRequest, MyPermissionsResponse, Page_AdminUserView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserRolesPath, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, resetUserPassword as buildResetUserPasswordPath, setUserRoles as buildSetUserRolesPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
+import type { AdminListWidgetsQuery, AdminUserView, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetUserPath, GetUserProfilePath, GetWidgetPath, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListRolesQuery, ListUsersQuery, ListWidgetsQuery, LoginRequest, MyPermissionsResponse, Page_AdminUserView, Page_RoleView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserAvatarPath, SetUserAvatarRequest, SetUserProfilePath, SetUserRolesPath, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listRoles as buildListRolesPath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, setUserAvatar as buildSetUserAvatarPath, resetUserPassword as buildResetUserPasswordPath, getUserProfile as buildGetUserProfilePath, setUserProfile as buildSetUserProfilePath, setUserRoles as buildSetUserRolesPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -53,6 +53,20 @@ export function adminGetMe(options: AdminGetMeOptions, requestOptions: RuntimeRe
     return requestJson<UserResponse>(buildAdminGetMePath(), {
         ...requestOptions,
         method: "GET",
+        signal: options.signal
+    });
+}
+export interface ListRolesOptions {
+    query?: ListRolesQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listRoles(options: ListRolesOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_RoleView> {
+    return requestJson<Page_RoleView>(buildListRolesPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
         signal: options.signal
     });
 }
@@ -124,6 +138,20 @@ export function deleteUser(options: DeleteUserOptions, requestOptions: RuntimeRe
         signal: options.signal
     });
 }
+export interface SetUserAvatarOptions {
+    query?: never;
+    path: SetUserAvatarPath;
+    body: SetUserAvatarRequest;
+    signal?: AbortSignal;
+}
+export function setUserAvatar(options: SetUserAvatarOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildSetUserAvatarPath(options.path), {
+        ...requestOptions,
+        method: "POST",
+        body: options.body,
+        signal: options.signal
+    });
+}
 export interface ResetUserPasswordOptions {
     query?: never;
     path: ResetUserPasswordPath;
@@ -134,6 +162,33 @@ export function resetUserPassword(options: ResetUserPasswordOptions, requestOpti
     return requestVoid(buildResetUserPasswordPath(options.path), {
         ...requestOptions,
         method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface GetUserProfileOptions {
+    query?: never;
+    path: GetUserProfilePath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getUserProfile(options: GetUserProfileOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildGetUserProfilePath(options.path), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
+export interface SetUserProfileOptions {
+    query?: never;
+    path: SetUserProfilePath;
+    body: PutProfileRequest;
+    signal?: AbortSignal;
+}
+export function setUserProfile(options: SetUserProfileOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildSetUserProfilePath(options.path), {
+        ...requestOptions,
+        method: "PUT",
         json: options.body,
         signal: options.signal
     });

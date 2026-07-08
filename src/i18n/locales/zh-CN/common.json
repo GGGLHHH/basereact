@@ -23,7 +23,8 @@
     "save": "保存",
     "saveChanges": "保存修改",
     "saving": "保存中...",
-    "search": "搜索"
+    "search": "搜索",
+    "view": "查看"
   },
   "loading": {
     "empty": "暂无数据",
@@ -100,6 +101,7 @@
     "title": "个人信息"
   },
   "users": {
+    "actions": "操作",
     "columns": {
       "avatarUrl": "头像地址",
       "createdAt": "创建时间",
@@ -110,7 +112,63 @@
       "roles": "角色",
       "username": "用户名"
     },
-    "empty": "暂无用户"
+    "create": {
+      "description": "新建账号并分配角色。",
+      "submit": "创建用户",
+      "success": "用户已创建",
+      "title": "创建用户"
+    },
+    "delete": {
+      "confirm": "删除",
+      "description": "将永久删除 {{name}},且无法恢复。",
+      "success": "用户已删除",
+      "title": "删除用户"
+    },
+    "detail": {
+      "notFound": "用户不存在",
+      "title": "用户详情"
+    },
+    "edit": {
+      "accountDescription": "修改登录用户名与邮箱。",
+      "accountTitle": "账号",
+      "description": "管理该账号的身份、角色、密码与资料。",
+      "metaTitle": "系统",
+      "passwordButton": "重置密码",
+      "passwordDescription": "直接设置新密码,无需旧密码。",
+      "passwordReset": "密码已重置",
+      "passwordTitle": "密码",
+      "profileDescription": "头像、显示名与手机号存于用户资料。",
+      "profileSaved": "资料已保存",
+      "profileTitle": "资料",
+      "rolesDescription": "增删角色。未知角色名保存时会被拒绝。",
+      "rolesSaved": "角色已保存",
+      "rolesTitle": "角色",
+      "success": "修改已保存",
+      "title": "编辑用户"
+    },
+    "empty": "暂无用户",
+    "form": {
+      "avatarHint": "支持 JPG、PNG 或 GIF。",
+      "avatarUploadFailed": "头像上传失败",
+      "changeAvatar": "更换头像",
+      "displayNamePlaceholder": "全站展示的名称",
+      "emailPlaceholder": "name@example.com",
+      "newPassword": "新密码",
+      "newPasswordPlaceholder": "至少 3 个字符",
+      "password": "密码",
+      "passwordPlaceholder": "至少 3 个字符",
+      "phone": "手机号",
+      "phonePlaceholder": "可选",
+      "rolesAddPlaceholder": "输入角色后按回车",
+      "rolesHint": "逗号分隔的角色名;留空表示不授予。",
+      "rolesPlaceholder": "如 admin, editor",
+      "usernamePlaceholder": "请输入用户名"
+    },
+    "new": "新建用户",
+    "validation": {
+      "passwordMin": "密码至少 3 个字符",
+      "usernameRequired": "用户名必填"
+    }
   },
   "widgets": {
     "columns": {
