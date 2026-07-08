@@ -68,7 +68,7 @@ export function useUpdateProfile() {
   })
 }
 
-// 后台管理员按 user_id 查他人资料 —— 走 admin 面(GET /admin/users/{id}/profile,users:admin),
+// 后台管理员按 user_id 查他人资料 —— 走 admin 面(GET /admin/auth/users/{id}/profile,users:admin),
 // 不再需要 profiles:read。资料/头像管理整条收进 users:admin(见 baserust 纳入)。
 export function userProfileQueryOptions(userId: string) {
   return queryOptions({
@@ -84,7 +84,7 @@ export function useUserProfile(userId: string, options?: { enabled?: boolean }) 
   })
 }
 
-// 后台改他人资料(PUT /admin/users/{id}/profile,users:admin)。种 detail(userId) 缓存,
+// 后台改他人资料(PUT /admin/auth/users/{id}/profile,users:admin)。种 detail(userId) 缓存,
 // 不碰 me()(避免管理员改别人时污染自己的侧栏头像/姓名)。
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient()
@@ -98,7 +98,7 @@ export function useUpdateUserProfile() {
   })
 }
 
-// 后台传他人头像(POST /admin/users/{id}/avatar,users:admin,multipart)。上传即绑定
+// 后台传他人头像(POST /admin/auth/users/{id}/avatar,users:admin,multipart)。上传即绑定
 // (auto-bind:后端上传 content(owner=目标用户)+ 立即绑资料),返回更新后的 ProfileResponse。
 // 生成的 setUserAvatar 把 multipart 误当 JSON,故绕过它直接用 requestJson 送 FormData(ky 原生支持)。
 export function useUploadUserAvatar(userId: string) {

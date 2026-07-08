@@ -15,7 +15,7 @@ import { globalRouter } from '#/lib/global-router'
 import { queryKeys } from '#/lib/query-keys'
 import type { LinkProps } from '@tanstack/react-router'
 
-const API_BASE_URL = '/api/v1'
+export const API_BASE_URL = '/api/v1'
 export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']
 const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
 

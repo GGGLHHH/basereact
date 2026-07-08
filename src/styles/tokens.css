@@ -37,6 +37,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Auth audit board — semantic + accent data layer. Colours are spent only on
+     data (outcomes, series); grounds/cards stay the app's neutrals. Consumed by
+     the /admin/auth-log page + its ChartConfig. Violet accent = identity/access. */
+  --auth-accent: oklch(0.55 0.2 280);
+  --auth-success: oklch(0.62 0.13 165);
+  --auth-fail: oklch(0.58 0.21 25);
+  --auth-warn: oklch(0.7 0.14 70);
 }
 
 .dark {
@@ -71,4 +79,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Auth board data layer — brighter on the dark ground so outcomes read at a glance. */
+  --auth-accent: oklch(0.72 0.18 280);
+  --auth-success: oklch(0.72 0.14 168);
+  --auth-fail: oklch(0.68 0.2 25);
+  --auth-warn: oklch(0.8 0.14 72);
 }

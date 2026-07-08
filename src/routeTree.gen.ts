@@ -25,6 +25,7 @@ import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
 import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
+import { Route as AdminShellAuthLogRouteImport } from './routes/admin/_shell/auth-log'
 import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
 import { Route as AdminShell403RouteImport } from './routes/admin/_shell/403'
 import { Route as AdminShellUsersRouteRouteImport } from './routes/admin/_shell/users/route'
@@ -117,6 +118,11 @@ const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
 const AdminShellHomeRoute = AdminShellHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellAuthLogRoute = AdminShellAuthLogRouteImport.update({
+  id: '/auth-log',
+  path: '/auth-log',
   getParentRoute: () => AdminShellRoute,
 } as any)
 const AdminShell404Route = AdminShell404RouteImport.update({
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminShellUsersRouteRouteWithChildren
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
+  '/admin/auth-log': typeof AdminShellAuthLogRoute
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByTo {
   '/frontend/login': typeof FrontendLoginRoute
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
+  '/admin/auth-log': typeof AdminShellAuthLogRoute
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/admin/_shell/users': typeof AdminShellUsersRouteRouteWithChildren
   '/admin/_shell/403': typeof AdminShell403Route
   '/admin/_shell/404': typeof AdminShell404Route
+  '/admin/_shell/auth-log': typeof AdminShellAuthLogRoute
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/profile': typeof AdminShellProfileRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/403'
     | '/admin/404'
+    | '/admin/auth-log'
     | '/admin/home'
     | '/admin/profile'
     | '/admin/widgets'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/frontend/login'
     | '/admin/403'
     | '/admin/404'
+    | '/admin/auth-log'
     | '/admin/home'
     | '/admin/profile'
     | '/admin/widgets'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/_shell/users'
     | '/admin/_shell/403'
     | '/admin/_shell/404'
+    | '/admin/_shell/auth-log'
     | '/admin/_shell/home'
     | '/admin/_shell/profile'
     | '/admin/_shell/widgets'
@@ -504,6 +516,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/admin/home'
       preLoaderRoute: typeof AdminShellHomeRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/auth-log': {
+      id: '/admin/_shell/auth-log'
+      path: '/auth-log'
+      fullPath: '/admin/auth-log'
+      preLoaderRoute: typeof AdminShellAuthLogRouteImport
       parentRoute: typeof AdminShellRoute
     }
     '/admin/_shell/404': {
@@ -688,6 +707,7 @@ interface AdminShellRouteChildren {
   AdminShellUsersRouteRoute: typeof AdminShellUsersRouteRouteWithChildren
   AdminShell403Route: typeof AdminShell403Route
   AdminShell404Route: typeof AdminShell404Route
+  AdminShellAuthLogRoute: typeof AdminShellAuthLogRoute
   AdminShellHomeRoute: typeof AdminShellHomeRoute
   AdminShellProfileRoute: typeof AdminShellProfileRoute
   AdminShellWidgetsRoute: typeof AdminShellWidgetsRoute
@@ -698,6 +718,7 @@ const AdminShellRouteChildren: AdminShellRouteChildren = {
   AdminShellUsersRouteRoute: AdminShellUsersRouteRouteWithChildren,
   AdminShell403Route: AdminShell403Route,
   AdminShell404Route: AdminShell404Route,
+  AdminShellAuthLogRoute: AdminShellAuthLogRoute,
   AdminShellHomeRoute: AdminShellHomeRoute,
   AdminShellProfileRoute: AdminShellProfileRoute,
   AdminShellWidgetsRoute: AdminShellWidgetsRoute,

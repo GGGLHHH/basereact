@@ -1,6 +1,7 @@
 {
   "titles": {
     "admin": "Admin",
+    "adminAuthLog": "Auth log",
     "adminHome": "Home",
     "adminLogin": "Login",
     "adminUserCreate": "New user",

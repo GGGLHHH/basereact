@@ -2,6 +2,61 @@
 // Do not edit manually. Changes will be overwritten on next build.
 
 export interface paths {
+    "/api/v1/admin/auth/auth-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 全局认证审计流(后台安全排障用)。 */
+        get: operations["list_auth_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/auth-events/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 认证审计仪表盘(时间序列 + 各维度 group-by 计数 + KPI)。默认区间最近 24h。 */
+        get: operations["stats_auth_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/auth-events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 认证事件实时推送(SSE)。projector 落库成功后立即推送;镜像 `widget::routes::widget_events`
+         *     的鉴权/心跳范式。best-effort 无回放:断线期间的事件丢失,EventSource 自动重连拿新订阅。
+         *     ponytail:总线是单 idm 实例内广播,见 `AuthEventBus` 头注(多实例扇出需换 JetStream 直连)。
+         */
+        get: operations["stream_auth_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/auth/login": {
         parameters: {
             query?: never;
@@ -34,7 +89,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/roles": {
+    "/api/v1/admin/auth/roles": {
         parameters: {
             query?: never;
             header?: never;
@@ -54,7 +109,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users": {
+    "/api/v1/admin/auth/users": {
         parameters: {
             query?: never;
             header?: never;
@@ -77,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/{id}": {
+    "/api/v1/admin/auth/users/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -96,7 +151,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/{id}/avatar": {
+    "/api/v1/admin/auth/users/{id}/auth-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 某用户的认证事件历史(后台用户详情页 / 排障用)。 */
+        get: operations["list_user_auth_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/users/{id}/avatar": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +188,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/{id}/password": {
+    "/api/v1/admin/auth/users/{id}/password": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,7 +205,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/{id}/profile": {
+    "/api/v1/admin/auth/users/{id}/profile": {
         parameters: {
             query?: never;
             header?: never;
@@ -151,7 +223,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users/{id}/roles": {
+    "/api/v1/admin/auth/users/{id}/roles": {
         parameters: {
             query?: never;
             header?: never;
@@ -756,6 +828,72 @@ export interface components {
             roles: string[];
             username: string;
         };
+        /**
+         * @description 认证渠道闭集(`public` 前台 / `admin` 后台)。同 `AuthEventType` 头注:存储值不变,只加读侧
+         *     强类型;无 `#[serde(other)]` 兜底,原因同上(唯一写者是本仓 emit)。
+         * @enum {string}
+         */
+        AuthChannel: "public" | "admin";
+        /** @description 读模型行(admin 端点返回)。 */
+        AuthEventRow: {
+            actor?: string | null;
+            browser?: string | null;
+            channel: components["schemas"]["AuthChannel"];
+            city?: string | null;
+            country?: string | null;
+            event_type: components["schemas"]["AuthEventType"];
+            failure_reason?: null | components["schemas"]["FailureReason"];
+            /** Format: uuid */
+            id: string;
+            identifier_attempted?: string | null;
+            ip?: string | null;
+            /** Format: date-time */
+            occurred_at: string;
+            os?: string | null;
+            outcome: components["schemas"]["AuthOutcome"];
+            /** Format: uuid */
+            session_id?: string | null;
+            user_agent?: string | null;
+            /** Format: uuid */
+            user_id?: string | null;
+        };
+        /**
+         * @description 认证审计事件类型闭集。存储值不变(仍是 `emit` 写的 `"auth.xxx"` 字符串,免数据迁移),
+         *     这里只是给它上一层强类型:emit 侧编译期防手滑字面量,读侧 utoipa 生成前端可辨识联合类型。
+         *     故意不设 `#[serde(other)]` 兜底 —— 该列只由本仓 `auth::emit` 写入(闭集只增不改),
+         *     出现未知值本身就是数据异常,该让它在解码处炸出来而不是悄悄吞掉。
+         * @enum {string}
+         */
+        AuthEventType: "auth.login_succeeded" | "auth.login_failed" | "auth.admin_access_denied" | "auth.refreshed" | "auth.logged_out" | "auth.logout_all" | "auth.password_changed" | "auth.registered" | "auth.account_deleted";
+        AuthKpi: {
+            /** Format: int64 */
+            failed_count: number;
+            /** Format: double */
+            failed_delta: number;
+            /** Format: double */
+            success_rate: number;
+            /**
+             * Format: double
+             * @description (当前 - 上个等长窗口) / 上个等长窗口;上个窗口为 0 时记 0.0(无基数,不作 +∞/NaN)。
+             */
+            total_delta: number;
+            /** Format: int64 */
+            total_events: number;
+            /** Format: int64 */
+            unique_ips: number;
+        };
+        /**
+         * @description 认证结果闭集(`success` / `failure`)。同上头注。
+         * @enum {string}
+         */
+        AuthOutcome: "success" | "failure";
+        AuthStats: {
+            activity: components["schemas"]["StatBucket"][];
+            kpi: components["schemas"]["AuthKpi"];
+            reasons: components["schemas"]["ReasonCount"][];
+            top_ips: components["schemas"]["IpStat"][];
+            types: components["schemas"]["TypeCount"][];
+        };
         /** @description 修改密码。 */
         ChangePasswordRequest: {
             current_password: string;
@@ -835,6 +973,19 @@ export interface components {
             /** @description 给人看的安全消息 —— 不含 SQL/解析器/路径等任何内部原始措辞 */
             error: string;
         };
+        /**
+         * @description 失败原因闭集。同上头注;`account_locked`/`rate_limited` 目前 emit 侧未产出(预留取值,
+         *     闭集只增不改 —— 出现才炸,不提前拒绝合法但暂未使用的取值)。
+         * @enum {string}
+         */
+        FailureReason: "unknown_user" | "bad_password" | "no_admin_perm" | "account_locked" | "rate_limited";
+        IpStat: {
+            /** Format: int64 */
+            failures: number;
+            ip: string;
+            /** Format: int64 */
+            total: number;
+        };
         /** @description 登录请求(公开)。`identifier` = username 或 email,由 idm 自动识别。 */
         LoginRequest: {
             identifier: string;
@@ -911,6 +1062,35 @@ export interface components {
                 /** @description idm 角色名(全量)。 */
                 roles: string[];
                 username: string;
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         */
+        Page_AuthEventRow: {
+            items: {
+                actor?: string | null;
+                browser?: string | null;
+                channel: components["schemas"]["AuthChannel"];
+                city?: string | null;
+                country?: string | null;
+                event_type: components["schemas"]["AuthEventType"];
+                failure_reason?: null | components["schemas"]["FailureReason"];
+                /** Format: uuid */
+                id: string;
+                identifier_attempted?: string | null;
+                ip?: string | null;
+                /** Format: date-time */
+                occurred_at: string;
+                os?: string | null;
+                outcome: components["schemas"]["AuthOutcome"];
+                /** Format: uuid */
+                session_id?: string | null;
+                user_agent?: string | null;
+                /** Format: uuid */
+                user_id?: string | null;
             }[];
             page_info: components["schemas"]["PageInfo"];
         };
@@ -996,6 +1176,12 @@ export interface components {
             display_name?: string | null;
             phone?: string | null;
         };
+        /** @description `reasons` group-by 计数的强类型版本(镜像 `TypeCount`)。 */
+        ReasonCount: {
+            /** Format: int64 */
+            count: number;
+            key: components["schemas"]["FailureReason"];
+        };
         /** @description 注册请求(公开)。username 必填、唯一;email 可选;password 至少 3 位。 */
         RegisterRequest: {
             email?: string | null;
@@ -1037,6 +1223,21 @@ export interface components {
          * @enum {string}
          */
         SortOrder: "asc" | "desc";
+        /** @description 仪表盘统计(admin `/auth-events/stats`)。时间序列 + 各维度 group-by 计数。 */
+        StatBucket: {
+            /** Format: int64 */
+            failure: number;
+            /** Format: int64 */
+            success: number;
+            /** Format: date-time */
+            t: string;
+        };
+        /** @description `types` group-by 计数的强类型版本。 */
+        TypeCount: {
+            /** Format: int64 */
+            count: number;
+            key: components["schemas"]["AuthEventType"];
+        };
         /** @description **全量更新**内容可编辑字段(PUT 语义:都替换;tenant/owner/status/derivation 不动)。 */
         UpdateContentRequest: {
             description?: string | null;
@@ -1149,6 +1350,12 @@ export interface components {
     pathItems: never;
 }
 export type AdminUserView = components['schemas']['AdminUserView'];
+export type AuthChannel = components['schemas']['AuthChannel'];
+export type AuthEventRow = components['schemas']['AuthEventRow'];
+export type AuthEventType = components['schemas']['AuthEventType'];
+export type AuthKpi = components['schemas']['AuthKpi'];
+export type AuthOutcome = components['schemas']['AuthOutcome'];
+export type AuthStats = components['schemas']['AuthStats'];
 export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 export type ContentMetadataResponse = components['schemas']['ContentMetadataResponse'];
 export type ContentResponse = components['schemas']['ContentResponse'];
@@ -1157,23 +1364,29 @@ export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
 export type ErrorBody = components['schemas']['ErrorBody'];
+export type FailureReason = components['schemas']['FailureReason'];
+export type IpStat = components['schemas']['IpStat'];
 export type LoginRequest = components['schemas']['LoginRequest'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
+export type Page_AuthEventRow = components['schemas']['Page_AuthEventRow'];
 export type Page_RoleView = components['schemas']['Page_RoleView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
 export type ProfileResponse = components['schemas']['ProfileResponse'];
 export type PutProfileRequest = components['schemas']['PutProfileRequest'];
+export type ReasonCount = components['schemas']['ReasonCount'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
 export type RoleView = components['schemas']['RoleView'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
 export type SortOrder = components['schemas']['SortOrder'];
+export type StatBucket = components['schemas']['StatBucket'];
+export type TypeCount = components['schemas']['TypeCount'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
 export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
@@ -1189,6 +1402,132 @@ export type WidgetStats = components['schemas']['WidgetStats'];
 export type WidgetView = components['schemas']['WidgetView'];
 export type $defs = Record<string, never>;
 export interface operations {
+    list_auth_events: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+                event_type?: string;
+                outcome?: components["schemas"]["AuthOutcome"];
+                ip?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuthEventRow"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    stats_auth_events: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthStats"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    stream_auth_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE 事件流;event = auth_event,data = AuthEventRow JSON */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["AuthEventRow"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     admin_login: {
         parameters: {
             query?: never;
@@ -1603,6 +1942,58 @@ export interface operations {
             };
             /** @description 不存在 / 已软删 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_user_auth_events: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+                event_type?: string;
+                outcome?: components["schemas"]["AuthOutcome"];
+                ip?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuthEventRow"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3665,10 +4056,13 @@ export type GetProfilePath = operations['get_profile']['parameters']['path'];
 export type GetUserPath = operations['get_user']['parameters']['path'];
 export type GetUserProfilePath = operations['get_user_profile']['parameters']['path'];
 export type GetWidgetPath = operations['get_widget']['parameters']['path'];
+export type ListAuthEventsQuery = operations['list_auth_events']['parameters']['query'];
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
 export type ListRolesQuery = operations['list_roles']['parameters']['query'];
+export type ListUserAuthEventsPath = operations['list_user_auth_events']['parameters']['path'];
+export type ListUserAuthEventsQuery = operations['list_user_auth_events']['parameters']['query'];
 export type ListUsersQuery = operations['list_users']['parameters']['query'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
@@ -3679,6 +4073,7 @@ export type SetUserAvatarPath = operations['set_user_avatar']['parameters']['pat
 export type SetUserAvatarRequest = FormData;
 export type SetUserProfilePath = operations['set_user_profile']['parameters']['path'];
 export type SetUserRolesPath = operations['set_user_roles']['parameters']['path'];
+export type StatsAuthEventsQuery = operations['stats_auth_events']['parameters']['query'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
 export type UpdateUserPath = operations['update_user']['parameters']['path'];
 export type UpdateWidgetPath = operations['update_widget']['parameters']['path'];

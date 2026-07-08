@@ -1,4 +1,64 @@
 {
+  "authLog": {
+    "title": "Auth log",
+    "subtitle": "Live authentication activity across public and admin sign-in.",
+    "window": "Last 24 hours",
+    "kpi": {
+      "events": "Events",
+      "successRate": "Success rate",
+      "failed": "Failed attempts",
+      "sources": "Sources",
+      "vsPrev": "vs prev 24h",
+      "uniqueIps": "unique IPs"
+    },
+    "chart": {
+      "activityTitle": "Authentication activity",
+      "success": "Success",
+      "failure": "Failure"
+    },
+    "tape": {
+      "title": "Event stream",
+      "live": "Live",
+      "paused": "Paused"
+    },
+    "breakdown": {
+      "reasons": "Failure reasons",
+      "types": "Event mix",
+      "topIps": "Top sources",
+      "failures": "failures",
+      "fail": "fail"
+    },
+    "table": {
+      "title": "Recent events",
+      "search": "user or IP…",
+      "allOutcomes": "All outcomes",
+      "time": "Time",
+      "event": "Event",
+      "actor": "Actor",
+      "source": "Source",
+      "channel": "Channel",
+      "outcome": "Outcome",
+      "empty": "No events match these filters."
+    },
+    "events": {
+      "loginSucceeded": "Signed in",
+      "registered": "Registered",
+      "loginFailed": "Sign-in failed",
+      "adminAccessDenied": "Admin access denied",
+      "passwordChanged": "Password changed",
+      "refreshed": "Session refreshed",
+      "loggedOut": "Signed out",
+      "logoutAll": "All sessions ended",
+      "accountDeleted": "Account deleted"
+    },
+    "reasons": {
+      "unknownUser": "unknown user",
+      "badPassword": "wrong password",
+      "noAdminPerm": "no admin access",
+      "accountLocked": "account locked",
+      "rateLimited": "rate limited"
+    }
+  },
   "appTitle": "TanStack Start Starter",
   "language": "Language",
   "theme": {
