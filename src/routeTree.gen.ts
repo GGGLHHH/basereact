@@ -23,19 +23,20 @@ import { Route as AdminShellRouteImport } from './routes/admin/_shell'
 import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
 import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
-import { Route as AdminShellUsersRouteImport } from './routes/admin/_shell/users'
 import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
 import { Route as AdminShell403RouteImport } from './routes/admin/_shell/403'
+import { Route as AdminShellUsersRouteRouteImport } from './routes/admin/_shell/users/route'
 import { Route as AdminShellNestedRouteRouteImport } from './routes/admin/_shell/nested/route'
+import { Route as AdminShellUsersIndexRouteImport } from './routes/admin/_shell/users/index'
 import { Route as AdminShellNestedIndexRouteImport } from './routes/admin/_shell/nested/index'
-import { Route as AdminShellUsersNewRouteImport } from './routes/admin/_shell/users_.new'
-import { Route as AdminShellUsersUserIdRouteImport } from './routes/admin/_shell/users_.$userId'
+import { Route as AdminShellUsersNewRouteImport } from './routes/admin/_shell/users/new'
+import { Route as AdminShellUsersUserIdRouteImport } from './routes/admin/_shell/users/$userId'
 import { Route as AdminShellNestedOverviewRouteImport } from './routes/admin/_shell/nested/overview'
 import { Route as AdminShellNestedReportsRouteRouteImport } from './routes/admin/_shell/nested/reports/route'
 import { Route as AdminShellNestedReportsIndexRouteImport } from './routes/admin/_shell/nested/reports/index'
-import { Route as AdminShellUsersUserIdEditRouteImport } from './routes/admin/_shell/users_.$userId_.edit'
+import { Route as AdminShellUsersUserIdEditRouteImport } from './routes/admin/_shell/users/$userId_.edit'
 import { Route as AdminShellNestedReportsDailyRouteImport } from './routes/admin/_shell/nested/reports/daily'
 import { Route as AdminShellNestedReportsRegionsRouteRouteImport } from './routes/admin/_shell/nested/reports/regions/route'
 import { Route as AdminShellNestedReportsRegionsIndexRouteImport } from './routes/admin/_shell/nested/reports/regions/index'
@@ -108,11 +109,6 @@ const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
   path: '/widgets',
   getParentRoute: () => AdminShellRoute,
 } as any)
-const AdminShellUsersRoute = AdminShellUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminShellRoute,
-} as any)
 const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -133,10 +129,20 @@ const AdminShell403Route = AdminShell403RouteImport.update({
   path: '/403',
   getParentRoute: () => AdminShellRoute,
 } as any)
+const AdminShellUsersRouteRoute = AdminShellUsersRouteRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminShellRoute,
+} as any)
 const AdminShellNestedRouteRoute = AdminShellNestedRouteRouteImport.update({
   id: '/nested',
   path: '/nested',
   getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellUsersIndexRoute = AdminShellUsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminShellUsersRouteRoute,
 } as any)
 const AdminShellNestedIndexRoute = AdminShellNestedIndexRouteImport.update({
   id: '/',
@@ -144,14 +150,14 @@ const AdminShellNestedIndexRoute = AdminShellNestedIndexRouteImport.update({
   getParentRoute: () => AdminShellNestedRouteRoute,
 } as any)
 const AdminShellUsersNewRoute = AdminShellUsersNewRouteImport.update({
-  id: '/users_/new',
-  path: '/users/new',
-  getParentRoute: () => AdminShellRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminShellUsersRouteRoute,
 } as any)
 const AdminShellUsersUserIdRoute = AdminShellUsersUserIdRouteImport.update({
-  id: '/users_/$userId',
-  path: '/users/$userId',
-  getParentRoute: () => AdminShellRoute,
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminShellUsersRouteRoute,
 } as any)
 const AdminShellNestedOverviewRoute =
   AdminShellNestedOverviewRouteImport.update({
@@ -173,9 +179,9 @@ const AdminShellNestedReportsIndexRoute =
   } as any)
 const AdminShellUsersUserIdEditRoute =
   AdminShellUsersUserIdEditRouteImport.update({
-    id: '/users_/$userId_/edit',
-    path: '/users/$userId/edit',
-    getParentRoute: () => AdminShellRoute,
+    id: '/$userId_/edit',
+    path: '/$userId/edit',
+    getParentRoute: () => AdminShellUsersRouteRoute,
   } as any)
 const AdminShellNestedReportsDailyRoute =
   AdminShellNestedReportsDailyRouteImport.update({
@@ -207,11 +213,11 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/frontend/': typeof FrontendIndexRoute
   '/admin/nested': typeof AdminShellNestedRouteRouteWithChildren
+  '/admin/users': typeof AdminShellUsersRouteRouteWithChildren
   '/admin/403': typeof AdminShell403Route
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
-  '/admin/users': typeof AdminShellUsersRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$userId': typeof AdminShellUsersUserIdRoute
   '/admin/users/new': typeof AdminShellUsersNewRoute
   '/admin/nested/': typeof AdminShellNestedIndexRoute
+  '/admin/users/': typeof AdminShellUsersIndexRoute
   '/admin/nested/reports/regions': typeof AdminShellNestedReportsRegionsRouteRouteWithChildren
   '/admin/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
   '/admin/users/$userId/edit': typeof AdminShellUsersUserIdEditRoute
@@ -238,7 +245,6 @@ export interface FileRoutesByTo {
   '/admin/404': typeof AdminShell404Route
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
-  '/admin/users': typeof AdminShellUsersRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
@@ -246,6 +252,7 @@ export interface FileRoutesByTo {
   '/admin/users/$userId': typeof AdminShellUsersUserIdRoute
   '/admin/users/new': typeof AdminShellUsersNewRoute
   '/admin/nested': typeof AdminShellNestedIndexRoute
+  '/admin/users': typeof AdminShellUsersIndexRoute
   '/admin/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
   '/admin/users/$userId/edit': typeof AdminShellUsersUserIdEditRoute
   '/admin/nested/reports': typeof AdminShellNestedReportsIndexRoute
@@ -265,22 +272,23 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/frontend/': typeof FrontendIndexRoute
   '/admin/_shell/nested': typeof AdminShellNestedRouteRouteWithChildren
+  '/admin/_shell/users': typeof AdminShellUsersRouteRouteWithChildren
   '/admin/_shell/403': typeof AdminShell403Route
   '/admin/_shell/404': typeof AdminShell404Route
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/profile': typeof AdminShellProfileRoute
-  '/admin/_shell/users': typeof AdminShellUsersRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
   '/frontend/_shell/about': typeof FrontendShellAboutRoute
   '/frontend/_shell/home': typeof FrontendShellHomeRoute
   '/admin/_shell/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
   '/admin/_shell/nested/overview': typeof AdminShellNestedOverviewRoute
-  '/admin/_shell/users_/$userId': typeof AdminShellUsersUserIdRoute
-  '/admin/_shell/users_/new': typeof AdminShellUsersNewRoute
+  '/admin/_shell/users/$userId': typeof AdminShellUsersUserIdRoute
+  '/admin/_shell/users/new': typeof AdminShellUsersNewRoute
   '/admin/_shell/nested/': typeof AdminShellNestedIndexRoute
+  '/admin/_shell/users/': typeof AdminShellUsersIndexRoute
   '/admin/_shell/nested/reports/regions': typeof AdminShellNestedReportsRegionsRouteRouteWithChildren
   '/admin/_shell/nested/reports/daily': typeof AdminShellNestedReportsDailyRoute
-  '/admin/_shell/users_/$userId_/edit': typeof AdminShellUsersUserIdEditRoute
+  '/admin/_shell/users/$userId_/edit': typeof AdminShellUsersUserIdEditRoute
   '/admin/_shell/nested/reports/': typeof AdminShellNestedReportsIndexRoute
   '/admin/_shell/nested/reports/regions/': typeof AdminShellNestedReportsRegionsIndexRoute
 }
@@ -297,11 +305,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/frontend/'
     | '/admin/nested'
+    | '/admin/users'
     | '/admin/403'
     | '/admin/404'
     | '/admin/home'
     | '/admin/profile'
-    | '/admin/users'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
@@ -310,6 +318,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/admin/nested/'
+    | '/admin/users/'
     | '/admin/nested/reports/regions'
     | '/admin/nested/reports/daily'
     | '/admin/users/$userId/edit'
@@ -328,7 +337,6 @@ export interface FileRouteTypes {
     | '/admin/404'
     | '/admin/home'
     | '/admin/profile'
-    | '/admin/users'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
@@ -336,6 +344,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/admin/nested'
+    | '/admin/users'
     | '/admin/nested/reports/daily'
     | '/admin/users/$userId/edit'
     | '/admin/nested/reports'
@@ -354,22 +363,23 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/frontend/'
     | '/admin/_shell/nested'
+    | '/admin/_shell/users'
     | '/admin/_shell/403'
     | '/admin/_shell/404'
     | '/admin/_shell/home'
     | '/admin/_shell/profile'
-    | '/admin/_shell/users'
     | '/admin/_shell/widgets'
     | '/frontend/_shell/about'
     | '/frontend/_shell/home'
     | '/admin/_shell/nested/reports'
     | '/admin/_shell/nested/overview'
-    | '/admin/_shell/users_/$userId'
-    | '/admin/_shell/users_/new'
+    | '/admin/_shell/users/$userId'
+    | '/admin/_shell/users/new'
     | '/admin/_shell/nested/'
+    | '/admin/_shell/users/'
     | '/admin/_shell/nested/reports/regions'
     | '/admin/_shell/nested/reports/daily'
-    | '/admin/_shell/users_/$userId_/edit'
+    | '/admin/_shell/users/$userId_/edit'
     | '/admin/_shell/nested/reports/'
     | '/admin/_shell/nested/reports/regions/'
   fileRoutesById: FileRoutesById
@@ -482,13 +492,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellWidgetsRouteImport
       parentRoute: typeof AdminShellRoute
     }
-    '/admin/_shell/users': {
-      id: '/admin/_shell/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminShellUsersRouteImport
-      parentRoute: typeof AdminShellRoute
-    }
     '/admin/_shell/profile': {
       id: '/admin/_shell/profile'
       path: '/profile'
@@ -517,12 +520,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShell403RouteImport
       parentRoute: typeof AdminShellRoute
     }
+    '/admin/_shell/users': {
+      id: '/admin/_shell/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminShellUsersRouteRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
     '/admin/_shell/nested': {
       id: '/admin/_shell/nested'
       path: '/nested'
       fullPath: '/admin/nested'
       preLoaderRoute: typeof AdminShellNestedRouteRouteImport
       parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/users/': {
+      id: '/admin/_shell/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminShellUsersIndexRouteImport
+      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/': {
       id: '/admin/_shell/nested/'
@@ -531,19 +548,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellNestedIndexRouteImport
       parentRoute: typeof AdminShellNestedRouteRoute
     }
-    '/admin/_shell/users_/new': {
-      id: '/admin/_shell/users_/new'
-      path: '/users/new'
+    '/admin/_shell/users/new': {
+      id: '/admin/_shell/users/new'
+      path: '/new'
       fullPath: '/admin/users/new'
       preLoaderRoute: typeof AdminShellUsersNewRouteImport
-      parentRoute: typeof AdminShellRoute
+      parentRoute: typeof AdminShellUsersRouteRoute
     }
-    '/admin/_shell/users_/$userId': {
-      id: '/admin/_shell/users_/$userId'
-      path: '/users/$userId'
+    '/admin/_shell/users/$userId': {
+      id: '/admin/_shell/users/$userId'
+      path: '/$userId'
       fullPath: '/admin/users/$userId'
       preLoaderRoute: typeof AdminShellUsersUserIdRouteImport
-      parentRoute: typeof AdminShellRoute
+      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/overview': {
       id: '/admin/_shell/nested/overview'
@@ -566,12 +583,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellNestedReportsIndexRouteImport
       parentRoute: typeof AdminShellNestedReportsRouteRoute
     }
-    '/admin/_shell/users_/$userId_/edit': {
-      id: '/admin/_shell/users_/$userId_/edit'
-      path: '/users/$userId/edit'
+    '/admin/_shell/users/$userId_/edit': {
+      id: '/admin/_shell/users/$userId_/edit'
+      path: '/$userId/edit'
       fullPath: '/admin/users/$userId/edit'
       preLoaderRoute: typeof AdminShellUsersUserIdEditRouteImport
-      parentRoute: typeof AdminShellRoute
+      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/reports/daily': {
       id: '/admin/_shell/nested/reports/daily'
@@ -649,30 +666,41 @@ const AdminShellNestedRouteRouteWithChildren =
     AdminShellNestedRouteRouteChildren,
   )
 
+interface AdminShellUsersRouteRouteChildren {
+  AdminShellUsersUserIdRoute: typeof AdminShellUsersUserIdRoute
+  AdminShellUsersNewRoute: typeof AdminShellUsersNewRoute
+  AdminShellUsersIndexRoute: typeof AdminShellUsersIndexRoute
+  AdminShellUsersUserIdEditRoute: typeof AdminShellUsersUserIdEditRoute
+}
+
+const AdminShellUsersRouteRouteChildren: AdminShellUsersRouteRouteChildren = {
+  AdminShellUsersUserIdRoute: AdminShellUsersUserIdRoute,
+  AdminShellUsersNewRoute: AdminShellUsersNewRoute,
+  AdminShellUsersIndexRoute: AdminShellUsersIndexRoute,
+  AdminShellUsersUserIdEditRoute: AdminShellUsersUserIdEditRoute,
+}
+
+const AdminShellUsersRouteRouteWithChildren =
+  AdminShellUsersRouteRoute._addFileChildren(AdminShellUsersRouteRouteChildren)
+
 interface AdminShellRouteChildren {
   AdminShellNestedRouteRoute: typeof AdminShellNestedRouteRouteWithChildren
+  AdminShellUsersRouteRoute: typeof AdminShellUsersRouteRouteWithChildren
   AdminShell403Route: typeof AdminShell403Route
   AdminShell404Route: typeof AdminShell404Route
   AdminShellHomeRoute: typeof AdminShellHomeRoute
   AdminShellProfileRoute: typeof AdminShellProfileRoute
-  AdminShellUsersRoute: typeof AdminShellUsersRoute
   AdminShellWidgetsRoute: typeof AdminShellWidgetsRoute
-  AdminShellUsersUserIdRoute: typeof AdminShellUsersUserIdRoute
-  AdminShellUsersNewRoute: typeof AdminShellUsersNewRoute
-  AdminShellUsersUserIdEditRoute: typeof AdminShellUsersUserIdEditRoute
 }
 
 const AdminShellRouteChildren: AdminShellRouteChildren = {
   AdminShellNestedRouteRoute: AdminShellNestedRouteRouteWithChildren,
+  AdminShellUsersRouteRoute: AdminShellUsersRouteRouteWithChildren,
   AdminShell403Route: AdminShell403Route,
   AdminShell404Route: AdminShell404Route,
   AdminShellHomeRoute: AdminShellHomeRoute,
   AdminShellProfileRoute: AdminShellProfileRoute,
-  AdminShellUsersRoute: AdminShellUsersRoute,
   AdminShellWidgetsRoute: AdminShellWidgetsRoute,
-  AdminShellUsersUserIdRoute: AdminShellUsersUserIdRoute,
-  AdminShellUsersNewRoute: AdminShellUsersNewRoute,
-  AdminShellUsersUserIdEditRoute: AdminShellUsersUserIdEditRoute,
 }
 
 const AdminShellRouteWithChildren = AdminShellRoute._addFileChildren(

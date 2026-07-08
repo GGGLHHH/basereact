@@ -18,17 +18,12 @@ const usersSearchSchema = z.object({
   size: z.number().int().min(1).max(100).catch(20).default(20),
 })
 
-export const Route = createFileRoute('/admin/_shell/users')({
+// /admin/users 落地内容(父 route.tsx 的 Outlet 里)。菜单/面包屑标题挂在父
+// route.tsx,本 index 不设 titleKey,避免同路径重复出现。分页 search 只在此声明,
+// 建号/详情/编辑不继承(它们不需要 page/size)。
+export const Route = createFileRoute('/admin/_shell/users/')({
   component: UsersPage,
   validateSearch: usersSearchSchema,
-  staticData: {
-    titleKey: 'titles.adminUsers',
-    menuTitleKey: 'titles.adminUsers',
-    icon: 'i-tabler-users',
-    groupKey: 'menuGroups.admin',
-    // 页面主数据即列表操作,准入随它:缺 users:admin 时菜单不出现、直连进壳内 403。
-    accessPolicyKeys: ['listUsers'],
-  },
 })
 
 function UsersPage() {
