@@ -1,4 +1,5 @@
 import { useCallback, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { AdminUserView } from '#/generated/api-types'
 
@@ -10,6 +11,11 @@ import {
   type InfiniteComboboxChildren,
 } from '@/components/select/infinite-combobox'
 import {
+  InfiniteSelectEmpty,
+  InfiniteSelectError,
+  InfiniteSelectLoading,
+  InfiniteSelectLoadingMore,
+  InfiniteSelectRetry,
   type ControllableSelectionProps,
   type InfiniteSelectOption,
 } from '@/components/select/infinite-select'
@@ -36,11 +42,9 @@ interface UserInfiniteSelectCommonProps {
   commitOnClose?: boolean
 
   searchPlaceholder?: string
-  emptyLabel?: ReactNode
-  loadingLabel?: ReactNode
-  loadingMoreLabel?: ReactNode
-  errorLabel?: ReactNode
-  retryLabel?: ReactNode
+
+  /** 追加插槽(如底部条),接在本组件内置的 i18n 状态插槽之后。 */
+  slots?: ReactNode
 }
 
 export type UserInfiniteSelectProps = UserInfiniteSelectCommonProps &
@@ -48,8 +52,11 @@ export type UserInfiniteSelectProps = UserInfiniteSelectCommonProps &
 
 /**
  * User-specific select wrapper combining user queries and `InfiniteCombobox`.
+ *
+ * 状态文案(空/加载/错误)i18n 在**本业务层**注入(底座 infinite-select 零 i18n),可用 `slots` 覆盖。
  */
 export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
+  const { t } = useTranslation('common')
   const {
     children,
     disabled = false,
@@ -58,11 +65,7 @@ export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
     pageSize,
     commitOnClose = false,
     searchPlaceholder = 'Search user by name',
-    emptyLabel,
-    loadingLabel,
-    loadingMoreLabel,
-    errorLabel,
-    retryLabel,
+    slots,
   } = props
 
   const combobox = useInfiniteComboboxState({
@@ -87,20 +90,34 @@ export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
 
   const selectionProps = getInfiniteComboboxSelectionProps<AdminUserView>(props)
 
+  // 内置 i18n 状态插槽(始终渲染,按状态自显示);调用方 `slots` 追加在其后。
+  const stateSlots = (
+    <>
+      <InfiniteSelectEmpty>{t('loading.empty')}</InfiniteSelectEmpty>
+      <InfiniteSelectLoading>{t('loading.loading')}</InfiniteSelectLoading>
+      <InfiniteSelectLoadingMore>{t('loading.loadingMore')}</InfiniteSelectLoadingMore>
+      <InfiniteSelectError>
+        {t('loading.failed')}
+        <InfiniteSelectRetry>{t('action.retry')}</InfiniteSelectRetry>
+      </InfiniteSelectError>
+    </>
+  )
+
   return (
     <InfiniteCombobox<AdminUserView>
       align={align}
       commitOnClose={props.multiple ? commitOnClose : false}
       contentClassName={contentClassName}
       disabled={disabled}
-      emptyLabel={emptyLabel}
-      errorLabel={errorLabel}
       getOption={getOption}
       list={list}
-      loadingLabel={loadingLabel}
-      loadingMoreLabel={loadingMoreLabel}
-      retryLabel={retryLabel}
       searchPlaceholder={searchPlaceholder}
+      slots={
+        <>
+          {stateSlots}
+          {slots}
+        </>
+      }
       state={combobox}
       {...selectionProps}
     >

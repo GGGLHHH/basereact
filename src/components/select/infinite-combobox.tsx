@@ -13,7 +13,9 @@ import type { InfiniteSelectAdapterProps } from '@/components/select/use-infinit
 
 import {
   InfiniteSelect,
+  InfiniteSelectActionsProvider,
   type ControllableSelectionProps,
+  type InfiniteSelectActions,
   type InfiniteSelectItemRenderParams,
   type InfiniteSelectOption,
 } from '@/components/select/infinite-select'
@@ -186,14 +188,13 @@ interface InfiniteComboboxCommonProps<T> {
   align?: 'start' | 'center' | 'end'
   commitOnClose?: boolean
   searchPlaceholder?: string
-  emptyLabel?: ReactNode
-  loadingLabel?: ReactNode
-  loadingMoreLabel?: ReactNode
-  errorLabel?: ReactNode
-  retryLabel?: ReactNode
+  /**
+   * 唯一插槽通道:状态插槽 + 底部条(footer),原样透传给 InfiniteSelect 的 children。
+   * 文案由上层注入;footer 内的 clear/close 用 `useInfiniteComboboxActions()`。
+   */
+  slots?: ReactNode
   maxListHeight?: number
   closeOnSelect?: boolean
-  footer?: ReactNode
   selectClassName?: string
 }
 
@@ -226,19 +227,14 @@ export function InfiniteCombobox<T>(props: InfiniteComboboxProps<T>) {
     commitOnClose = false,
     contentClassName,
     disabled = false,
-    emptyLabel,
-    errorLabel,
     getOption,
     list,
-    loadingLabel,
-    loadingMoreLabel,
     maxListHeight,
     renderItem,
-    retryLabel,
     searchPlaceholder = 'Search',
+    slots,
     state,
     closeOnSelect = true,
-    footer,
     selectClassName,
   } = props
 
@@ -324,6 +320,33 @@ export function InfiniteCombobox<T>(props: InfiniteComboboxProps<T>) {
     [disabled, state],
   )
 
+  const clearSelection = useCallback(() => {
+    if (deferredEnabled) {
+      // 草稿路:清空草稿并标记「变过」,关弹层的 useEffect 便提交空集。
+      setDraftIds([])
+      draftIdsRef.current = []
+      draftItemsRef.current = []
+      hasChangedRef.current = true
+      return
+    }
+    if (props.multiple) {
+      setSelectedValue([])
+      props.onChange?.([], [])
+    } else {
+      setSelectedValue(undefined)
+      props.onChange?.(undefined)
+    }
+  }, [deferredEnabled, props, setSelectedValue])
+
+  // footer 里的 clear/close 经 Context 供给(shadcn 组合式)。Context 定义在底座 infinite-select
+  // (避免反向 import 成环),这里只填值。
+  const actions: InfiniteSelectActions<T> = {
+    selectedItems,
+    selectedIds,
+    clear: clearSelection,
+    close: () => state.setOpen(false),
+  }
+
   const trigger =
     typeof children === 'function'
       ? children({
@@ -350,62 +373,56 @@ export function InfiniteCombobox<T>(props: InfiniteComboboxProps<T>) {
         )}
         sideOffset={4}
       >
-        {props.multiple ? (
-          <InfiniteSelect<T>
-            {...list}
-            emptyLabel={emptyLabel}
-            errorLabel={errorLabel}
-            getOption={getOption}
-            loadingLabel={loadingLabel}
-            loadingMoreLabel={loadingMoreLabel}
-            maxListHeight={maxListHeight}
-            multiple
-            className={selectClassName}
-            footer={footer}
-            onChange={(items, ids) => {
-              if (deferredEnabled) {
-                setDraftIds(ids)
-                draftItemsRef.current = items
-                draftIdsRef.current = ids
-                hasChangedRef.current = true
-                return
-              }
-              setSelectedValue(ids)
-              props.onChange?.(items, ids)
-            }}
-            onSearchInputValueChange={state.setSearchValue}
-            renderItem={renderItem}
-            retryLabel={retryLabel}
-            searchInputValue={state.searchValue}
-            searchPlaceholder={searchPlaceholder}
-            value={deferredEnabled ? draftIds : ((selectedValue as string[] | undefined) ?? [])}
-          />
-        ) : (
-          <InfiniteSelect<T>
-            {...list}
-            emptyLabel={emptyLabel}
-            errorLabel={errorLabel}
-            getOption={getOption}
-            loadingLabel={loadingLabel}
-            loadingMoreLabel={loadingMoreLabel}
-            maxListHeight={maxListHeight}
-            className={selectClassName}
-            footer={footer}
-            onChange={(item) => {
-              setSelectedValue(item ? getOption(item).id : undefined)
-              props.onChange?.(item)
-              if (closeOnSelect) {
-                state.setOpen(false)
-              }
-            }}
-            onSearchInputValueChange={state.setSearchValue}
-            renderItem={renderItem}
-            retryLabel={retryLabel}
-            searchInputValue={state.searchValue}
-            searchPlaceholder={searchPlaceholder}
-            value={selectedValue as string | undefined}
-          />
-        )}
+        <InfiniteSelectActionsProvider value={actions}>
+          {props.multiple ? (
+            <InfiniteSelect<T>
+              {...list}
+              getOption={getOption}
+              maxListHeight={maxListHeight}
+              multiple
+              className={selectClassName}
+              onChange={(items, ids) => {
+                if (deferredEnabled) {
+                  setDraftIds(ids)
+                  draftItemsRef.current = items
+                  draftIdsRef.current = ids
+                  hasChangedRef.current = true
+                  return
+                }
+                setSelectedValue(ids)
+                props.onChange?.(items, ids)
+              }}
+              onSearchInputValueChange={state.setSearchValue}
+              renderItem={renderItem}
+              searchInputValue={state.searchValue}
+              searchPlaceholder={searchPlaceholder}
+              value={deferredEnabled ? draftIds : ((selectedValue as string[] | undefined) ?? [])}
+            >
+              {slots}
+            </InfiniteSelect>
+          ) : (
+            <InfiniteSelect<T>
+              {...list}
+              getOption={getOption}
+              maxListHeight={maxListHeight}
+              className={selectClassName}
+              onChange={(item) => {
+                setSelectedValue(item ? getOption(item).id : undefined)
+                props.onChange?.(item)
+                if (closeOnSelect) {
+                  state.setOpen(false)
+                }
+              }}
+              onSearchInputValueChange={state.setSearchValue}
+              renderItem={renderItem}
+              searchInputValue={state.searchValue}
+              searchPlaceholder={searchPlaceholder}
+              value={selectedValue as string | undefined}
+            >
+              {slots}
+            </InfiniteSelect>
+          )}
+        </InfiniteSelectActionsProvider>
       </PopoverContent>
     </Popover>
   )
