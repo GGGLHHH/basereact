@@ -1,17 +1,39 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { z } from 'zod'
+
+import type { AuthOutcome } from './-auth-log/types'
+
+import { AuthEventTable } from '@/business/auth-log/table'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 import { ActivityChart } from './-auth-log/activity-chart'
 import { Breakdowns } from './-auth-log/breakdowns'
 import { mapStats, toAuthEvent, useAuthEventsList, useAuthEventsStats } from './-auth-log/data'
 import { EventTape } from './-auth-log/event-tape'
-import { EventsTable } from './-auth-log/events-table'
 import { KpiTiles } from './-auth-log/kpi-tiles'
 import { useAuthEventStream, useLiveStats, useThrottledEvents } from './-auth-log/use-live'
 
+const TABLE_SIZE = 20
+
+// page/size 进 URL search(同 users 路由)。非法回默认(catch),缺失走 default(菜单跳本页
+// 可省 search);size 上限对齐分页器选项 [10..100]。
+const authLogSearchSchema = z.object({
+  page: z.number().int().min(1).catch(1).default(1),
+  size: z.number().int().min(1).max(100).catch(TABLE_SIZE).default(TABLE_SIZE),
+})
+
 export const Route = createFileRoute('/admin/_shell/auth-log')({
   component: AuthLogPage,
+  validateSearch: authLogSearchSchema,
   staticData: {
     titleKey: 'titles.adminAuthLog',
     menuTitleKey: 'titles.adminAuthLog',
@@ -51,6 +73,33 @@ function AuthLogPage() {
     const seen = new Set(live.map((e) => e.id))
     return [...live, ...seed.filter((e) => !seen.has(e.id))].slice(0, 200)
   }, [stream.events, list.data])
+
+  // 事件表:客户端过滤(结果 + 搜索 actor/ip)+ 切片分页。page/size 进 URL search(同 users
+  // 路由),过滤(outcome/q)仍是本地态(搜索即输、不进 URL)。表纯展示,数据/分页由这层注入。
+  const { page, size } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [outcome, setOutcome] = useState<'all' | AuthOutcome>('all')
+  const [q, setQ] = useState('')
+
+  // 过滤变化回第一页;保留 size。
+  const goPage = (p: number) => void navigate({ search: (prev) => ({ ...prev, page: p }) })
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    return recent
+      .filter((e) => outcome === 'all' || e.outcome === outcome)
+      .filter(
+        (e) =>
+          !needle ||
+          (e.actor ?? '').toLowerCase().includes(needle) ||
+          e.ip.toLowerCase().includes(needle),
+      )
+  }, [recent, outcome, q])
+
+  const pageRows = useMemo(
+    () => filtered.slice((page - 1) * size, page * size),
+    [filtered, page, size],
+  )
 
   return (
     <div className='flex flex-col gap-4'>
@@ -99,7 +148,54 @@ function AuthLogPage() {
         </div>
       </div>
 
-      <EventsTable events={recent} />
+      <div className='flex flex-col gap-3'>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
+          <h2 className='text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase'>
+            {t('authLog.table.title')}
+          </h2>
+          <div className='flex items-center gap-2'>
+            <Input
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value)
+                goPage(1)
+              }}
+              placeholder={t('authLog.table.search')}
+              className='h-8 w-44 font-mono text-xs'
+            />
+            <Select
+              value={outcome}
+              onValueChange={(v) => {
+                setOutcome(v as typeof outcome)
+                goPage(1)
+              }}
+            >
+              <SelectTrigger
+                size='sm'
+                className='w-32'
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>{t('authLog.table.allOutcomes')}</SelectItem>
+                <SelectItem value='success'>{t('authLog.chart.success')}</SelectItem>
+                <SelectItem value='failure'>{t('authLog.chart.failure')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <AuthEventTable
+          data={pageRows}
+          isLoading={list.isPending}
+          limit={size}
+          page={page}
+          total={filtered.length}
+          onLimitChange={(l) => {
+            void navigate({ search: { page: 1, size: l } })
+          }}
+          onPageChange={goPage}
+        />
+      </div>
     </div>
   )
 }
