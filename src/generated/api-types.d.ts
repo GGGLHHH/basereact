@@ -1193,6 +1193,13 @@ export interface components {
             new_password: string;
         };
         /**
+         * @description 角色名的**唯一真相**(封闭集)。角色本身不做动态 CRUD(角色**有哪些权限**才可运行时改,
+         *     见 `role_permissions` 表);故角色集编进代码。wire 串经 `rename`,与 idm.roles.name / JWT
+         *     claim / `role_permissions.role_name` 同源。加角色 = 加变体 + 补 `ALL`/`display_name`/`default_permissions`。
+         * @enum {string}
+         */
+        RoleName: "superadmin" | "admin" | "user";
+        /**
          * @description 角色目录项(admin 分配角色的候选集;`GET /roles` 返回)。
          *     `name`=机器码(唯一稳定,JWT/权限引用),`display_name`=展示名(UI,可改)。
          */
@@ -1381,6 +1388,7 @@ export type PutProfileRequest = components['schemas']['PutProfileRequest'];
 export type ReasonCount = components['schemas']['ReasonCount'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
+export type RoleName = components['schemas']['RoleName'];
 export type RoleView = components['schemas']['RoleView'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
@@ -1668,10 +1676,10 @@ export interface operations {
                 username?: string;
                 /** @description 用户名 + 显示名模糊搜索(仅投影/search 后端支持;无后端 → 422)。 */
                 q?: string;
-                /** @description 正选:含任一角色(逗号分隔,如 `?role=admin,editor`)。 */
-                role?: string;
-                /** @description 反选:不含任一角色(逗号分隔)。 */
-                role_not?: string;
+                /** @description 正选:含任一角色(重复 key,如 `?role=admin&role=user`)。 */
+                role?: components["schemas"]["RoleName"][];
+                /** @description 反选:不含任一角色。 */
+                role_not?: components["schemas"]["RoleName"][];
                 created_from?: string;
                 created_to?: string;
                 sort_by?: components["schemas"]["UserSortField"];

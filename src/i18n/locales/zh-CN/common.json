@@ -73,6 +73,7 @@
   },
   "action": {
     "cancel": "取消",
+    "clear": "清除",
     "confirm": "确认",
     "delete": "删除",
     "edit": "编辑",
@@ -208,6 +209,7 @@
       "title": "编辑用户"
     },
     "empty": "暂无用户",
+    "filterRoles": "角色",
     "form": {
       "avatarHint": "支持 JPG、PNG 或 GIF。",
       "avatarUploadFailed": "头像上传失败",
@@ -227,6 +229,7 @@
     },
     "new": "新建用户",
     "noRoles": "无角色",
+    "searchPlaceholder": "搜索用户名或显示名",
     "unverified": "未验证",
     "validation": {
       "passwordMin": "密码至少 3 个字符",

@@ -73,6 +73,7 @@
   },
   "action": {
     "cancel": "Cancel",
+    "clear": "Clear",
     "confirm": "Confirm",
     "delete": "Delete",
     "edit": "Edit",
@@ -208,6 +209,7 @@
       "title": "Edit user"
     },
     "empty": "No users yet",
+    "filterRoles": "Roles",
     "form": {
       "avatarHint": "JPG, PNG, or GIF.",
       "avatarUploadFailed": "Avatar upload failed",
@@ -227,6 +229,7 @@
     },
     "new": "New user",
     "noRoles": "No roles",
+    "searchPlaceholder": "Search name or display name",
     "unverified": "Unverified",
     "validation": {
       "passwordMin": "Password must be at least 3 characters",
