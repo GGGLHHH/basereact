@@ -318,6 +318,8 @@ export interface paths {
         /**
          * 列当前用户的内容(单租户:tenant=nil)。需 `contents:read`。
          *     所有权固有:service 按 (owner_id, tenant_id) 列,只回自己创建的。
+         *     ponytail: `contents:read:all` 在此**不生效**(content 库 list 签名强制 owner,无"列全部"入口);
+         *     单条端点已按 mode 放行。要让越权读贯通列表,需 content 库 list 的 owner 参数改 Option。
          */
         get: operations["list_contents"];
         put?: never;
@@ -543,6 +545,29 @@ export interface paths {
          *     未建 → 201,已有 → 200(PUT 即建即替,RFC 7231 本义;profile 无独立 POST)。
          */
         put: operations["put_profile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/profiles/{user_id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 用户头像展示端点(**跨用户可见**:任意登录用户都能看别人的头像 —— 头像是 profile 刻意暴露
+         *     的单张公开图,与"content 本体严格按 owner 隔离"分开)。读该用户的 avatar_content_id → 出字节。
+         *     无资料 / 未绑定头像 / 头像 content 已删或未就绪 → 404。
+         *     **只服务被指定为头像的那个 content**(且 put 已校验 owner==本人、image/*),故不重开
+         *     `contents/{id}/preview` 那种"任意 image 越权读"的面。仅需登录(头像非敏感展示数据,不额外要 contents:read)。
+         */
+        get: operations["get_user_avatar"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -814,7 +839,7 @@ export interface components {
     schemas: {
         /** @description 后台用户视图:身份(idm.users)+ 角色(idm)+ 富化的资料(app.profiles;缺/分进程降级 → null)。 */
         AdminUserView: {
-            /** @description 富化:相对 preview 路径(悬空/分进程 → null)。 */
+            /** @description 富化:相对头像端点路径(悬空/分进程 → null)。 */
             avatar_url?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -824,8 +849,8 @@ export interface components {
             email_verified: boolean;
             /** Format: uuid */
             id: string;
-            /** @description idm 角色名(全量)。 */
-            roles: string[];
+            /** @description idm 角色名(全量;闭集,生成前端 union)。 */
+            roles: components["schemas"]["RoleName"][];
             username: string;
         };
         /**
@@ -917,7 +942,7 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
-        /** @description 内容主体的对外响应(投影 `content::Content`;`status` 投影成字符串)。 */
+        /** @description 内容主体的对外响应(投影 `content::Content`;`status` 投影成闭集视图)。 */
         ContentResponse: {
             /** Format: date-time */
             created_at: string;
@@ -930,13 +955,19 @@ export interface components {
             /** Format: uuid */
             owner_id: string;
             owner_type?: string | null;
-            /** @description 生命周期状态(created/uploading/uploaded/processing/processed/failed/archived)。 */
-            status: string;
+            /** @description 生命周期状态(闭集,生成前端 union)。 */
+            status: components["schemas"]["ContentStatusView"];
             /** Format: uuid */
             tenant_id: string;
             /** Format: date-time */
             updated_at: string;
         };
+        /**
+         * @description 内容生命周期状态闭集(镜像 `content::ContentStatus` 的 wire 串;库零 HTTP 不 derive
+         *     ToSchema,视图枚举归消费方 —— 见 closed-enums skill)。`From` 穷尽匹配:库加变体这里编译错。
+         * @enum {string}
+         */
+        ContentStatusView: "created" | "uploading" | "uploaded" | "processing" | "processed" | "failed" | "archived";
         /** @description 建内容的入参(仅建 content 行,不碰对象/字节)。owner_id 来自认证主体(不入参)。 */
         CreateContentRequest: {
             derivation_type?: string | null;
@@ -968,11 +999,16 @@ export interface components {
         };
         /** @description 统一错误响应体。pub + ToSchema:让这个契约出现在 OpenAPI,前端 codegen 能看到错误形状。 */
         ErrorBody: {
-            /** @description 机器可读错误类别(not_found / validation / bad_request / unauthorized / conflict / internal) */
-            code: string;
+            /** @description 机器可读错误类别(闭集) */
+            code: components["schemas"]["ErrorCode"];
             /** @description 给人看的安全消息 —— 不含 SQL/解析器/路径等任何内部原始措辞 */
             error: string;
         };
+        /**
+         * @description 错误机器码闭集(前端按它分支;闭集生成前端 union,见 closed-enums skill)。
+         * @enum {string}
+         */
+        ErrorCode: "not_found" | "validation" | "bad_request" | "unauthorized" | "conflict" | "forbidden" | "internal" | "timeout" | "rate_limited";
         /**
          * @description 失败原因闭集。同上头注;`account_locked`/`rate_limited` 目前 emit 侧未产出(预留取值,
          *     闭集只增不改 —— 出现才炸,不提前拒绝合法但暂未使用的取值)。
@@ -996,10 +1032,10 @@ export interface components {
          *     role 展开(含 implies)∩ scope 收窄,wire 串排序输出。
          */
         MyPermissionsResponse: {
-            /** @description 有效权限 wire 串(排序)。前端按钮显隐 / codegen accessPolicies `has()` 的数据源。 */
-            permissions: string[];
-            /** @description token claim 里的角色名。 */
-            roles: string[];
+            /** @description 有效权限(闭集,wire 串序输出)。前端按钮显隐 / codegen accessPolicies `has()` 的数据源。 */
+            permissions: components["schemas"]["Perm"][];
+            /** @description token claim 里的角色名(闭集,生成前端 union)。 */
+            roles: components["schemas"]["RoleName"][];
         };
         /** @description 存储对象的对外响应(投影 `content::Object`)。 */
         ObjectResponse: {
@@ -1012,7 +1048,8 @@ export interface components {
             id: string;
             object_key: string;
             object_type?: string | null;
-            status: string;
+            /** @description 对象状态(闭集,生成前端 union)。 */
+            status: components["schemas"]["ObjectStatusView"];
             storage_backend_name: string;
             storage_class?: string | null;
             /** Format: date-time */
@@ -1020,6 +1057,11 @@ export interface components {
             /** Format: int32 */
             version: number;
         };
+        /**
+         * @description 对象状态闭集(镜像 `content::ObjectStatus`;无 `Archived`,归档是内容级语义)。
+         * @enum {string}
+         */
+        ObjectStatusView: "created" | "uploading" | "uploaded" | "processing" | "processed" | "failed";
         /**
          * @description 分页元信息:offset 给 total/total_pages,cursor 给 next_cursor/has_more。
          *     内部标签 `mode` 区分(类型诚实:cursor 模式不可能混入 total);utoipa 生成带 mode 判别的 oneOf。
@@ -1049,7 +1091,7 @@ export interface components {
          */
         Page_AdminUserView: {
             items: {
-                /** @description 富化:相对 preview 路径(悬空/分进程 → null)。 */
+                /** @description 富化:相对头像端点路径(悬空/分进程 → null)。 */
                 avatar_url?: string | null;
                 /** Format: date-time */
                 created_at: string;
@@ -1059,8 +1101,8 @@ export interface components {
                 email_verified: boolean;
                 /** Format: uuid */
                 id: string;
-                /** @description idm 角色名(全量)。 */
-                roles: string[];
+                /** @description idm 角色名(全量;闭集,生成前端 union)。 */
+                roles: components["schemas"]["RoleName"][];
                 username: string;
             }[];
             page_info: components["schemas"]["PageInfo"];
@@ -1103,7 +1145,8 @@ export interface components {
                 display_name: string;
                 /** Format: uuid */
                 id: string;
-                name: string;
+                /** @description 机器码(闭集,生成前端 union)。 */
+                name: components["schemas"]["RoleName"];
             }[];
             page_info: components["schemas"]["PageInfo"];
         };
@@ -1127,6 +1170,13 @@ export interface components {
             }[];
             page_info: components["schemas"]["PageInfo"];
         };
+        /**
+         * @description 权限词表的**唯一真相**(封闭集)。handler 用变体 `Perm::WidgetWrite`,拼错=编译错。
+         *     wire 串(TOML / JWT scope)经 `rename` 映射;未知串 → 反序列化失败 → 启动期挡住(fail-fast)。
+         *     加权限 = 加一个变体 + `rename`,别处不动。
+         * @enum {string}
+         */
+        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
         /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
         PrepareUploadRequest: {
             description?: string | null;
@@ -1148,11 +1198,14 @@ export interface components {
             object: components["schemas"]["ObjectResponse"];
             upload_url?: string | null;
         };
-        /** @description 出参 = 行字段 + 富化的 `avatar_url`(相对 preview 路径;悬空/未就绪/探测故障 → null)。 */
+        /** @description 出参 = 行字段 + 富化的 `avatar_url`(相对头像端点路径;悬空/未就绪/探测故障 → null)。 */
         ProfileResponse: {
             /** Format: uuid */
             avatar_content_id?: string | null;
-            /** @description 相对路径 `/api/v1/frontend/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
+            /**
+             * @description 相对路径 `/api/v1/frontend/profiles/{user_id}/avatar`(单域名哲学,无 base-url 变量;
+             *     头像专用端点,只出本人的头像图 —— content 本体经 `contents/{id}/preview` 严格按 owner 隔离)。
+             */
             avatar_url?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -1207,7 +1260,8 @@ export interface components {
             display_name: string;
             /** Format: uuid */
             id: string;
-            name: string;
+            /** @description 机器码(闭集,生成前端 union)。 */
+            name: components["schemas"]["RoleName"];
         };
         /** @description 设置内容元数据(全量替换,upsert)。 */
         SetContentMetadataRequest: {
@@ -1284,7 +1338,8 @@ export interface components {
             email_verified: boolean;
             /** Format: uuid */
             id: string;
-            roles: string[];
+            /** @description 角色名(闭集,生成前端 union)。 */
+            roles: components["schemas"]["RoleName"][];
             username: string;
         };
         /**
@@ -1366,21 +1421,25 @@ export type AuthStats = components['schemas']['AuthStats'];
 export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 export type ContentMetadataResponse = components['schemas']['ContentMetadataResponse'];
 export type ContentResponse = components['schemas']['ContentResponse'];
+export type ContentStatusView = components['schemas']['ContentStatusView'];
 export type CreateContentRequest = components['schemas']['CreateContentRequest'];
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
 export type ErrorBody = components['schemas']['ErrorBody'];
+export type ErrorCode = components['schemas']['ErrorCode'];
 export type FailureReason = components['schemas']['FailureReason'];
 export type IpStat = components['schemas']['IpStat'];
 export type LoginRequest = components['schemas']['LoginRequest'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
+export type ObjectStatusView = components['schemas']['ObjectStatusView'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
 export type Page_AuthEventRow = components['schemas']['Page_AuthEventRow'];
 export type Page_RoleView = components['schemas']['Page_RoleView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
+export type Perm = components['schemas']['Perm'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
 export type ProfileResponse = components['schemas']['ProfileResponse'];
@@ -1415,13 +1474,18 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
                 /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
                 with_total?: boolean;
-                event_type?: string;
+                /** @description 事件类型(闭集;未知值在 Query 提取器被拒 → 400 bad_request,而非静默空结果)。 */
+                event_type?: components["schemas"]["AuthEventType"];
                 outcome?: components["schemas"]["AuthOutcome"];
                 ip?: string;
                 from?: string;
@@ -1451,6 +1515,24 @@ export interface operations {
             };
             /** @description 无 users:admin 权限 */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 审计后端未接线(无 search 投影库) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description page 与 cursor 互斥 */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1497,6 +1579,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 审计后端未接线(无 search 投影库) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     stream_auth_events: {
@@ -1527,6 +1618,15 @@ export interface operations {
             };
             /** @description 无 users:admin 权限 */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 审计后端未接线(无 search 投影库) */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1569,6 +1669,15 @@ export interface operations {
             };
             /** @description 凭据正确但无后台准入(admin:login),不发 token 不设 cookie */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1619,7 +1728,11 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
@@ -1666,7 +1779,11 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
@@ -1957,6 +2074,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 不能删除自己的账号 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     list_user_auth_events: {
@@ -1964,13 +2090,18 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
                 /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
                 with_total?: boolean;
-                event_type?: string;
+                /** @description 事件类型(闭集;未知值在 Query 提取器被拒 → 400 bad_request,而非静默空结果)。 */
+                event_type?: components["schemas"]["AuthEventType"];
                 outcome?: components["schemas"]["AuthOutcome"];
                 ip?: string;
                 from?: string;
@@ -2009,6 +2140,24 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 审计后端未接线(无 search 投影库) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description page 与 cursor 互斥 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     set_user_avatar: {
@@ -2024,18 +2173,11 @@ export interface operations {
         requestBody: {
             content: {
                 "multipart/form-data": {
-                    /** Format: uuid */
-                    avatar_content_id?: string | null;
-                    /** @description 相对路径 `/api/v1/frontend/contents/{id}/preview`(单域名哲学,无 base-url 变量)。 */
-                    avatar_url?: string | null;
-                    /** Format: date-time */
-                    created_at: string;
-                    display_name?: string | null;
-                    phone?: string | null;
-                    /** Format: date-time */
-                    updated_at: string;
-                    /** Format: uuid */
-                    user_id: string;
+                    /**
+                     * Format: binary
+                     * @description 图片本体(必填,带 filename + content-type,须 image/*)。
+                     */
+                    file: string;
                 };
             };
         };
@@ -2304,6 +2446,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 不能移除自己的 admin 权限 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
             /** @description 未知角色名 */
             422: {
                 headers: {
@@ -2320,7 +2471,11 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
@@ -2464,6 +2619,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     delete_me: {
@@ -2495,6 +2659,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     change_password: {
@@ -2519,6 +2692,15 @@ export interface operations {
             };
             /** @description 旧密码错 */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2627,8 +2809,17 @@ export interface operations {
         requestBody: {
             content: {
                 "multipart/form-data": {
-                    content: components["schemas"]["ContentResponse"];
-                    object: components["schemas"]["ObjectResponse"];
+                    document_type?: string | null;
+                    /**
+                     * Format: binary
+                     * @description 文件本体(必填,带 filename + content-type)。
+                     */
+                    file: string;
+                    name?: string | null;
+                    /** @description 逗号分隔。 */
+                    tags?: string | null;
+                    /** Format: uuid */
+                    tenant_id?: string | null;
                 };
             };
         };
@@ -2770,7 +2961,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人(不区分,防泄露存在;contents:read:all 可看全部) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2824,7 +3015,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2881,7 +3072,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2931,7 +3122,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2997,7 +3188,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 无可下载对象 */
+            /** @description 不存在 / 非本人且无 contents:read:all / 无可下载对象(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3056,7 +3247,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无元数据 */
+            /** @description 不存在 / 非本人且无 contents:read:all / 无元数据(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3108,7 +3299,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 内容不存在 */
+            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3167,6 +3358,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 不存在 / 非本人(不区分,防泄露存在) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     preview_content: {
@@ -3215,7 +3415,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 无可预览对象 */
+            /** @description 不存在 / 非本人且无 contents:read:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3404,8 +3604,56 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 校验失败(超长 / 头像不存在 / 未 confirm / 非 image) */
+            /** @description 校验失败(超长 / 头像不存在或非本人 / 未 confirm / 非 image) */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_user_avatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description idm user id(1:1) */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description inline 图片字节(代理回退) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description 跳转到短时效签名 URL(presign 后端) */
+            307: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无资料 / 未绑定头像 / 头像不可用 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3420,7 +3668,11 @@ export interface operations {
             query?: {
                 /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
                 page?: number;
-                /** @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。 */
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
                 cursor?: string;
                 /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
                 size?: number;
@@ -3877,6 +4129,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     logout: {
@@ -4061,6 +4322,7 @@ export type DownloadContentPath = operations['download_content']['parameters']['
 export type GetContentMetadataPath = operations['get_content_metadata']['parameters']['path'];
 export type GetContentPath = operations['get_content']['parameters']['path'];
 export type GetProfilePath = operations['get_profile']['parameters']['path'];
+export type GetUserAvatarPath = operations['get_user_avatar']['parameters']['path'];
 export type GetUserPath = operations['get_user']['parameters']['path'];
 export type GetUserProfilePath = operations['get_user_profile']['parameters']['path'];
 export type GetWidgetPath = operations['get_widget']['parameters']['path'];

@@ -14,7 +14,12 @@ describe('SearchInput', () => {
   it('debounces and normalizes (trim → undefined) before emitting onSearch', () => {
     vi.useFakeTimers()
     const onSearch = vi.fn<(v: string | undefined) => void>()
-    const { getByRole } = render(<SearchInput onSearch={onSearch} debounceMs={300} />)
+    const { getByRole } = render(
+      <SearchInput
+        onSearch={onSearch}
+        debounceMs={300}
+      />,
+    )
     const input = getByRole('textbox')
 
     fireEvent.change(input, { target: { value: 'a' } })
@@ -32,7 +37,11 @@ describe('SearchInput', () => {
   it('is controllable: value mirrors the prop, onChange emits raw text', () => {
     const onChange = vi.fn<(v: string) => void>()
     const { getByRole, rerender } = render(
-      <SearchInput value='a' onChange={onChange} onSearch={vi.fn()} />,
+      <SearchInput
+        value='a'
+        onChange={onChange}
+        onSearch={vi.fn()}
+      />,
     )
     const input = getByRole('textbox') as HTMLInputElement
     expect(input.value).toBe('a')
@@ -41,7 +50,13 @@ describe('SearchInput', () => {
     expect(onChange).toHaveBeenCalledWith('ab') // 吐原始文本
     expect(input.value).toBe('a') // 受控:未回灌 prop 前不自行变
 
-    rerender(<SearchInput value='ab' onChange={onChange} onSearch={vi.fn()} />)
+    rerender(
+      <SearchInput
+        value='ab'
+        onChange={onChange}
+        onSearch={vi.fn()}
+      />,
+    )
     expect(input.value).toBe('ab') // prop 变即反映
   })
 })

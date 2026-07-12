@@ -50,6 +50,10 @@ const config = defineConfig(({ command }) => ({
       },
     },
   },
+  test: {
+    // Node 24+ 遮蔽 jsdom/happy-dom 的 Web Storage → 补内存版兜底(见 src/test-setup.ts)。
+    setupFiles: ['./src/test-setup.ts'],
+  },
 }))
 
 export default config

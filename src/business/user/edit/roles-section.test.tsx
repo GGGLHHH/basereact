@@ -9,7 +9,7 @@ vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
 const catalog: RoleView[] = [
   { display_name: 'Admin', id: 'r-admin', name: 'admin' },
-  { display_name: 'Editor', id: 'r-editor', name: 'editor' },
+  { display_name: 'Superadmin', id: 'r-superadmin', name: 'superadmin' },
   { display_name: 'User', id: 'r-user', name: 'user' },
 ]
 

@@ -325,6 +325,13 @@ export const accessPolicies = {
     path: "frontend/profiles/{user_id}",
     permissions: ["profiles:write"],
   },
+  getUserAvatar: {
+    apiPath: "/api/v1/frontend/profiles/{user_id}/avatar",
+    kind: "authenticated",
+    method: "GET",
+    operationId: "get_user_avatar",
+    path: "frontend/profiles/{user_id}/avatar",
+  },
   listWidgets: {
     apiPath: "/api/v1/frontend/widgets",
     kind: "permission",

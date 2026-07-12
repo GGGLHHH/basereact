@@ -5,8 +5,10 @@ import { useControllableState } from '@/hooks/use-controllable-state'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
-export interface SearchInputProps
-  extends Omit<ComponentProps<typeof Input>, 'value' | 'defaultValue' | 'onChange'> {
+export interface SearchInputProps extends Omit<
+  ComponentProps<typeof Input>,
+  'value' | 'defaultValue' | 'onChange'
+> {
   /** 受控:输入框文本。 */
   value?: string
   /** 非受控初始文本。 */
@@ -35,11 +37,15 @@ export function SearchInput({
   className,
   ...rest
 }: SearchInputProps) {
-  const [text, setText] = useControllableState<string>({ value, defaultValue, onChange, fallback: '' })
-  const { run: commit } = useDebounceFn(
-    (raw: string) => onSearch(raw.trim() || undefined),
-    { wait: debounceMs },
-  )
+  const [text, setText] = useControllableState<string>({
+    value,
+    defaultValue,
+    onChange,
+    fallback: '',
+  })
+  const { run: commit } = useDebounceFn((raw: string) => onSearch(raw.trim() || undefined), {
+    wait: debounceMs,
+  })
 
   return (
     <div className={cn('relative', className)}>

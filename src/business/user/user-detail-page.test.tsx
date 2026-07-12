@@ -31,7 +31,7 @@ function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
     email: 'ada@example.com',
     email_verified: true,
     id: 'u1',
-    roles: ['admin', 'editor'],
+    roles: ['admin', 'superadmin'],
     username: 'ada',
     ...overrides,
   }
@@ -70,7 +70,7 @@ describe('UserDetailPage', () => {
     expect(screen.getByText('ada@example.com')).toBeTruthy()
     // 角色现为独立 chips(RoleBadges),不再是合并串。
     expect(screen.getByText('admin')).toBeTruthy()
-    expect(screen.getByText('editor')).toBeTruthy()
+    expect(screen.getByText('superadmin')).toBeTruthy()
   })
 
   it('navigates to the edit page from the Edit action', () => {
