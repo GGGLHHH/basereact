@@ -1487,6 +1487,12 @@ export interface operations {
                 /** @description 事件类型(闭集;未知值在 Query 提取器被拒 → 400 bad_request,而非静默空结果)。 */
                 event_type?: components["schemas"]["AuthEventType"];
                 outcome?: components["schemas"]["AuthOutcome"];
+                /**
+                 * @description 联合模糊搜:`actor`(展示用户名/标识)+ `identifier_attempted`(失败场景提交的用户名/邮箱)
+                 *     + `ip`(文本),大小写不敏感子串。**下推到库**(全历史检索),取代前端内存过滤。空 = 不搜。
+                 */
+                q?: string;
+                /** @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。 */
                 ip?: string;
                 from?: string;
                 to?: string;
@@ -2103,6 +2109,12 @@ export interface operations {
                 /** @description 事件类型(闭集;未知值在 Query 提取器被拒 → 400 bad_request,而非静默空结果)。 */
                 event_type?: components["schemas"]["AuthEventType"];
                 outcome?: components["schemas"]["AuthOutcome"];
+                /**
+                 * @description 联合模糊搜:`actor`(展示用户名/标识)+ `identifier_attempted`(失败场景提交的用户名/邮箱)
+                 *     + `ip`(文本),大小写不敏感子串。**下推到库**(全历史检索),取代前端内存过滤。空 = 不搜。
+                 */
+                q?: string;
+                /** @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。 */
                 ip?: string;
                 from?: string;
                 to?: string;

@@ -4,7 +4,15 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
-import type { AuthEventType, Count, FailureReason, HourBucket, IpStat, Kpi } from './types'
+import type {
+  AuthEventType,
+  AuthOutcome,
+  Count,
+  FailureReason,
+  HourBucket,
+  IpStat,
+  Kpi,
+} from './types'
 import type { AuthEventRow, AuthStats } from '#/generated/api-types'
 
 import { listAuthEvents, statsAuthEvents } from '#/generated/client'
@@ -22,11 +30,37 @@ export function useAuthEventsStats() {
   })
 }
 
-/** 近期事件基线快照(表 + 事件流初始种子),取一次。keyset 首页,size 条。 */
+/** 近期事件基线快照(**事件流初始种子**,喂 tape/KPI 叠加),取一次。keyset 首页,size 条。 */
 export function useAuthEventsList(size = 80) {
   return useQuery({
     queryKey: [...LIST_KEY, size],
     queryFn: () => listAuthEvents({ query: { size } }),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** 事件表:**服务端**过滤(`q` 联合模糊搜 actor/identifier/ip 子串 + `outcome` 状态)+ offset 分页 + total。
+ *  全历史检索,取代前端对近期流(≤200 条)的内存过滤/切片。`q`/`outcome` 为空即不过滤。 */
+export function useAuthEventsPage(f: {
+  page: number
+  size: number
+  q: string
+  outcome: 'all' | AuthOutcome
+}) {
+  const q = f.q.trim() || undefined
+  const outcome = f.outcome === 'all' ? undefined : f.outcome
+  return useQuery({
+    queryKey: [...LIST_KEY, 'page', f.page, f.size, q ?? '', outcome ?? ''],
+    queryFn: () =>
+      listAuthEvents({
+        query: {
+          page: f.page,
+          size: f.size,
+          with_total: true,
+          ...(q ? { q } : {}),
+          ...(outcome ? { outcome } : {}),
+        },
+      }),
     placeholderData: keepPreviousData,
   })
 }

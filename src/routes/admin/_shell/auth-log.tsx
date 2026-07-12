@@ -6,7 +6,7 @@ import { z } from 'zod'
 import type { AuthOutcome } from './-auth-log/types'
 
 import { AuthEventTable } from '@/business/auth-log/table'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/search-input'
 import {
   Select,
   SelectContent,
@@ -17,7 +17,13 @@ import {
 
 import { ActivityChart } from './-auth-log/activity-chart'
 import { Breakdowns } from './-auth-log/breakdowns'
-import { mapStats, toAuthEvent, useAuthEventsList, useAuthEventsStats } from './-auth-log/data'
+import {
+  mapStats,
+  toAuthEvent,
+  useAuthEventsList,
+  useAuthEventsPage,
+  useAuthEventsStats,
+} from './-auth-log/data'
 import { EventTape } from './-auth-log/event-tape'
 import { KpiTiles } from './-auth-log/kpi-tiles'
 import { useAuthEventStream, useLiveStats, useThrottledEvents } from './-auth-log/use-live'
@@ -74,8 +80,9 @@ function AuthLogPage() {
     return [...live, ...seed.filter((e) => !seen.has(e.id))].slice(0, 200)
   }, [stream.events, list.data])
 
-  // 事件表:客户端过滤(结果 + 搜索 actor/ip)+ 切片分页。page/size 进 URL search(同 users
-  // 路由),过滤(outcome/q)仍是本地态(搜索即输、不进 URL)。表纯展示,数据/分页由这层注入。
+  // 事件表:**服务端**过滤(`q` 联合模糊搜 actor/identifier/ip + `outcome` 状态)+ offset 分页 + total
+  // ——全历史检索,取代对近期流的内存过滤。page/size 进 URL search(同 users 路由);q/outcome 本地态
+  // (不进 URL),`q` 由 SearchInput 去抖后回填。表纯展示,数据由这层注入。
   const { page, size } = Route.useSearch()
   const navigate = Route.useNavigate()
   const [outcome, setOutcome] = useState<'all' | AuthOutcome>('all')
@@ -84,22 +91,10 @@ function AuthLogPage() {
   // 过滤变化回第一页;保留 size。
   const goPage = (p: number) => void navigate({ search: (prev) => ({ ...prev, page: p }) })
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase()
-    return recent
-      .filter((e) => outcome === 'all' || e.outcome === outcome)
-      .filter(
-        (e) =>
-          !needle ||
-          (e.actor ?? '').toLowerCase().includes(needle) ||
-          e.ip.toLowerCase().includes(needle),
-      )
-  }, [recent, outcome, q])
-
-  const pageRows = useMemo(
-    () => filtered.slice((page - 1) * size, page * size),
-    [filtered, page, size],
-  )
+  const table = useAuthEventsPage({ page, size, q, outcome })
+  const pageRows = useMemo(() => (table.data?.items ?? []).map(toAuthEvent), [table.data])
+  const pageInfo = table.data?.page_info
+  const total = pageInfo?.mode === 'offset' ? (pageInfo.total ?? 0) : 0
 
   return (
     <div className='flex flex-col gap-4'>
@@ -154,14 +149,13 @@ function AuthLogPage() {
             {t('authLog.table.title')}
           </h2>
           <div className='flex items-center gap-2'>
-            <Input
-              value={q}
-              onChange={(e) => {
-                setQ(e.target.value)
+            <SearchInput
+              onSearch={(v) => {
+                setQ(v ?? '')
                 goPage(1)
               }}
               placeholder={t('authLog.table.search')}
-              className='h-8 w-44 font-mono text-xs'
+              className='w-44'
             />
             <Select
               value={outcome}
@@ -186,10 +180,10 @@ function AuthLogPage() {
         </div>
         <AuthEventTable
           data={pageRows}
-          isLoading={list.isPending}
+          isLoading={table.isPending}
           limit={size}
           page={page}
-          total={filtered.length}
+          total={total}
           onLimitChange={(l) => {
             void navigate({ search: { page: 1, size: l } })
           }}
