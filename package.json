@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 7621",
+    "dev": "NODE_OPTIONS=--disable-warning=ExperimentalWarning vite dev --port 7621",
     "generate-routes": "tsr generate",
     "generate": "vg",
     "build": "vite build",
@@ -88,11 +88,5 @@
     "vite-plugin-openapi-codegen": "^5.0.2",
     "vitest": "^4.1.5",
     "zod": "^4.4.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
   }
 }
