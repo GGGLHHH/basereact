@@ -518,6 +518,8 @@ export interface paths {
          * 读**请求者自己**的资料(仅登录,零 perm —— "自己"是身份事实不是授权决策,
          *     对齐 `get_me`/`my_widget_count` 的自我操作范式;`profiles:read` 留给"读任意人")。
          *     静态段 `/profiles/me` 与参数段 `/profiles/{user_id}` 共存,axum 静态优先。
+         * @description **不 404**:未建资料 → 200 + 空资料(时间戳 null),前端照常渲染空表单、保存即 PUT 建行。
+         *     与按 id 读(`get_profile`)刻意不同,理由见 `ProfileService::get_or_empty`。
          */
         get: operations["get_my_profile"];
         put?: never;
@@ -1210,7 +1212,14 @@ export interface components {
             object: components["schemas"]["ObjectResponse"];
             upload_url?: string | null;
         };
-        /** @description 出参 = 行字段 + 富化的 `avatar_url`(相对头像端点路径;悬空/未就绪/探测故障 → null)。 */
+        /**
+         * @description 出参 = 行字段 + 富化的 `avatar_url`(相对头像端点路径;悬空/未就绪/探测故障 → null)。
+         *
+         *     时间戳 `Option`:`/profiles/me` 在资料未建时回**空资料**(见 [`ProfileService::get_or_empty`]),
+         *     那一刻行还不存在、没有真时间戳 —— 回 null,而不是编一个 now() 冒充。其余端点回的都是真行,恒 `Some`。
+         *
+         *     [`ProfileService::get_or_empty`]: super::service::ProfileService::get_or_empty
+         */
         ProfileResponse: {
             /** Format: uuid */
             avatar_content_id?: string | null;
@@ -1219,12 +1228,18 @@ export interface components {
              *     头像专用端点,只出本人的头像图 —— content 本体经 `contents/{id}/preview` 严格按 owner 隔离)。
              */
             avatar_url?: string | null;
-            /** Format: date-time */
-            created_at: string;
+            /**
+             * Format: date-time
+             * @description 资料未建(仅 `/profiles/me` 的空资料)→ null。
+             */
+            created_at?: string | null;
             display_name?: string | null;
             phone?: string | null;
-            /** Format: date-time */
-            updated_at: string;
+            /**
+             * Format: date-time
+             * @description 资料未建(仅 `/profiles/me` 的空资料)→ null。
+             */
+            updated_at?: string | null;
             /** Format: uuid */
             user_id: string;
         };
@@ -3520,7 +3535,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 自己的资料(avatar_url 为相对 preview 路径) */
+            /** @description 自己的资料;尚未建则各段为 null(user_id 仍是本人,前端据此 PUT 建资料) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3531,15 +3546,6 @@ export interface operations {
             };
             /** @description 未认证 */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-            /** @description 尚未建资料(前端以此引导建资料) */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
