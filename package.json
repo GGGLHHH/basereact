@@ -11,7 +11,7 @@
     "generate": "vg",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
-    "preview": "vite preview",
+    "preview": "pnpm start",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings && oxfmt --check .",
