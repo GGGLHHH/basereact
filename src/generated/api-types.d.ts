@@ -604,6 +604,11 @@ export interface paths {
          * 订阅 widget 变更事件流(SSE)。需登录 + `widgets:read` —— 与列表同权:能看列表就能看变更。
          *     EventSource 不能自定义 header,凭据靠 httponly cookie(Bearer 兜底给 curl/测试)。
          *     best-effort 无回放:断线期间的事件丢失,EventSource 自动重连拿新订阅。
+         * @description **行级 ownership 与 list 同口径**:总线是广播(不分频道),过滤落在本 handler —— 逐帧
+         *     `allows_created_by`,不过就跳帧(`continue`),**不**结束流。没这层,无 `read:all` 的 `user`
+         *     能从流里读到 `list_widgets`/`get_widget` 都不给他看的**别人的 widget**(名字等全量 `Widget`)。
+         *     `Access` 在开流时刻算定并随流存活 —— 同下面的鉴权时刻取舍。
+         *
          *     鉴权只在开流时刻评估:流存活期间 token 过期/吊销不会断流(SSE 惯例取舍;低敏数据可接受)。
          *     要收紧:按 claim 的 exp 到点结束流,EventSource 重连即重新鉴权。
          */
@@ -1024,6 +1029,13 @@ export interface components {
         };
         /** @description 登录请求(公开)。`identifier` = username 或 email,由 idm 自动识别。 */
         LoginRequest: {
+            /**
+             * @description 上限 320 = email 的最大合法长度(64 local + @ + 255 domain);username 上限 32 更窄,取宽的那个。
+             *     **必须有上限**:登录失败时本字段被原样写进审计事件(`identifier_attempted`),经 outbox →
+             *     NATS → 投影落 `auth_events`,而这条路是**未认证**可达的。没上限时唯一的界是 axum 的 2MB
+             *     body 上限(限流还是 opt-in),等于放任匿名者每次瞎登录就持久化 ~2MB 攻击者可控文本;
+             *     这些行之后还会被后台 `q` 过滤 ILIKE 全表扫,成本反复付。
+             */
             identifier: string;
             password: string;
         };
@@ -1176,7 +1188,7 @@ export interface components {
          *     加权限 = 加一个变体 + `rename`,别处不动。
          * @enum {string}
          */
-        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
+        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
         /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
         PrepareUploadRequest: {
             description?: string | null;
@@ -1263,7 +1275,16 @@ export interface components {
             /** @description 机器码(闭集,生成前端 union)。 */
             name: components["schemas"]["RoleName"];
         };
-        /** @description 设置内容元数据(全量替换,upsert)。 */
+        /**
+         * @description 设置内容元数据(全量替换,upsert)。
+         *
+         *     **无 `mime_type` 字段 —— 它是服务端所有物**(上传时由字节的实际 Content-Type 定,见
+         *     `into_input`)。理由是安全而非洁癖:presign 出的 URL 只 override disposition,浏览器拿到的
+         *     Content-Type 恒是**对象上传时存进 S3 的那个**;而 inline 安全闸(`is_safe_inline_mime`)与头像
+         *     栅格白名单读的都是**这张表**的 mime。两者若能分叉,攻击者就能 `text/html` 上传、改 mime 成
+         *     `image/png` 骗过闸门,再经 presign 拿回 `Content-Type: text/html` + inline = 存储型 XSS。
+         *     让 mime 不可改,分叉就不存在。
+         */
         SetContentMetadataRequest: {
             checksum?: string | null;
             checksum_algorithm?: string | null;
@@ -1272,7 +1293,6 @@ export interface components {
             file_size?: number | null;
             /** @description 自由表单 JSONB(省略 → `{}`)。 */
             metadata?: unknown;
-            mime_type?: string | null;
             tags: string[];
         };
         /** @description 全量设角色(原子替换)。传角色 id;未知 id → 422。 */
@@ -1364,7 +1384,13 @@ export interface components {
             updated_at: string;
             updated_by?: string | null;
         };
-        /** @description widget 变更事件。SSE 帧的 event name = serde tag(created/updated/deleted)。 */
+        /**
+         * @description widget 变更事件。SSE 帧的 event name = serde tag(created/updated/deleted)。
+         *
+         *     **每个变体都带得出 owner**([`WidgetEvent::owner`])—— SSE handler 要按 `Access` 逐帧过滤,
+         *     没 owner 的帧无法判定:放行=泄露、丢弃=owner 收不到自己的删除。`Deleted` 因此单带 `created_by`
+         *     (删除后行已软删,订阅侧无从回查)。
+         */
         WidgetEvent: {
             /** @enum {string} */
             type: "created";
@@ -1374,6 +1400,7 @@ export interface components {
             type: "updated";
             widget: components["schemas"]["Widget"];
         } | {
+            created_by?: string | null;
             /** Format: uuid */
             id: string;
             /** @enum {string} */
@@ -1492,7 +1519,11 @@ export interface operations {
                  *     + `ip`(文本),大小写不敏感子串。**下推到库**(全历史检索),取代前端内存过滤。空 = 不搜。
                  */
                 q?: string;
-                /** @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。 */
+                /**
+                 * @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。强类型 `IpAddr`:
+                 *     非法值在 Query 提取器被拒 → 400(而非把裸串 cast 成 `::inet` 让 PG 抛 500;亦对齐内存侧规范化比较)。
+                 *     OpenAPI 里仍呈现为 string(utoipa 无 `IpAddr` schema)。
+                 */
                 ip?: string;
                 from?: string;
                 to?: string;
@@ -2114,7 +2145,11 @@ export interface operations {
                  *     + `ip`(文本),大小写不敏感子串。**下推到库**(全历史检索),取代前端内存过滤。空 = 不搜。
                  */
                 q?: string;
-                /** @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。 */
+                /**
+                 * @description 精确 IP 过滤(`ip = X`)。与 `q` 的子串搜互补;两者都给则 AND 组合。强类型 `IpAddr`:
+                 *     非法值在 Query 提取器被拒 → 400(而非把裸串 cast 成 `::inet` 让 PG 抛 500;亦对齐内存侧规范化比较)。
+                 *     OpenAPI 里仍呈现为 string(utoipa 无 `IpAddr` schema)。
+                 */
                 ip?: string;
                 from?: string;
                 to?: string;
