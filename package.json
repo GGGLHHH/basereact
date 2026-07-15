@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "NODE_OPTIONS=--disable-warning=ExperimentalWarning vite dev --port 7621",
+    "dev": "NODE_OPTIONS=--disable-warning=ExperimentalWarning vite dev",
     "generate-routes": "tsr generate",
     "generate": "vg",
     "build": "vite build",
