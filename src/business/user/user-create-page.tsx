@@ -11,7 +11,7 @@ import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup, FieldLabel } from '@/components/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
@@ -129,6 +129,9 @@ export function UserCreatePage() {
                   <span className='i-lucide-chevron-down size-4 shrink-0 opacity-50' />
                 </Button>
               </RoleInfiniteSelect>
+              {/* 角色无校验,这里只为和其它字段一样占住错误行的高度 —— FieldGroup 是 gap-0,
+                  字段间距全靠各自的 FieldError 撑;漏了它下面的按钮行就会贴上来。 */}
+              <FieldError />
             </Field>
             <Field
               className='justify-end'
