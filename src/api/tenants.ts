@@ -1,9 +1,21 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { SetActiveTenantRequest, UserResponse } from '#/generated/api-types'
+import type {
+  AddMemberRequest,
+  CreateTenantRequest,
+  SetActiveTenantRequest,
+  UpdateTenantRequest,
+  UserResponse,
+} from '#/generated/api-types'
 import {
+  addMember as addMemberApi,
+  createTenant as createTenantApi,
+  listMembers as listMembersApi,
   listMyTenants as listMyTenantsApi,
+  listTenants as listTenantsApi,
   putActiveTenant as putActiveTenantApi,
+  removeMember as removeMemberApi,
+  updateTenant as updateTenantApi,
 } from '#/generated/client'
 import { queryKeys } from '#/lib/query-keys'
 
@@ -43,6 +55,71 @@ export function useSwitchTenant() {
     onSuccess: (user: UserResponse) => {
       queryClient.clear()
       queryClient.setQueryData(queryKeys.auth.me(), user)
+    },
+  })
+}
+
+// ── 平台租户管理(superadmin,/admin/auth/tenants)──
+
+export function useTenants(options?: { enabled?: boolean }) {
+  return useQuery({
+    enabled: options?.enabled ?? true,
+    queryFn: () => listTenantsApi({}),
+    queryKey: queryKeys.tenantsAdmin.list(),
+  })
+}
+
+export function useCreateTenant() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: CreateTenantRequest) => createTenantApi({ body: request }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenantsAdmin.all })
+    },
+  })
+}
+
+export function useUpdateTenant() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, request }: { id: string; request: UpdateTenantRequest }) =>
+      updateTenantApi({ path: { id }, body: request }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenantsAdmin.all })
+    },
+  })
+}
+
+// ── 租户内成员管理(tn:admin 自助,/frontend/auth/tenants/members)──
+//
+// 只有当前租户的管理员打得通(后端活 tn:admin 检查);非管理员 403。前端据此隐藏入口,
+// 但**真正的闸在后端** —— 前端隐藏只是体验,不是安全边界。
+
+/** 我当前租户的成员。**enabled 由调用方门控**(仅当自己是本租户 admin 时才拉,避免必然 403)。 */
+export function useTenantMembers(options?: { enabled?: boolean }) {
+  return useQuery({
+    enabled: options?.enabled ?? true,
+    queryFn: () => listMembersApi({}),
+    queryKey: queryKeys.auth.members(),
+  })
+}
+
+export function useInviteMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: AddMemberRequest) => addMemberApi({ body: request }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.members() })
+    },
+  })
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (userId: string) => removeMemberApi({ path: { user_id: userId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.members() })
     },
   })
 }

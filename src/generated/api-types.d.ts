@@ -109,6 +109,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/auth/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_tenants"];
+        put?: never;
+        post: operations["create_tenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_tenant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/auth/users": {
         parameters: {
             query?: never;
@@ -340,6 +372,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/auth/tenants/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_members"];
+        put?: never;
+        post: operations["add_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/auth/tenants/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["remove_member"];
         options?: never;
         head?: never;
         patch?: never;
@@ -898,6 +962,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description 邀请一名成员进租户(`POST /admin/auth/tenants/{id}/members` 或自助
+         *     `POST /frontend/auth/tenants/members`)。`identifier` = 已有账号的 username/email。
+         *
+         *     **被邀请者必须先有账号**:0 租户是常规状态(register 的常规出口,spec §1.1)——
+         *     人先注册、再被邀请进公司。查无此人 → 404。
+         */
+        AddMemberRequest: {
+            identifier: string;
+            role: components["schemas"]["TenantRole"];
+        };
         /** @description 后台用户视图:身份(idm.users)+ 角色(idm)+ 富化的资料(app.profiles;缺/分进程降级 → null)。 */
         AdminUserView: {
             /** @description 富化:相对头像端点路径(悬空/分进程 → null)。 */
@@ -1040,6 +1115,19 @@ export interface components {
             document_type?: string | null;
             name?: string | null;
             owner_type?: string | null;
+        };
+        /**
+         * @description 平台开通一个租户(`POST /admin/auth/tenants`)。可选带一个初始管理员。
+         *
+         *     **PUT/POST 全量**:name 是机器码 slug(建后不改,像 username);display_name 可后续 PUT 改。
+         *     `admin_identifier` 给了就把该已有用户设为这个租户的第一个 `tn:admin` —— 平台开通即交钥匙,
+         *     之后由租户管理员自助邀请其余人(spec §7:平台开通 + 租户内部邀请)。
+         */
+        CreateTenantRequest: {
+            /** @description 初始管理员的 username 或 email(必须是已有账号)。不给 = 建空租户。 */
+            admin_identifier?: string | null;
+            display_name: string;
+            name: string;
         };
         /** @description 建号(原子含角色)。`password` 复用 `RegisterRequest` 的长度口径(auth/types.rs `length(min=3)`)。 */
         CreateUserRequest: {
@@ -1263,7 +1351,7 @@ export interface components {
          *     加权限 = 加一个变体 + `rename`,别处不动。
          * @enum {string}
          */
-        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
+        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "tenants:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
         /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 与 tenant_id 都来自认证主体,不入参。 */
         PrepareUploadRequest: {
             description?: string | null;
@@ -1419,6 +1507,59 @@ export interface components {
             /** Format: date-time */
             t: string;
         };
+        /**
+         * @description 一整个租户(P6 的平台管理端点 `GET/POST/PUT /admin/auth/tenants` 用)。
+         *
+         *     **不含 `deleted_at`**:DTO 从不暴露软删标记(同 widget 的 `Widget`)。列表只回存活行。
+         */
+        Tenant: {
+            /** Format: date-time */
+            created_at: string;
+            /** @description 展示名(`Acme 公司`)。UI 用,可改。 */
+            display_name: string;
+            /** Format: uuid */
+            id: string;
+            /** @description 机器码 slug(`acme`)。**唯一**(存活行内),代码/引用用。 */
+            name: string;
+            status: components["schemas"]["TenantStatus"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /**
+         * @description 一个租户的一名成员(P6 的成员管理端点 `GET /.../members` 的一行)。
+         *
+         *     与 `Membership` 相反的视角:`Membership` 是「某用户在**哪些**租户」(用户视角),
+         *     这个是「某租户里有**哪些**成员」(租户视角)。`username` 由 service 从 idm 富化。
+         */
+        TenantMember: {
+            /** Format: date-time */
+            granted_at: string;
+            role: components["schemas"]["TenantRole"];
+            /** Format: uuid */
+            user_id: string;
+            username: string;
+        };
+        /**
+         * @description **租户级**角色:某人在**某一家**公司里是 admin 还是 member。
+         *
+         *     与平台级的 [`RoleName`](crate::infra::authz::RoleName) 是两个类型,**这是刻意的** ——
+         *     平台角色骑在租户边界之上、由 `Policy` 映射成平台范围的 `Perm`;租户角色关在租户边界
+         *     之内、存 `tenant_members.role`。把它做成 `RoleName` 的变体试过一次:`Policy` 没有租户
+         *     维度,于是 `tn:admin` 被映射成**平台范围**的 `:all` 权限,一家 5 人公司的管理员就成了
+         *     全平台的事实管理员。两个类型让那件事编译不过。
+         *
+         *     serde/sqlx 的串都是 DB 裸值(`admin`/`member`),与 `tenant_members_role_ck` 一致。
+         * @enum {string}
+         */
+        TenantRole: "admin" | "member";
+        /**
+         * @description 租户状态。DB 侧有 `tenants_status_ck` check 约束双保险。
+         *
+         *     P6 的租户管理端点(`GET /admin/auth/tenants` 列表、`PUT` 改状态)要序列化/接收它,
+         *     故挣回了 `Serialize`/`ToSchema`(闭集枚举 → 前端生成 union,不漂成 string)。
+         * @enum {string}
+         */
+        TenantStatus: "active" | "suspended";
         /** @description `types` group-by 计数的强类型版本。 */
         TypeCount: {
             /** Format: int64 */
@@ -1436,6 +1577,14 @@ export interface components {
         UpdateMeRequest: {
             email?: string | null;
             username: string;
+        };
+        /**
+         * @description 全量更新一个租户(`PUT /admin/auth/tenants/{id}`)。**PUT 全量替换,不是 PATCH**:
+         *     display_name 与 status 都必传(status 用它来停用/恢复)。name(slug)刻意不可改。
+         */
+        UpdateTenantRequest: {
+            display_name: string;
+            status: components["schemas"]["TenantStatus"];
         };
         /** @description 改身份(PUT 全量)。`email=None` 即清空(替换 email 会重置 email_verified,idm 语义)。 */
         UpdateUserRequest: {
@@ -1568,6 +1717,7 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type AddMemberRequest = components['schemas']['AddMemberRequest'];
 export type AdminUserView = components['schemas']['AdminUserView'];
 export type AuthChannel = components['schemas']['AuthChannel'];
 export type AuthEventRow = components['schemas']['AuthEventRow'];
@@ -1580,6 +1730,7 @@ export type ContentMetadataResponse = components['schemas']['ContentMetadataResp
 export type ContentResponse = components['schemas']['ContentResponse'];
 export type ContentStatusView = components['schemas']['ContentStatusView'];
 export type CreateContentRequest = components['schemas']['CreateContentRequest'];
+export type CreateTenantRequest = components['schemas']['CreateTenantRequest'];
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
@@ -1612,9 +1763,14 @@ export type SetContentMetadataRequest = components['schemas']['SetContentMetadat
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
 export type SortOrder = components['schemas']['SortOrder'];
 export type StatBucket = components['schemas']['StatBucket'];
+export type Tenant = components['schemas']['Tenant'];
+export type TenantMember = components['schemas']['TenantMember'];
+export type TenantRole = components['schemas']['TenantRole'];
+export type TenantStatus = components['schemas']['TenantStatus'];
 export type TypeCount = components['schemas']['TypeCount'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
 export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
+export type UpdateTenantRequest = components['schemas']['UpdateTenantRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
 export type UpdateWidget = components['schemas']['UpdateWidget'];
 export type UploadResponse = components['schemas']['UploadResponse'];
@@ -1934,6 +2090,140 @@ export interface operations {
             };
             /** @description 无 users:admin 权限 */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_tenants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 全部存活租户(最近建的在前) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tenant"][];
+                };
+            };
+            /** @description 无 tenants:admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 已开通 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tenant"];
+                };
+            };
+            /** @description 初始 admin 不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description name(slug)已占用 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新(status=suspended 即停用) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tenant"];
+                };
+            };
+            /** @description 无 tenants:admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2950,6 +3240,146 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 我当前租户的成员 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantMember"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 你不是当前租户的管理员 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    add_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description 已邀请(对已是成员的人 = 改角色) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 你不是当前租户的管理员 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 被邀请者不存在(须先有账号) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 被移除成员的 user id */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已移除 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 你不是当前租户的管理员 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 此人不是本租户成员 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4577,14 +5007,17 @@ export type ListAuthEventsQuery = operations['list_auth_events']['parameters']['
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListMembersResponse = operations['list_members']['responses'][200]['content']['application/json'];
 export type ListMyTenantsResponse = operations['list_my_tenants']['responses'][200]['content']['application/json'];
 export type ListRolesQuery = operations['list_roles']['parameters']['query'];
+export type ListTenantsResponse = operations['list_tenants']['responses'][200]['content']['application/json'];
 export type ListUserAuthEventsPath = operations['list_user_auth_events']['parameters']['path'];
 export type ListUserAuthEventsQuery = operations['list_user_auth_events']['parameters']['query'];
 export type ListUsersQuery = operations['list_users']['parameters']['query'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
 export type PutProfilePath = operations['put_profile']['parameters']['path'];
+export type RemoveMemberPath = operations['remove_member']['parameters']['path'];
 export type ResetUserPasswordPath = operations['reset_user_password']['parameters']['path'];
 export type SetContentMetadataPath = operations['set_content_metadata']['parameters']['path'];
 export type SetUserAvatarPath = operations['set_user_avatar']['parameters']['path'];
@@ -4593,6 +5026,7 @@ export type SetUserProfilePath = operations['set_user_profile']['parameters']['p
 export type SetUserRolesPath = operations['set_user_roles']['parameters']['path'];
 export type StatsAuthEventsQuery = operations['stats_auth_events']['parameters']['query'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
+export type UpdateTenantPath = operations['update_tenant']['parameters']['path'];
 export type UpdateUserPath = operations['update_user']['parameters']['path'];
 export type UpdateWidgetPath = operations['update_widget']['parameters']['path'];
 export type UploadContentRequest = FormData;

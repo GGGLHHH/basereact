@@ -15,6 +15,15 @@ export const queryKeys = {
     // 我的租户列表(GET /auth/tenants)。归 auth 前缀:它是认证域的事(切租户 = 重新铸币)。
     // 切租户成功后走 clear() 全清,所以这份也随之失效、下次进切换器重新拉。
     tenants: () => [...queryKeys.auth.all, 'tenants'] as const,
+    // 我当前租户的成员(GET /auth/tenants/members)。租户内成员管理(tn:admin 自助)。
+    // 归 auth 前缀:切租户 clear() 后随之失效(成员属于旧租户)。
+    members: () => [...queryKeys.auth.all, 'members'] as const,
+  },
+  // 平台租户管理(superadmin,/admin/auth/tenants)。归 admin 前缀:与其余后台缓存
+  // 同生命周期(登出 clear / 登录 removeQueries),且它不随租户切换而变(平台视角)。
+  tenantsAdmin: {
+    all: ['admin', 'tenants'] as const,
+    list: () => [...queryKeys.tenantsAdmin.all, 'list'] as const,
   },
   profile: {
     all: ['profile'] as const,

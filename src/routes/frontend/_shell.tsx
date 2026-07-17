@@ -34,6 +34,15 @@ function FrontendShell() {
           >
             {t('route:titles.frontendAbout')}
           </Link>
+          {/* 团队(成员管理)。登录后才显示;非本租户 admin 进去会看到「你不是管理员」。 */}
+          {me ? (
+            <Link
+              to='/frontend/team'
+              className='[&.active]:font-semibold'
+            >
+              {t('route:titles.frontendTeam')}
+            </Link>
+          ) : null}
         </nav>
         <div className='ml-auto flex items-center gap-3 text-sm'>
           {me ? (

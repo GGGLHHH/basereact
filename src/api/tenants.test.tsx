@@ -7,14 +7,38 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type { MyTenantResponse, UserResponse } from '#/generated/api-types'
 
-import { listMyTenants, putActiveTenant } from '#/generated/client'
+import {
+  addMember,
+  createTenant,
+  listMembers,
+  listMyTenants,
+  listTenants,
+  putActiveTenant,
+  removeMember,
+  updateTenant,
+} from '#/generated/client'
 import { queryKeys } from '#/lib/query-keys'
 
-import { useMyTenants, useSwitchTenant } from './tenants'
+import {
+  useCreateTenant,
+  useInviteMember,
+  useMyTenants,
+  useRemoveMember,
+  useSwitchTenant,
+  useTenantMembers,
+  useTenants,
+  useUpdateTenant,
+} from './tenants'
 
 vi.mock('#/generated/client', () => ({
   listMyTenants: vi.fn(),
   putActiveTenant: vi.fn(),
+  listTenants: vi.fn(),
+  createTenant: vi.fn(),
+  updateTenant: vi.fn(),
+  listMembers: vi.fn(),
+  addMember: vi.fn(),
+  removeMember: vi.fn(),
 }))
 
 function fakeTenant(overrides: Partial<MyTenantResponse> = {}): MyTenantResponse {
@@ -113,5 +137,92 @@ describe('useSwitchTenant — 缓存策略是安全关键点', () => {
     result.current.mutate({ tenant_id: 't-globex' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(putActiveTenant).toHaveBeenCalledWith({ body: { tenant_id: 't-globex' } })
+  })
+})
+
+describe('平台租户管理 hooks', () => {
+  it('useTenants 列表', async () => {
+    vi.mocked(listTenants).mockResolvedValue([
+      {
+        id: 't1',
+        name: 'acme',
+        display_name: 'Acme',
+        status: 'active',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ])
+    const client = makeClient()
+    const { result } = renderHook(() => useTenants(), { wrapper: wrapper(client) })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.[0].name).toBe('acme')
+  })
+
+  it('useCreateTenant 成功后失效租户列表缓存', async () => {
+    vi.mocked(createTenant).mockResolvedValue({
+      id: 't2',
+      name: 'newco',
+      display_name: 'New',
+      status: 'active',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    })
+    const client = makeClient()
+    const spy = vi.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useCreateTenant(), { wrapper: wrapper(client) })
+    result.current.mutate({ name: 'newco', display_name: 'New' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.tenantsAdmin.all })
+  })
+
+  it('useUpdateTenant 用 {id, request} 形状调端点', async () => {
+    vi.mocked(updateTenant).mockResolvedValue({
+      id: 't1',
+      name: 'acme',
+      display_name: 'Acme',
+      status: 'suspended',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    })
+    const client = makeClient()
+    const { result } = renderHook(() => useUpdateTenant(), { wrapper: wrapper(client) })
+    result.current.mutate({ id: 't1', request: { display_name: 'Acme', status: 'suspended' } })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(updateTenant).toHaveBeenCalledWith({
+      path: { id: 't1' },
+      body: { display_name: 'Acme', status: 'suspended' },
+    })
+  })
+})
+
+describe('租户内成员管理 hooks', () => {
+  it('useTenantMembers 列成员', async () => {
+    vi.mocked(listMembers).mockResolvedValue([
+      { user_id: 'u1', username: 'alice', role: 'admin', granted_at: '2026-01-01T00:00:00Z' },
+    ])
+    const client = makeClient()
+    const { result } = renderHook(() => useTenantMembers(), { wrapper: wrapper(client) })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.[0].username).toBe('alice')
+  })
+
+  it('useInviteMember 成功后失效成员缓存', async () => {
+    vi.mocked(addMember).mockResolvedValue()
+    const client = makeClient()
+    const spy = vi.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useInviteMember(), { wrapper: wrapper(client) })
+    result.current.mutate({ identifier: 'bob', role: 'member' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(addMember).toHaveBeenCalledWith({ body: { identifier: 'bob', role: 'member' } })
+    expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.auth.members() })
+  })
+
+  it('useRemoveMember 用 user_id path 调端点', async () => {
+    vi.mocked(removeMember).mockResolvedValue()
+    const client = makeClient()
+    const { result } = renderHook(() => useRemoveMember(), { wrapper: wrapper(client) })
+    result.current.mutate('u9')
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(removeMember).toHaveBeenCalledWith({ path: { user_id: 'u9' } })
   })
 })
