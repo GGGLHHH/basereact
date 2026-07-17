@@ -4,6 +4,8 @@ import type {
   AddMemberRequest,
   CreateTenantRequest,
   SetActiveTenantRequest,
+  Tenant,
+  TenantMember,
   UpdateTenantRequest,
   UserResponse,
 } from '#/generated/api-types'
@@ -84,8 +86,16 @@ export function useUpdateTenant() {
   return useMutation({
     mutationFn: ({ id, request }: { id: string; request: UpdateTenantRequest }) =>
       updateTenantApi({ path: { id }, body: request }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tenantsAdmin.all })
+    // update 返回整实体 → 用服务器真值补丁列表那一行,再 quiet-invalidate(免 refetch 闪烁)。
+    // 同 users.ts 的 useUpdateUser —— 项目统一口径。
+    onSuccess: (tenant) => {
+      queryClient.setQueriesData<Tenant[]>({ queryKey: queryKeys.tenantsAdmin.all }, (old) =>
+        old?.map((t) => (t.id === tenant.id ? tenant : t)),
+      )
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.tenantsAdmin.all,
+        refetchType: 'none',
+      })
     },
   })
 }
@@ -95,7 +105,11 @@ export function useUpdateTenant() {
 // 只有当前租户的管理员打得通(后端活 tn:admin 检查);非管理员 403。前端据此隐藏入口,
 // 但**真正的闸在后端** —— 前端隐藏只是体验,不是安全边界。
 
-/** 我当前租户的成员。**enabled 由调用方门控**(仅当自己是本租户 admin 时才拉,避免必然 403)。 */
+/**
+ * 我当前租户的成员。`MyTenantResponse` 不带 role,所以调用方(team-page)**无从预知**自己是不是
+ * 本租户 admin —— 直接拉,**用后端 403 当「你不是管理员」的信号**(活 tn:admin 检查是权威)。
+ * `enabled` 仅用于确有前置条件时(如 0 租户)按需关掉,不是安全门控。
+ */
 export function useTenantMembers(options?: { enabled?: boolean }) {
   return useQuery({
     enabled: options?.enabled ?? true,
@@ -118,8 +132,15 @@ export function useRemoveMember() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (userId: string) => removeMemberApi({ path: { user_id: userId } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.members() })
+    // 删行(乐观)+ quiet-invalidate —— 同 users.ts 的 useDeleteUser。
+    onSuccess: (_data, userId) => {
+      queryClient.setQueryData<TenantMember[]>(queryKeys.auth.members(), (old) =>
+        old?.filter((m) => m.user_id !== userId),
+      )
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.auth.members(),
+        refetchType: 'none',
+      })
     },
   })
 }

@@ -175,23 +175,31 @@ describe('平台租户管理 hooks', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.tenantsAdmin.all })
   })
 
-  it('useUpdateTenant 用 {id, request} 形状调端点', async () => {
-    vi.mocked(updateTenant).mockResolvedValue({
+  it('useUpdateTenant 调端点,并用返回实体补丁列表那一行(乐观)', async () => {
+    const suspended = {
       id: 't1',
       name: 'acme',
       display_name: 'Acme',
-      status: 'suspended',
+      status: 'suspended' as const,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
-    })
+    }
+    vi.mocked(updateTenant).mockResolvedValue(suspended)
     const client = makeClient()
+    // 预置列表缓存里那行还是 active —— 成功后必须被补成 suspended,不等 refetch。
+    client.setQueryData(queryKeys.tenantsAdmin.list(), [{ ...suspended, status: 'active' }])
+
     const { result } = renderHook(() => useUpdateTenant(), { wrapper: wrapper(client) })
     result.current.mutate({ id: 't1', request: { display_name: 'Acme', status: 'suspended' } })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
     expect(updateTenant).toHaveBeenCalledWith({
       path: { id: 't1' },
       body: { display_name: 'Acme', status: 'suspended' },
     })
+    // **核心断言**:缓存行已被服务器真值补丁(同 users.ts 的 useUpdateUser 口径)。
+    const cached = client.getQueryData(queryKeys.tenantsAdmin.list()) as Array<{ status: string }>
+    expect(cached[0].status).toBe('suspended')
   })
 })
 
@@ -217,12 +225,22 @@ describe('租户内成员管理 hooks', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.auth.members() })
   })
 
-  it('useRemoveMember 用 user_id path 调端点', async () => {
+  it('useRemoveMember 调端点,并从成员缓存里删掉那行(乐观)', async () => {
     vi.mocked(removeMember).mockResolvedValue()
     const client = makeClient()
+    // 预置成员列表含 u9 —— 成功后必须被删掉,不等 refetch。
+    client.setQueryData(queryKeys.auth.members(), [
+      { user_id: 'u1', username: 'alice', role: 'admin', granted_at: '2026-01-01T00:00:00Z' },
+      { user_id: 'u9', username: 'bob', role: 'member', granted_at: '2026-01-01T00:00:00Z' },
+    ])
+
     const { result } = renderHook(() => useRemoveMember(), { wrapper: wrapper(client) })
     result.current.mutate('u9')
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
     expect(removeMember).toHaveBeenCalledWith({ path: { user_id: 'u9' } })
+    // **核心断言**:被移除的成员已从缓存消失(同 users.ts 的 useDeleteUser 口径)。
+    const cached = client.getQueryData(queryKeys.auth.members()) as Array<{ user_id: string }>
+    expect(cached.map((m) => m.user_id)).toEqual(['u1'])
   })
 })
