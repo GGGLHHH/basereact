@@ -56,7 +56,6 @@ function buildMultipartForm(
   if (request?.name != null) form.append('name', request.name)
   if (request?.tags?.length) form.append('tags', request.tags.join(','))
   if (request?.document_type != null) form.append('document_type', request.document_type)
-  if (request?.tenant_id != null) form.append('tenant_id', request.tenant_id)
   return form
 }
 

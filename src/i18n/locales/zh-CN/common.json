@@ -49,7 +49,8 @@
       "refreshed": "会话刷新",
       "loggedOut": "登出",
       "logoutAll": "登出所有会话",
-      "accountDeleted": "注销账户"
+      "accountDeleted": "注销账户",
+      "tenantSwitched": "切换租户"
     },
     "reasons": {
       "unknownUser": "用户不存在",
@@ -296,6 +297,61 @@
         "landing": "地区落地页(index)。本演示的最深层。",
         "level3Prefix": "第 3 级 · "
       }
+    }
+  },
+  "tenant": {
+    "none": "无租户",
+    "switchLabel": "切换公司"
+  },
+  "tenantAdmin": {
+    "columns": {
+      "name": "名称",
+      "slug": "机器码",
+      "status": "状态",
+      "createdAt": "创建时间",
+      "role": "角色",
+      "member": "成员",
+      "actions": ""
+    },
+    "status": {
+      "active": "启用",
+      "suspended": "已停用"
+    },
+    "admin": {
+      "title": "租户",
+      "empty": "还没有租户。",
+      "create": "开通租户",
+      "createTitle": "开通一个新租户",
+      "nameLabel": "机器码 slug",
+      "namePlaceholder": "acme",
+      "displayNameLabel": "展示名",
+      "displayNamePlaceholder": "Acme 公司",
+      "adminLabel": "初始管理员(username/email,可选)",
+      "adminPlaceholder": "必须是已有账号",
+      "submit": "开通",
+      "submitting": "开通中…",
+      "suspend": "停用",
+      "reactivate": "恢复",
+      "created": "租户已开通",
+      "updated": "租户已更新"
+    },
+    "team": {
+      "title": "团队",
+      "empty": "还没有成员。",
+      "notAdmin": "你不是本公司的管理员,无法管理成员。",
+      "noTenant": "你还没有加入任何公司。",
+      "invite": "邀请成员",
+      "inviteTitle": "邀请某人加入本公司",
+      "identifierLabel": "用户名或邮箱",
+      "identifierPlaceholder": "必须已有账号",
+      "roleLabel": "角色",
+      "roleAdmin": "管理员",
+      "roleMember": "成员",
+      "submit": "邀请",
+      "submitting": "邀请中…",
+      "remove": "移除",
+      "invited": "已邀请成员",
+      "removed": "已移除成员"
     }
   }
 }

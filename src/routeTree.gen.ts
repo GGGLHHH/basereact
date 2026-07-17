@@ -20,9 +20,11 @@ import { Route as FrontendLoginRouteImport } from './routes/frontend/login'
 import { Route as FrontendShellRouteImport } from './routes/frontend/_shell'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminShellRouteImport } from './routes/admin/_shell'
+import { Route as FrontendShellTeamRouteImport } from './routes/frontend/_shell/team'
 import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
 import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
 import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
+import { Route as AdminShellTenantsRouteImport } from './routes/admin/_shell/tenants'
 import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
 import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShellAuthLogRouteImport } from './routes/admin/_shell/auth-log'
@@ -95,6 +97,11 @@ const AdminShellRoute = AdminShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const FrontendShellTeamRoute = FrontendShellTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => FrontendShellRoute,
+} as any)
 const FrontendShellHomeRoute = FrontendShellHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -108,6 +115,11 @@ const FrontendShellAboutRoute = FrontendShellAboutRouteImport.update({
 const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
   id: '/widgets',
   path: '/widgets',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellTenantsRoute = AdminShellTenantsRouteImport.update({
+  id: '/tenants',
+  path: '/tenants',
   getParentRoute: () => AdminShellRoute,
 } as any)
 const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
@@ -225,9 +237,11 @@ export interface FileRoutesByFullPath {
   '/admin/auth-log': typeof AdminShellAuthLogRoute
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
+  '/admin/tenants': typeof AdminShellTenantsRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
+  '/frontend/team': typeof FrontendShellTeamRoute
   '/admin/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
   '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/users/$userId': typeof AdminShellUsersUserIdRoute
@@ -253,9 +267,11 @@ export interface FileRoutesByTo {
   '/admin/auth-log': typeof AdminShellAuthLogRoute
   '/admin/home': typeof AdminShellHomeRoute
   '/admin/profile': typeof AdminShellProfileRoute
+  '/admin/tenants': typeof AdminShellTenantsRoute
   '/admin/widgets': typeof AdminShellWidgetsRoute
   '/frontend/about': typeof FrontendShellAboutRoute
   '/frontend/home': typeof FrontendShellHomeRoute
+  '/frontend/team': typeof FrontendShellTeamRoute
   '/admin/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/users/$userId': typeof AdminShellUsersUserIdRoute
   '/admin/users/new': typeof AdminShellUsersNewRoute
@@ -286,9 +302,11 @@ export interface FileRoutesById {
   '/admin/_shell/auth-log': typeof AdminShellAuthLogRoute
   '/admin/_shell/home': typeof AdminShellHomeRoute
   '/admin/_shell/profile': typeof AdminShellProfileRoute
+  '/admin/_shell/tenants': typeof AdminShellTenantsRoute
   '/admin/_shell/widgets': typeof AdminShellWidgetsRoute
   '/frontend/_shell/about': typeof FrontendShellAboutRoute
   '/frontend/_shell/home': typeof FrontendShellHomeRoute
+  '/frontend/_shell/team': typeof FrontendShellTeamRoute
   '/admin/_shell/nested/reports': typeof AdminShellNestedReportsRouteRouteWithChildren
   '/admin/_shell/nested/overview': typeof AdminShellNestedOverviewRoute
   '/admin/_shell/users/$userId': typeof AdminShellUsersUserIdRoute
@@ -320,9 +338,11 @@ export interface FileRouteTypes {
     | '/admin/auth-log'
     | '/admin/home'
     | '/admin/profile'
+    | '/admin/tenants'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
+    | '/frontend/team'
     | '/admin/nested/reports'
     | '/admin/nested/overview'
     | '/admin/users/$userId'
@@ -348,9 +368,11 @@ export interface FileRouteTypes {
     | '/admin/auth-log'
     | '/admin/home'
     | '/admin/profile'
+    | '/admin/tenants'
     | '/admin/widgets'
     | '/frontend/about'
     | '/frontend/home'
+    | '/frontend/team'
     | '/admin/nested/overview'
     | '/admin/users/$userId'
     | '/admin/users/new'
@@ -380,9 +402,11 @@ export interface FileRouteTypes {
     | '/admin/_shell/auth-log'
     | '/admin/_shell/home'
     | '/admin/_shell/profile'
+    | '/admin/_shell/tenants'
     | '/admin/_shell/widgets'
     | '/frontend/_shell/about'
     | '/frontend/_shell/home'
+    | '/frontend/_shell/team'
     | '/admin/_shell/nested/reports'
     | '/admin/_shell/nested/overview'
     | '/admin/_shell/users/$userId'
@@ -483,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/frontend/_shell/team': {
+      id: '/frontend/_shell/team'
+      path: '/team'
+      fullPath: '/frontend/team'
+      preLoaderRoute: typeof FrontendShellTeamRouteImport
+      parentRoute: typeof FrontendShellRoute
+    }
     '/frontend/_shell/home': {
       id: '/frontend/_shell/home'
       path: '/home'
@@ -502,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/widgets'
       fullPath: '/admin/widgets'
       preLoaderRoute: typeof AdminShellWidgetsRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/tenants': {
+      id: '/admin/_shell/tenants'
+      path: '/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AdminShellTenantsRouteImport
       parentRoute: typeof AdminShellRoute
     }
     '/admin/_shell/profile': {
@@ -710,6 +748,7 @@ interface AdminShellRouteChildren {
   AdminShellAuthLogRoute: typeof AdminShellAuthLogRoute
   AdminShellHomeRoute: typeof AdminShellHomeRoute
   AdminShellProfileRoute: typeof AdminShellProfileRoute
+  AdminShellTenantsRoute: typeof AdminShellTenantsRoute
   AdminShellWidgetsRoute: typeof AdminShellWidgetsRoute
 }
 
@@ -721,6 +760,7 @@ const AdminShellRouteChildren: AdminShellRouteChildren = {
   AdminShellAuthLogRoute: AdminShellAuthLogRoute,
   AdminShellHomeRoute: AdminShellHomeRoute,
   AdminShellProfileRoute: AdminShellProfileRoute,
+  AdminShellTenantsRoute: AdminShellTenantsRoute,
   AdminShellWidgetsRoute: AdminShellWidgetsRoute,
 }
 
@@ -747,11 +787,13 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 interface FrontendShellRouteChildren {
   FrontendShellAboutRoute: typeof FrontendShellAboutRoute
   FrontendShellHomeRoute: typeof FrontendShellHomeRoute
+  FrontendShellTeamRoute: typeof FrontendShellTeamRoute
 }
 
 const FrontendShellRouteChildren: FrontendShellRouteChildren = {
   FrontendShellAboutRoute: FrontendShellAboutRoute,
   FrontendShellHomeRoute: FrontendShellHomeRoute,
+  FrontendShellTeamRoute: FrontendShellTeamRoute,
 }
 
 const FrontendShellRouteWithChildren = FrontendShellRoute._addFileChildren(

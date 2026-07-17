@@ -49,7 +49,8 @@
       "refreshed": "Session refreshed",
       "loggedOut": "Signed out",
       "logoutAll": "All sessions ended",
-      "accountDeleted": "Account deleted"
+      "accountDeleted": "Account deleted",
+      "tenantSwitched": "Switched tenant"
     },
     "reasons": {
       "unknownUser": "unknown user",
@@ -296,6 +297,61 @@
         "landing": "Regions landing (index). Deepest level in this demo.",
         "level3Prefix": "Level 3 · "
       }
+    }
+  },
+  "tenant": {
+    "none": "No tenant",
+    "switchLabel": "Switch tenant"
+  },
+  "tenantAdmin": {
+    "columns": {
+      "name": "Name",
+      "slug": "Slug",
+      "status": "Status",
+      "createdAt": "Created",
+      "role": "Role",
+      "member": "Member",
+      "actions": ""
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "admin": {
+      "title": "Tenants",
+      "empty": "No tenants yet.",
+      "create": "New tenant",
+      "createTitle": "Open a new tenant",
+      "nameLabel": "Slug (machine name)",
+      "namePlaceholder": "acme",
+      "displayNameLabel": "Display name",
+      "displayNamePlaceholder": "Acme Inc",
+      "adminLabel": "Initial admin (username/email, optional)",
+      "adminPlaceholder": "existing account",
+      "submit": "Create",
+      "submitting": "Creating…",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "created": "Tenant created",
+      "updated": "Tenant updated"
+    },
+    "team": {
+      "title": "Team",
+      "empty": "No members yet.",
+      "notAdmin": "You are not an admin of this company, so you can't manage its members.",
+      "noTenant": "You don't belong to any company yet.",
+      "invite": "Invite member",
+      "inviteTitle": "Invite someone to this company",
+      "identifierLabel": "Username or email",
+      "identifierPlaceholder": "must have an account",
+      "roleLabel": "Role",
+      "roleAdmin": "Admin",
+      "roleMember": "Member",
+      "submit": "Invite",
+      "submitting": "Inviting…",
+      "remove": "Remove",
+      "invited": "Member invited",
+      "removed": "Member removed"
     }
   }
 }

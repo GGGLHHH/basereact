@@ -3,6 +3,7 @@ import { Link, Outlet, createFileRoute, useNavigate } from '@tanstack/react-rout
 import { useTranslation } from 'react-i18next'
 
 import { meSoftQueryOptions, useLogout } from '@/api/auth'
+import { TenantSwitcher } from '@/components/tenant-switcher'
 import { Button } from '@/components/ui/button'
 
 // pathless 布局:公开站顶部导航壳。无守卫——home 公开,about 自带 requireUser。
@@ -33,10 +34,21 @@ function FrontendShell() {
           >
             {t('route:titles.frontendAbout')}
           </Link>
+          {/* 团队(成员管理)。登录后才显示;非本租户 admin 进去会看到「你不是管理员」。 */}
+          {me ? (
+            <Link
+              to='/frontend/team'
+              className='[&.active]:font-semibold'
+            >
+              {t('route:titles.frontendTeam')}
+            </Link>
+          ) : null}
         </nav>
         <div className='ml-auto flex items-center gap-3 text-sm'>
           {me ? (
             <>
+              {/* 登录后才显示切换器;它自己在 <2 个租户时不渲染。 */}
+              <TenantSwitcher />
               <span className='text-muted-foreground'>{me.username}</span>
               <Button
                 variant='outline'

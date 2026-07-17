@@ -20,7 +20,9 @@
     "nestedRegions": "Regions",
     "nestedReports": "Reports",
     "notFound": "Page not found",
-    "profile": "Profile"
+    "profile": "Profile",
+    "adminTenants": "Tenants",
+    "frontendTeam": "Team"
   },
   "menuGroups": {
     "admin": "Admin",
