@@ -156,6 +156,13 @@ export const accessPolicies = {
     path: "admin/widgets",
     permissions: ["users:admin", "admin:login"],
   },
+  putActiveTenant: {
+    apiPath: "/api/v1/frontend/auth/active-tenant",
+    kind: "authenticated",
+    method: "PUT",
+    operationId: "put_active_tenant",
+    path: "frontend/auth/active-tenant",
+  },
   logoutAll: {
     apiPath: "/api/v1/frontend/auth/logout-all",
     kind: "authenticated",
@@ -190,6 +197,13 @@ export const accessPolicies = {
     method: "POST",
     operationId: "change_password",
     path: "frontend/auth/me/password",
+  },
+  listMyTenants: {
+    apiPath: "/api/v1/frontend/auth/tenants",
+    kind: "authenticated",
+    method: "GET",
+    operationId: "list_my_tenants",
+    path: "frontend/auth/tenants",
   },
   listContents: {
     apiPath: "/api/v1/frontend/contents",
@@ -378,6 +392,13 @@ export const accessPolicies = {
     operationId: "purge_preview",
     path: "frontend/widgets/purge-preview",
     permissions: ["widgets:read", "widgets:delete"],
+  },
+  widgetStats: {
+    apiPath: "/api/v1/frontend/widgets/stats",
+    kind: "authenticated",
+    method: "GET",
+    operationId: "widget_stats",
+    path: "frontend/widgets/stats",
   },
   getWidget: {
     apiPath: "/api/v1/frontend/widgets/{id}",

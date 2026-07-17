@@ -58,6 +58,9 @@ export function adminListWidgets(): string {
     return "admin/widgets";
 }
 // Frontend
+export function putActiveTenant(): string {
+    return "frontend/auth/active-tenant";
+}
 export function logoutAll(): string {
     return "frontend/auth/logout-all";
 }
@@ -72,6 +75,9 @@ export function deleteMe(): string {
 }
 export function changePassword(): string {
     return "frontend/auth/me/password";
+}
+export function listMyTenants(): string {
+    return "frontend/auth/tenants";
 }
 export function listContents(): string {
     return "frontend/contents";
@@ -145,6 +151,9 @@ export function widgetOverview(): string {
 export function purgePreview(): string {
     return "frontend/widgets/purge-preview";
 }
+export function widgetStats(): string {
+    return "frontend/widgets/stats";
+}
 export function getWidget(params: GetWidgetPath): string {
     return `frontend/widgets/${params.id}`;
 }
@@ -166,7 +175,4 @@ export function refresh(): string {
 }
 export function register(): string {
     return "public/auth/register";
-}
-export function widgetStats(): string {
-    return "public/widgets/stats";
 }

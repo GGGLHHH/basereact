@@ -248,11 +248,32 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * **superadmin-only**:跨所有人列出全部 widget。gate 在 `users:admin`(seed 里只 superadmin 持有)。
+         * **superadmin-only**:跨所有人列出 widget。gate 在 `users:admin`(seed 里只 superadmin 持有)。
          *     演示"role 限制 = gate 一个该 role 专属的 perm";注意 admin 虽有 `read:all`,无 `users:admin` 仍 403。
+         * @description ⚠️ **语义已降级为「本租户内、跨所有人」**(spec §6.3):它原本是「跨所有人、跨所有租户」——
+         *     那是一条泄露行。superadmin 也被关在租户闸里:这只影响它读**业务数据**,不影响它管租户
+         *     (那是 `idm.tenants` 的 CRUD,另一件事,见 spec §7.1)。
+         *     真要「客服跨租户看客户数据」,那是 `Rows::AllTenants` + 一个 `platform:*:all` perm,
+         *     触发条件写在 spec §7 —— 别顺手把这个端点改回去。
          */
         get: operations["admin_list_widgets"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/auth/active-tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_active_tenant"];
         post?: never;
         delete?: never;
         options?: never;
@@ -308,6 +329,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/frontend/auth/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_my_tenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/frontend/contents": {
         parameters: {
             query?: never;
@@ -342,7 +379,8 @@ export interface paths {
         put?: never;
         /**
          * 一次性上传(multipart/form-data):建 content + object 行、推字节、同步元数据、翻状态。需 `contents:write`。
-         *     表单字段:`file`(必填,带 filename + content-type)、`name`、`tags`(逗号分隔)、`document_type`、`tenant_id`(可选)。
+         *     表单字段:`file`(必填,带 filename + content-type)、`name`、`tags`(逗号分隔)、`document_type`。
+         *     **无 tenant_id** —— 租户来自 claim。
          */
         post: operations["upload_content"];
         delete?: never;
@@ -606,13 +644,21 @@ export interface paths {
          * 订阅 widget 变更事件流(SSE)。需登录 + `widgets:read` —— 与列表同权:能看列表就能看变更。
          *     EventSource 不能自定义 header,凭据靠 httponly cookie(Bearer 兜底给 curl/测试)。
          *     best-effort 无回放:断线期间的事件丢失,EventSource 自动重连拿新订阅。
-         * @description **行级 ownership 与 list 同口径**:总线是广播(不分频道),过滤落在本 handler —— 逐帧
-         *     `allows_created_by`,不过就跳帧(`continue`),**不**结束流。没这层,无 `read:all` 的 `user`
-         *     能从流里读到 `list_widgets`/`get_widget` 都不给他看的**别人的 widget**(名字等全量 `Widget`)。
-         *     `Access` 在开流时刻算定并随流存活 —— 同下面的鉴权时刻取舍。
+         * @description **租户闸 + 行级 ownership 与 list 同口径**:总线是**全局广播**(NATS subject / PG NOTIFY
+         *     都不分租户),过滤落在本 handler —— 逐帧 `allows_created_by(event.tenant(), event.owner())`,
+         *     不过就跳帧(`continue`),**不**结束流。
          *
-         *     鉴权只在开流时刻评估:流存活期间 token 过期/吊销不会断流(SSE 惯例取舍;低敏数据可接受)。
-         *     要收紧:按 claim 的 exp 到点结束流,EventSource 重连即重新鉴权。
+         *     没这层,无 `read:all` 的 `user` 能从流里读到 `list_widgets`/`get_widget` 都不给他看的
+         *     别人的 widget;**没有租户那一维,他能读到别的公司的**。
+         *
+         *     # 流必须随 token 过期而断(spec §6.4a)
+         *
+         *     `Access` 在开流时刻算定、被 move 进流状态,之后每帧只读不重算 —— 而 `keep_alive` 还主动
+         *     每 15s 续命。合起来就是:**一条流能活过它的 token**。用户切了租户、被踢出公司、租户被停用,
+         *     那条流照推旧租户的事件不误,直到浏览器自己断开。
+         *
+         *     所以按 claim 的 `exp` 截流(`take_until`)。EventSource 会自动重连 → 拿新 token 重新鉴权
+         *     → 新的 `Access`。这也是「切租户后旧流还在推旧租户」的收口:最长一个 access TTL。
          */
         get: operations["widget_events"];
         put?: never;
@@ -675,6 +721,34 @@ export interface paths {
          *     `require_all` 缺任一 perm 即 403;文档 = 单 requirement 多 scope(`OP_PERMS` 的 `PermReq::All`)。
          */
         get: operations["purge_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/widgets/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * **仅登录**:本租户的 widget 计数。
+         * @description # 它曾经是 public,上租户轴后**必须挪进来**(spec §6.1)
+         *
+         *     原来它无 `CurrentUser`、任何人可调,演示"无需登录"形态。但 public 端点**没有 token,
+         *     就造不出 `TenantId`** —— 而"全站计数"在多租户下的意思是「把所有客户公司的数据加总告诉
+         *     匿名访问者」。那不是一个能加闸的端点,是一个不该存在的端点。
+         *
+         *     **代价**:widget 不再演示 "public 端点" 形态。**这是正确的** —— 多租户下「public + 租户
+         *     数据」本身就是反模式,留着它当样板是在教人写洞。真要 public 样板,另找一个**真无租户语义**
+         *     的端点去演示(如 /healthz 之类)。
+         */
+        get: operations["widget_stats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -760,26 +834,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/public/widgets/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * **public**:全站 widget 计数。无 `CurrentUser`/`require_scoped` → 任何人可调
-         *     (不进 `OP_PERMS` → 文档不挂 security)。演示"无需登录"形态。
-         */
-        get: operations["widget_stats"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -896,7 +950,7 @@ export interface components {
          *     出现未知值本身就是数据异常,该让它在解码处炸出来而不是悄悄吞掉。
          * @enum {string}
          */
-        AuthEventType: "auth.login_succeeded" | "auth.login_failed" | "auth.admin_access_denied" | "auth.refreshed" | "auth.logged_out" | "auth.logout_all" | "auth.password_changed" | "auth.registered" | "auth.account_deleted";
+        AuthEventType: "auth.login_succeeded" | "auth.login_failed" | "auth.admin_access_denied" | "auth.refreshed" | "auth.logged_out" | "auth.logout_all" | "auth.password_changed" | "auth.registered" | "auth.account_deleted" | "auth.tenant_switched";
         AuthKpi: {
             /** Format: int64 */
             failed_count: number;
@@ -964,7 +1018,11 @@ export interface components {
             owner_type?: string | null;
             /** @description 生命周期状态(闭集,生成前端 union)。 */
             status: components["schemas"]["ContentStatusView"];
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description 所属租户。**保留** —— 本 DTO 只 Serialize(只出不进),不是伪造面;
+             *     留着能让前端看见自己在哪个租户。入参侧的 tenant_id 已全部删除。
+             */
             tenant_id: string;
             /** Format: date-time */
             updated_at: string;
@@ -982,11 +1040,6 @@ export interface components {
             document_type?: string | null;
             name?: string | null;
             owner_type?: string | null;
-            /**
-             * Format: uuid
-             * @description 单租户脚手架:省略 → `Uuid::nil()`(多租户隔离是 app authz 的职责,见 routes.rs)。
-             */
-            tenant_id?: string | null;
         };
         /** @description 建号(原子含角色)。`password` 复用 `RegisterRequest` 的长度口径(auth/types.rs `length(min=3)`)。 */
         CreateUserRequest: {
@@ -1050,6 +1103,26 @@ export interface components {
             permissions: components["schemas"]["Perm"][];
             /** @description token claim 里的角色名(闭集,生成前端 union)。 */
             roles: components["schemas"]["RoleName"][];
+        };
+        /**
+         * @description 我的一个租户(`GET /auth/tenants` 的一行)。
+         *
+         *     `name` 是机器码 slug(与 `idm.tenants.name` 同名,**不叫 slug**)。
+         *
+         *     **没有 `role`**:见 `port::TenantBrief` 的 doc —— 切换器要的是「有哪几家、我现在在哪」。
+         *
+         *     **不实现 `From<TenantBrief>`**:`is_active` 只有 claim 知道(见 `list_my_tenants`),
+         *     `From` 填不出来。给它一个「默认 false」的 From 就是给下一个人埋雷 —— 他会写出
+         *     `brief.into()` 然后得到一个所有项都没选中的列表,而且没有任何东西会报错。
+         *     构造它必须同时给出 active,所以只有 `with_active` 这一条路。
+         */
+        MyTenantResponse: {
+            display_name: string;
+            /** Format: uuid */
+            id: string;
+            /** @description 是不是**本会话当前生效**的那个。 */
+            is_active: boolean;
+            name: string;
         };
         /** @description 存储对象的对外响应(投影 `content::Object`)。 */
         ObjectResponse: {
@@ -1191,7 +1264,7 @@ export interface components {
          * @enum {string}
          */
         Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
-        /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
+        /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 与 tenant_id 都来自认证主体,不入参。 */
         PrepareUploadRequest: {
             description?: string | null;
             document_type?: string | null;
@@ -1200,8 +1273,6 @@ export interface components {
             name?: string | null;
             owner_type?: string | null;
             tags?: string[];
-            /** Format: uuid */
-            tenant_id?: string | null;
         };
         /**
          * @description 两步上传①的响应:账 + 格 + 凭证。`upload_url = null` = 后端不支持直传,
@@ -1276,6 +1347,18 @@ export interface components {
          * @description 角色名的**唯一真相**(封闭集)。角色本身不做动态 CRUD(角色**有哪些权限**才可运行时改,
          *     见 `role_permissions` 表);故角色集编进代码。wire 串经 `rename`,与 idm.roles.name / JWT
          *     claim / `role_permissions.role_name` 同源。加角色 = 加变体 + 补 `ALL`/`display_name`/`default_permissions`。
+         *
+         *     # 这里**只装平台角色**
+         *
+         *     平台角色骑在租户边界**之上**,存 `idm.user_roles`,可经后台 `PUT /users/{id}/roles` 授予,
+         *     由 [`Policy`] 映射成 [`Perm`]。
+         *
+         *     **租户角色(某人在某家公司里是 admin 还是 member)不是它的变体** —— 那是
+         *     [`TenantRole`](crate::features::tenants::TenantRole),存 `idm.tenant_members.role`,靠成员
+         *     资格获得。别把它们塞进来:`Policy` 没有租户维度,`tn:admin` 一旦成为 `RoleName` 变体就会
+         *     被 `Policy` 映射成**平台范围**的权限 —— 一个 5 人小公司的管理员就此成为全平台
+         *     widget/content 的事实管理员。那是 P2 真实犯过的错,靠三层防护也没堵住(三层守的全是
+         *     **授予**路径,而 claim 是从 `tenant_members` 来的,根本不过那三道闸)。
          * @enum {string}
          */
         RoleName: "superadmin" | "admin" | "user";
@@ -1289,6 +1372,14 @@ export interface components {
             id: string;
             /** @description 机器码(闭集,生成前端 union)。 */
             name: components["schemas"]["RoleName"];
+        };
+        /** @description 切换激活租户(`PUT /auth/active-tenant`)。**PUT 全量替换**,不是 PATCH。 */
+        SetActiveTenantRequest: {
+            /**
+             * Format: uuid
+             * @description 目标租户。**非本人成员 → 404**(不是 403 —— 不泄露该租户是否存在)。
+             */
+            tenant_id: string;
         };
         /**
          * @description 设置内容元数据(全量替换,upsert)。
@@ -1395,6 +1486,18 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /**
+             * Format: uuid
+             * @description 所属租户。**只出不进**:没有任何 handler 收 `Json<Widget>`(入参是 `CreateWidget` /
+             *     `UpdateWidget`),所以它不是伪造面 —— 同 `ContentResponse.tenant_id`。
+             *
+             *     **不能 `#[serde(skip)]`**:本类型是 `WidgetEvent::{Created,Updated}` 的载荷,
+             *     跳过序列化 = 租户过不了事件总线 = SSE 订阅端没东西可逐帧过滤(spec §6.4b)。
+             *
+             *     (spec §5.2 写的是「DTO 不暴露」—— 它假设 `Widget` 不是 DTO。事实是
+             *     create/get/update 三个端点**直接返回它**,只有 list 走 `WidgetView`。按事实走。)
+             */
+            tenant_id: string;
             /** Format: date-time */
             updated_at: string;
             updated_by?: string | null;
@@ -1402,9 +1505,16 @@ export interface components {
         /**
          * @description widget 变更事件。SSE 帧的 event name = serde tag(created/updated/deleted)。
          *
-         *     **每个变体都带得出 owner**([`WidgetEvent::owner`])—— SSE handler 要按 `Access` 逐帧过滤,
-         *     没 owner 的帧无法判定:放行=泄露、丢弃=owner 收不到自己的删除。`Deleted` 因此单带 `created_by`
-         *     (删除后行已软删,订阅侧无从回查)。
+         *     **每个变体都带得出 tenant 与 owner**([`WidgetEvent::tenant`] / [`WidgetEvent::owner`])——
+         *     SSE handler 要按 `Access` **逐帧**过滤,缺任一维的帧都无法判定:放行=泄露、丢弃=本人收不到
+         *     自己的事件。
+         *
+         *     `Deleted` 因此单带 `created_by` **与 `tenant_id`** —— 两者理由**逐字同源**:删除后行已软删,
+         *     订阅侧无从回查。
+         *
+         *     ⚠️ **总线是全局广播**(NATS subject / PG NOTIFY 不分租户),过滤**纯在消费端**。
+         *     所以别租户的帧会进本进程内存 —— 但出不去。要连"进内存"都不许,那是按租户分 subject,
+         *     另一个威胁模型(spec §7)。
          */
         WidgetEvent: {
             /** @enum {string} */
@@ -1418,6 +1528,11 @@ export interface components {
             created_by?: string | null;
             /** Format: uuid */
             id: string;
+            /**
+             * Format: uuid
+             * @description 见本枚举 doc:行已软删,订阅侧回查不到 —— 必须随帧带上。
+             */
+            tenant_id: string;
             /** @enum {string} */
             type: "deleted";
         };
@@ -1474,6 +1589,7 @@ export type FailureReason = components['schemas']['FailureReason'];
 export type IpStat = components['schemas']['IpStat'];
 export type LoginRequest = components['schemas']['LoginRequest'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
+export type MyTenantResponse = components['schemas']['MyTenantResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type ObjectStatusView = components['schemas']['ObjectStatusView'];
 export type PageInfo = components['schemas']['PageInfo'];
@@ -1491,6 +1607,7 @@ export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
 export type RoleName = components['schemas']['RoleName'];
 export type RoleView = components['schemas']['RoleView'];
+export type SetActiveTenantRequest = components['schemas']['SetActiveTenantRequest'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
 export type SortOrder = components['schemas']['SortOrder'];
@@ -2590,6 +2707,48 @@ export interface operations {
             };
         };
     };
+    put_active_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetActiveTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 切换成功,**新 token 已写入 cookie** */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 未登录 / refresh cookie 无效 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 非本人成员(**不是 403** —— 不泄露该租户是否存在) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     logout_all: {
         parameters: {
             query?: never;
@@ -2772,6 +2931,34 @@ export interface operations {
             };
         };
     };
+    list_my_tenants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 我的租户列表(按加入顺序) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTenantResponse"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_contents: {
         parameters: {
             query?: never;
@@ -2880,8 +3067,6 @@ export interface operations {
                     name?: string | null;
                     /** @description 逗号分隔。 */
                     tags?: string | null;
-                    /** Format: uuid */
-                    tenant_id?: string | null;
                 };
             };
         };
@@ -3981,6 +4166,35 @@ export interface operations {
             };
         };
     };
+    widget_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 本租户 widget 计数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetStats"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_widget: {
         parameters: {
             query?: never;
@@ -4282,26 +4496,6 @@ export interface operations {
             };
         };
     };
-    widget_stats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 全站 widget 计数(公开) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WidgetStats"];
-                };
-            };
-        };
-    };
     health: {
         parameters: {
             query?: never;
@@ -4383,6 +4577,7 @@ export type ListAuthEventsQuery = operations['list_auth_events']['parameters']['
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListMyTenantsResponse = operations['list_my_tenants']['responses'][200]['content']['application/json'];
 export type ListRolesQuery = operations['list_roles']['parameters']['query'];
 export type ListUserAuthEventsPath = operations['list_user_auth_events']['parameters']['path'];
 export type ListUserAuthEventsQuery = operations['list_user_auth_events']['parameters']['query'];

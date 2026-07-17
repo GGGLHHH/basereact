@@ -12,6 +12,9 @@ export const queryKeys = {
   auth: {
     all: ['auth'] as const,
     me: () => [...queryKeys.auth.all, 'me'] as const,
+    // 我的租户列表(GET /auth/tenants)。归 auth 前缀:它是认证域的事(切租户 = 重新铸币)。
+    // 切租户成功后走 clear() 全清,所以这份也随之失效、下次进切换器重新拉。
+    tenants: () => [...queryKeys.auth.all, 'tenants'] as const,
   },
   profile: {
     all: ['profile'] as const,

@@ -45,6 +45,8 @@ export const EVENT_META: Record<AuthEventType, EventMeta> = {
   'auth.logged_out': { tone: 'muted', labelKey: 'authLog.events.loggedOut' },
   'auth.logout_all': { tone: 'muted', labelKey: 'authLog.events.logoutAll' },
   'auth.account_deleted': { tone: 'warn', labelKey: 'authLog.events.accountDeleted' },
+  // 用户跨越组织边界 —— 审计价值最高的事件之一,给它显眼的 accent。
+  'auth.tenant_switched': { tone: 'accent', labelKey: 'authLog.events.tenantSwitched' },
 }
 
 export const REASON_LABEL_KEY: Record<FailureReason, CommonKey> = {

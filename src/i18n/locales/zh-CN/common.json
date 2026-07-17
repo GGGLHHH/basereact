@@ -49,7 +49,8 @@
       "refreshed": "会话刷新",
       "loggedOut": "登出",
       "logoutAll": "登出所有会话",
-      "accountDeleted": "注销账户"
+      "accountDeleted": "注销账户",
+      "tenantSwitched": "切换租户"
     },
     "reasons": {
       "unknownUser": "用户不存在",
@@ -297,5 +298,9 @@
         "level3Prefix": "第 3 级 · "
       }
     }
+  },
+  "tenant": {
+    "none": "无租户",
+    "switchLabel": "切换公司"
   }
 }
