@@ -1,20 +1,16 @@
-import type { ColumnDef } from '@tanstack/react-table'
-
+import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
-import type { AdminUserView } from '#/generated/api-types'
-import { createColumnHelper } from '@tanstack/react-table'
 
+import type { AdminUserView } from '#/generated/api-types'
+import { Button } from '@gedatou/cadenza-ui'
 import { dash } from '@/business/common'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
 
 import { RoleBadges, VerifiedBadge } from '../user-badges'
 
-const columnHelper = createColumnHelper<AdminUserView>()
-
-export type UserColumnDef = ColumnDef<AdminUserView, any>
+export type UserColumnDef = DataTableColumn<AdminUserView>
 
 export interface UserRowActions {
   onView?: (user: AdminUserView) => void
@@ -23,13 +19,19 @@ export interface UserRowActions {
 }
 
 // 每个操作按钮都要 stopPropagation:整行点击已绑详情跳转(见 user-table.tsx 的
-// onRowClick),不拦截的话点删除会连带触发导航。
+// onRowAction),不拦截的话点删除会连带触发导航。
+//
+// pinned: 'end' 取代了原先在 DataTable 上传的 pinnedColumns={{right:['actions']}} ——
+// cadenza 把「钉哪一列」放回列自己身上。钉列必须有数字 width,偏移量由它算出来。
+// hideable: false —— 操作列不该被列显隐控件藏掉。
 function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserColumnDef {
-  return columnHelper.display({
+  return {
     id: 'actions',
     header: t('users.actions'),
-    size: 132,
-    cell: ({ row }) => (
+    width: 132,
+    pinned: 'end',
+    hideable: false,
+    cell: user => (
       <div className='flex items-center gap-0.5'>
         {actions.onView
           ? (
@@ -37,7 +39,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
                 aria-label={t('action.view')}
                 onClick={(event) => {
                   event.stopPropagation()
-                  actions.onView?.(row.original)
+                  actions.onView?.(user)
                 }}
                 size='icon-sm'
                 variant='ghost'
@@ -52,7 +54,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
                 aria-label={t('action.edit')}
                 onClick={(event) => {
                   event.stopPropagation()
-                  actions.onEdit?.(row.original)
+                  actions.onEdit?.(user)
                 }}
                 size='icon-sm'
                 variant='ghost'
@@ -68,7 +70,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
                 className='text-destructive hover:text-destructive'
                 onClick={(event) => {
                   event.stopPropagation()
-                  actions.onDelete?.(row.original)
+                  actions.onDelete?.(user)
                 }}
                 size='icon-sm'
                 variant='ghost'
@@ -79,7 +81,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
           : null}
       </div>
     ),
-  })
+  }
 }
 
 // 身份优先的用户列表:头像+用户名+邮箱合成一列,角色/验证走凭证词汇的 chips/印章。
@@ -89,54 +91,58 @@ export function createUserColumns(
   actions?: UserRowActions,
 ): UserColumnDef[] {
   const columns: UserColumnDef[] = [
-    columnHelper.accessor('username', {
+    {
+      // rowHeader:这一列给读屏当行的名字。不写的话 cadenza 默认取第一列,
+      // 结果一样,但写出来才是声明而非巧合。
+      id: 'username',
       header: t('users.columns.username'),
-      cell: ({ row }) => {
-        const u = row.original
-        return (
-          <div className='flex items-center gap-3'>
-            <Avatar>
-              <AvatarImage
-                alt={u.display_name ?? u.username}
-                src={u.avatar_url ?? undefined}
-              />
-              <AvatarFallback>{nameInitials((u.display_name ?? '') || u.username)}</AvatarFallback>
-            </Avatar>
-            <div className='flex min-w-0 flex-col'>
-              <span className='truncate font-medium'>{u.username}</span>
-              <span className='truncate text-xs text-muted-foreground'>{dash(u.email)}</span>
-            </div>
+      rowHeader: true,
+      hideable: false,
+      cell: u => (
+        <div className='flex items-center gap-3'>
+          <Avatar>
+            <AvatarImage
+              alt={u.display_name ?? u.username}
+              src={u.avatar_url ?? undefined}
+            />
+            <AvatarFallback>{nameInitials((u.display_name ?? '') || u.username)}</AvatarFallback>
+          </Avatar>
+          <div className='flex min-w-0 flex-col'>
+            <span className='truncate font-medium'>{u.username}</span>
+            <span className='truncate text-xs text-muted-foreground'>{dash(u.email)}</span>
           </div>
-        )
-      },
-    }),
-    // cell 一律从 row.original 取值:列表声明为 UserColumnDef(= ColumnDef<_, any>,
-    // data-table 的异构列表要求),getValue() 会跟着退化成 any;row 始终是强类型的。
-    columnHelper.accessor('display_name', {
+        </div>
+      ),
+    },
+    {
+      id: 'display_name',
       header: t('users.columns.displayName'),
-      cell: ({ row }) => dash(row.original.display_name),
-    }),
-    columnHelper.accessor('roles', {
+      cell: u => dash(u.display_name),
+    },
+    {
+      id: 'roles',
       header: t('users.columns.roles'),
-      size: 180,
-      cell: ({ row }) => (
+      width: 180,
+      cell: u => (
         <RoleBadges
           className='flex-nowrap'
           max={2}
-          roles={row.original.roles}
+          roles={u.roles}
         />
       ),
-    }),
-    columnHelper.accessor('email_verified', {
+    },
+    {
+      id: 'email_verified',
       header: t('users.columns.emailVerified'),
-      cell: ({ row }) => <VerifiedBadge verified={row.original.email_verified} />,
-    }),
-    columnHelper.accessor('created_at', {
+      cell: u => <VerifiedBadge verified={u.email_verified} />,
+    },
+    {
+      id: 'created_at',
       header: t('users.columns.createdAt'),
-      cell: ({ row }) => (
-        <span className='text-sm text-muted-foreground'>{formatDateTime(row.original.created_at)}</span>
+      cell: u => (
+        <span className='text-sm text-muted-foreground'>{formatDateTime(u.created_at)}</span>
       ),
-    }),
+    },
   ]
 
   const hasActions = Boolean(actions && (actions.onView || actions.onEdit || actions.onDelete))

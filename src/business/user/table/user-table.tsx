@@ -1,11 +1,12 @@
 import type { AdminUserView } from '#/generated/api-types'
 import type { UserRowActions } from './user-table-columns'
 
+import { DataPagination, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { useMemo } from 'react'
 
 import { useTranslation } from 'react-i18next'
 
-import { DataTable } from '@/components/table/data-table'
+import { AutoFitDataTable } from '@/components/table/auto-fit-data-table'
 import { createUserColumns } from './user-table-columns'
 
 interface UserTableProps extends UserRowActions {
@@ -42,22 +43,36 @@ export function UserTable({
   )
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      emptyMessage={t('users.empty')}
-      loading={{ isLoading, text: t('loading.loading') }}
-      onRowClick={onRowClick}
-      pinnedColumns={hasActions ? { right: ['actions'] } : undefined}
-      pagination={{
-        count: data.length,
-        limit,
-        page,
-        summary: ({ count, total }) => t('pagination.summary', { count, total }),
-        total,
-        onLimitChange,
-        onPageChange,
-      }}
-    />
+    <>
+      <AutoFitDataTable
+        aria-label={t('users.tableLabel')}
+        columns={columns}
+        items={data}
+        isLoading={isLoading}
+        onRowAction={onRowClick}
+      >
+        {/* 空态与加载态在 cadenza 里是插槽而不是字符串 prop —— 库本身零文案。 */}
+        <DataTableEmpty>{t('users.empty')}</DataTableEmpty>
+        <DataTableLoadingOverlay>{t('loading.loading')}</DataTableLoadingOverlay>
+      </AutoFitDataTable>
+      {/* 分页条不再由表格内嵌渲染,变成它的兄弟节点(cadenza 的 DataTable 不管分页)。 */}
+      <DataPagination
+        limit={limit}
+        page={page}
+        total={total}
+        onLimitChange={onLimitChange}
+        onPageChange={onPageChange}
+        rowsPerPageLabel={t('pagination.rowsPerPage')}
+        firstPageLabel={t('pagination.firstPage')}
+        previousPageLabel={t('pagination.previousPage')}
+        nextPageLabel={t('pagination.nextPage')}
+        lastPageLabel={t('pagination.lastPage')}
+        pageIndicator={({ page: current, totalPages }) =>
+          t('pagination.pageOf', { page: current, totalPages })}
+        // summary 的入参丢了 count(库版只给 page/limit/total/totalPages),
+        // 当前页行数从这里的闭包取。
+        summary={({ total: rowTotal }) => t('pagination.summary', { count: data.length, total: rowTotal })}
+      />
+    </>
   )
 }

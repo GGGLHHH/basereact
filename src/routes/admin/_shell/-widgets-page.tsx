@@ -1,12 +1,13 @@
-import type { ColumnDef } from '@tanstack/react-table'
+import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { WidgetView } from '#/generated/api-types'
+import { DataPagination, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useMemo } from 'react'
 
 import { useTranslation } from 'react-i18next'
 
 import { useWidgets } from '@/api/widgets'
-import { DataTable } from '@/components/table/data-table'
+import { AutoFitDataTable } from '@/components/table/auto-fit-data-table'
 import { toDataPagination } from '@/components/table/pagination'
 import { formatDateTime } from '@/lib/datetime'
 
@@ -19,26 +20,28 @@ export function WidgetsPage() {
   const { t } = useTranslation('common')
   const { data, isPending } = useWidgets({ page, size })
 
-  const columns = useMemo<ColumnDef<WidgetView, unknown>[]>(
+  const columns = useMemo<DataTableColumn<WidgetView>[]>(
     () => [
       {
-        accessorKey: 'name',
+        id: 'name',
         header: t('widgets.columns.name'),
+        rowHeader: true,
+        cell: widget => widget.name,
       },
       {
         id: 'created_by',
         header: t('widgets.columns.createdBy'),
-        cell: ({ row }) => row.original.created_by_user?.username ?? '—',
+        cell: widget => widget.created_by_user?.username ?? '—',
       },
       {
-        accessorKey: 'created_at',
+        id: 'created_at',
         header: t('widgets.columns.createdAt'),
-        cell: ({ row }) => formatDateTime(row.original.created_at),
+        cell: widget => formatDateTime(widget.created_at),
       },
       {
-        accessorKey: 'updated_at',
+        id: 'updated_at',
         header: t('widgets.columns.updatedAt'),
-        cell: ({ row }) => formatDateTime(row.original.updated_at),
+        cell: widget => formatDateTime(widget.updated_at),
       },
     ],
     [t],
@@ -49,24 +52,36 @@ export function WidgetsPage() {
   const { total } = toDataPagination(data?.page_info)
 
   return (
-    <DataTable
-      columns={columns}
-      data={data?.items ?? []}
-      emptyMessage={t('widgets.empty')}
-      loading={{ isLoading: isPending, text: t('loading.loading') }}
-      pagination={{
-        count: data?.items.length ?? 0,
-        limit: size,
-        page,
-        summary: ({ count, total }) => t('pagination.summary', { count, total }),
-        total,
-        onLimitChange: (limit) => {
+    <>
+      <AutoFitDataTable
+        aria-label={t('widgets.tableLabel')}
+        columns={columns}
+        items={data?.items ?? []}
+        isLoading={isPending}
+      >
+        <DataTableEmpty>{t('widgets.empty')}</DataTableEmpty>
+        <DataTableLoadingOverlay>{t('loading.loading')}</DataTableLoadingOverlay>
+      </AutoFitDataTable>
+      <DataPagination
+        limit={size}
+        page={page}
+        total={total}
+        onLimitChange={(limit) => {
           void navigate({ search: { page: 1, size: limit } })
-        },
-        onPageChange: (nextPage) => {
+        }}
+        onPageChange={(nextPage) => {
           void navigate({ search: prev => ({ ...prev, page: nextPage }) })
-        },
-      }}
-    />
+        }}
+        rowsPerPageLabel={t('pagination.rowsPerPage')}
+        firstPageLabel={t('pagination.firstPage')}
+        previousPageLabel={t('pagination.previousPage')}
+        nextPageLabel={t('pagination.nextPage')}
+        lastPageLabel={t('pagination.lastPage')}
+        pageIndicator={({ page: current, totalPages }) =>
+          t('pagination.pageOf', { page: current, totalPages })}
+        summary={({ total: rowTotal }) =>
+          t('pagination.summary', { count: data?.items.length ?? 0, total: rowTotal })}
+      />
+    </>
   )
 }

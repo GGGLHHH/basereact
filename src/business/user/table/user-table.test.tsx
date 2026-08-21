@@ -7,14 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { UserTable } from './user-table'
 
-// 渲染首行即可覆盖操作列行为(虚拟化在 jsdom 下无测量,mock 成只出 index 0)。
-vi.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: () => ({
-    getTotalSize: () => 53,
-    getVirtualItems: () => [{ end: 53, index: 0, key: '0', lane: 0, size: 53, start: 0 }],
-  }),
-}))
-
 class MockResizeObserver {
   observe() {}
   unobserve() {}

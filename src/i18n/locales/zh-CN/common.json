@@ -230,6 +230,7 @@
     "new": "新建用户",
     "noRoles": "无角色",
     "searchPlaceholder": "搜索用户名或显示名",
+    "tableLabel": "用户列表",
     "unverified": "未验证",
     "validation": {
       "passwordMin": "密码至少 3 个字符",
@@ -244,7 +245,8 @@
       "name": "名称",
       "updatedAt": "更新时间"
     },
-    "empty": "暂无组件"
+    "empty": "暂无组件",
+    "tableLabel": "组件列表"
   },
   "nav": {
     "main": {

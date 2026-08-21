@@ -230,6 +230,7 @@
     "new": "New user",
     "noRoles": "No roles",
     "searchPlaceholder": "Search name or display name",
+    "tableLabel": "Users table",
     "unverified": "Unverified",
     "validation": {
       "passwordMin": "Password must be at least 3 characters",
@@ -244,7 +245,8 @@
       "name": "Name",
       "updatedAt": "Updated at"
     },
-    "empty": "No widgets yet"
+    "empty": "No widgets yet",
+    "tableLabel": "Widgets table"
   },
   "nav": {
     "main": {
