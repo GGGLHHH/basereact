@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
 
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { NestedOverview } from './-overview-page'
 
 // 二级子路由(叶):/admin/nested/overview。一级父路由下的普通页面。
 export const Route = createFileRoute('/admin/_shell/nested/overview')({
@@ -12,16 +11,3 @@ export const Route = createFileRoute('/admin/_shell/nested/overview')({
     order: 0,
   },
 })
-
-function NestedOverview() {
-  const { t } = useTranslation()
-  const { t: tr } = useTranslation('route')
-  return (
-    <Card size='sm'>
-      <CardHeader>
-        <CardTitle>{tr('titles.nestedOverview')}</CardTitle>
-        <CardDescription>{t('nested.overviewDescription')}</CardDescription>
-      </CardHeader>
-    </Card>
-  )
-}

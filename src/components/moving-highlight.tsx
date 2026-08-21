@@ -29,18 +29,6 @@ function prefersReducedMotion(): boolean {
   )
 }
 
-// 可 hover 项的标记属性;激活项额外带 active。enabled=false 时不挂(高亮整体关掉的场景,
-// 如侧栏收起态)。spread 到项元素上即可。
-export function movingHighlightItemProps(
-  active: boolean,
-  enabled = true,
-): { 'data-mh-item'?: string; 'data-mh-active'?: string } {
-  return {
-    'data-mh-item': enabled ? '' : undefined,
-    'data-mh-active': enabled && active ? 'true' : undefined,
-  }
-}
-
 export function MovingHighlight({
   activeKey,
   enabled,
@@ -150,15 +138,17 @@ export function MovingHighlight({
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
     >
-      {enabled ? (
-        <div
-          ref={pillRef}
-          aria-hidden='true'
-          // isolate 建栈上下文 + -z-10:pill 沉到容器内容之下,项文字在其上。
-          className={cn('pointer-events-none absolute top-0 left-0 -z-10 opacity-0', pillClassName)}
-          style={{ willChange: 'transform, width, height' }}
-        />
-      ) : null}
+      {enabled
+        ? (
+            <div
+              ref={pillRef}
+              aria-hidden='true'
+              // isolate 建栈上下文 + -z-10:pill 沉到容器内容之下,项文字在其上。
+              className={cn('pointer-events-none absolute top-0 left-0 -z-10 opacity-0', pillClassName)}
+              style={{ willChange: 'transform, width, height' }}
+            />
+          )
+        : null}
       {children}
     </div>
   )

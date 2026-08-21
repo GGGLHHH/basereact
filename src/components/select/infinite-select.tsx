@@ -1,20 +1,21 @@
+import type { ChangeEvent, ComponentProps, ReactNode, RefObject } from 'react'
+import type { InfiniteSelectActions } from './infinite-select-actions'
 import { useControllableValue } from 'ahooks'
 import {
+
   createContext,
   Fragment,
+
+  use,
   useCallback,
-  useContext,
   useEffect,
   useRef,
-  type ChangeEvent,
-  type ComponentProps,
-  type ReactNode,
-  type RefObject,
 } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/scroll-area'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { InfiniteSelectActionsContext, useInfiniteSelectActions } from './infinite-select-actions'
 
 export interface InfiniteSelectOption {
   id: string
@@ -69,24 +70,24 @@ interface InfiniteSelectCommonProps<T> {
 /**
  * Controlled/uncontrolled selection props for single and multi-select modes.
  */
-export type ControllableSelectionProps<TItem = unknown> =
+export type ControllableSelectionProps<TItem = unknown>
+  = | {
+    multiple: true
+    value?: string[]
+    defaultValue?: string[]
+    /**
+     * `ids` is the authoritative selection (every toggled id), while `items`
+     * only holds the objects that were actually loaded — a preselected id from
+     * an unloaded page has an id but no item. Persist `ids`, not `items`.
+     */
+    onChange?: (items: TItem[], ids: string[]) => void
+  }
   | {
-      multiple: true
-      value?: string[]
-      defaultValue?: string[]
-      /**
-       * `ids` is the authoritative selection (every toggled id), while `items`
-       * only holds the objects that were actually loaded — a preselected id from
-       * an unloaded page has an id but no item. Persist `ids`, not `items`.
-       */
-      onChange?: (items: TItem[], ids: string[]) => void
-    }
-  | {
-      multiple?: false
-      value?: string
-      defaultValue?: string
-      onChange?: (item: TItem | undefined) => void
-    }
+    multiple?: false
+    value?: string
+    defaultValue?: string
+    onChange?: (item: TItem | undefined) => void
+  }
 
 export type InfiniteSelectProps<T> = InfiniteSelectCommonProps<T> & ControllableSelectionProps<T>
 
@@ -126,7 +127,7 @@ interface InfiniteSelectState {
 const InfiniteSelectStateContext = createContext<InfiniteSelectState | null>(null)
 
 function useInfiniteSelectState(): InfiniteSelectState {
-  const ctx = useContext(InfiniteSelectStateContext)
+  const ctx = use(InfiniteSelectStateContext)
   if (!ctx) {
     throw new Error('InfiniteSelect 状态插槽必须用在 InfiniteSelect 的 children 内')
   }
@@ -136,45 +137,53 @@ function useInfiniteSelectState(): InfiniteSelectState {
 /** 空态插槽:无结果时显示 children。 */
 export function InfiniteSelectEmpty({ className, ...props }: ComponentProps<'div'>) {
   const { isEmpty } = useInfiniteSelectState()
-  return isEmpty ? (
-    <InfiniteSelectStatus
-      className={className}
-      {...props}
-    />
-  ) : null
+  return isEmpty
+    ? (
+        <InfiniteSelectStatus
+          className={className}
+          {...props}
+        />
+      )
+    : null
 }
 
 /** 加载态插槽:首屏加载时显示 children。 */
 export function InfiniteSelectLoading({ className, ...props }: ComponentProps<'div'>) {
   const { isLoading } = useInfiniteSelectState()
-  return isLoading ? (
-    <InfiniteSelectStatus
-      className={className}
-      {...props}
-    />
-  ) : null
+  return isLoading
+    ? (
+        <InfiniteSelectStatus
+          className={className}
+          {...props}
+        />
+      )
+    : null
 }
 
 /** 加载更多插槽:拉下一页时显示在列表底部。 */
 export function InfiniteSelectLoadingMore({ className, ...props }: ComponentProps<'div'>) {
   const { isFetchingNextPage } = useInfiniteSelectState()
-  return isFetchingNextPage ? (
-    <InfiniteSelectStatus
-      className={cn('py-1.5 text-center text-xs', className)}
-      {...props}
-    />
-  ) : null
+  return isFetchingNextPage
+    ? (
+        <InfiniteSelectStatus
+          className={cn('py-1.5 text-center text-xs', className)}
+          {...props}
+        />
+      )
+    : null
 }
 
 /** 错误态插槽:容器(内部放错误文案 + `InfiniteSelectRetry`)。 */
 export function InfiniteSelectError({ className, ...props }: ComponentProps<'div'>) {
   const { isError } = useInfiniteSelectState()
-  return isError ? (
-    <InfiniteSelectStatus
-      className={cn('flex flex-col items-center gap-2 py-4', className)}
-      {...props}
-    />
-  ) : null
+  return isError
+    ? (
+        <InfiniteSelectStatus
+          className={cn('flex flex-col items-center gap-2 py-4', className)}
+          {...props}
+        />
+      )
+    : null
 }
 
 /** 重试按钮:调用底层 `onRetry`(无则不渲染)。放进 `InfiniteSelectError` 内,文案走 children。 */
@@ -340,7 +349,8 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
 
   const isSelected = useCallback(
     (id: string): boolean => {
-      if (isMultiple) return ((selectedValue as string[] | undefined) ?? []).includes(id)
+      if (isMultiple)
+        return ((selectedValue as string[] | undefined) ?? []).includes(id)
       return (selectedValue as string | undefined) === id
     },
     [isMultiple, selectedValue],
@@ -348,25 +358,27 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
 
   const handleSelect = useCallback(
     (item: T, option: InfiniteSelectOption) => {
-      if (option.disabled) return
+      if (option.disabled)
+        return
 
       if (props.multiple) {
         const currentIds = (selectedValue as string[] | undefined) ?? []
         const isToggleOff = currentIds.includes(option.id)
         const nextIds = isToggleOff
-          ? currentIds.filter((id) => id !== option.id)
+          ? currentIds.filter(id => id !== option.id)
           : [...currentIds, option.id]
 
         if (isToggleOff) {
           selectedItemsCacheRef.current.delete(option.id)
-        } else {
+        }
+        else {
           selectedItemsCacheRef.current.set(option.id, item)
         }
 
         setSelectedValue(nextIds)
 
         const nextItems = nextIds
-          .map((id) => selectedItemsCacheRef.current.get(id))
+          .map(id => selectedItemsCacheRef.current.get(id))
           .filter((entry): entry is T => entry !== undefined)
         // `nextIds` is authoritative (includes unloaded ids); `nextItems` is a
         // best-effort echo of the loaded ones.
@@ -392,8 +404,10 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
   useEffect(() => {
     const sentinel = sentinelRef.current
     const root = viewportRef.current
-    if (!sentinel || !hasNextPage || isFetchingNextPage) return
-    if (typeof IntersectionObserver === 'undefined') return
+    if (!sentinel || !hasNextPage || isFetchingNextPage)
+      return
+    if (typeof IntersectionObserver === 'undefined')
+      return
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -420,7 +434,7 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
       )}
       data-slot='infinite-select'
     >
-      <InfiniteSelectStateContext.Provider
+      <InfiniteSelectStateContext
         value={{ isLoading, isError, isEmpty, isFetchingNextPage, onRetry }}
       >
         <div
@@ -460,7 +474,7 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
 
         {/* 单通道:状态插槽 + 底部条(footer 作为最后一个子天然落底)。 */}
         {children}
-      </InfiniteSelectStateContext.Provider>
+      </InfiniteSelectStateContext>
     </div>
   )
 }
@@ -468,17 +482,9 @@ export function InfiniteSelect<T>(props: InfiniteSelectProps<T>) {
 // ── footer 动作(clear/close)：Context 定义在**底座层**,由上层 InfiniteCombobox 填值。
 //    放低层是刻意的:infinite-combobox 已依赖 infinite-select,hook/部件住这里才不会反向 import 成环。 ──
 
-/** footer 内可消费的选择器动作。上层(combobox)提供实现:clear=清选择、close=关弹层(含 commitOnClose 提交)。 */
-export interface InfiniteSelectActions<T = unknown> {
-  /** 已选项(仅已加载页的回显)。 */
-  selectedItems: T[]
-  /** 已选 id(权威全集,含未加载页)。 */
-  selectedIds: string[]
-  clear: () => void
-  close: () => void
-}
-
-const InfiniteSelectActionsContext = createContext<InfiniteSelectActions | null>(null)
+// 类型/Context/hook 都住 ./infinite-select-actions:它们是非组件,和本文件的组件
+// 放一起会拦住 Fast Refresh。Provider 是组件,所以留在这里。
+export type { InfiniteSelectActions } from './infinite-select-actions'
 
 /** 上层用它把 actions 灌进 footer 子树。 */
 export function InfiniteSelectActionsProvider<T>({
@@ -489,19 +495,10 @@ export function InfiniteSelectActionsProvider<T>({
   children: ReactNode
 }) {
   return (
-    <InfiniteSelectActionsContext.Provider value={value as InfiniteSelectActions}>
+    <InfiniteSelectActionsContext value={value}>
       {children}
-    </InfiniteSelectActionsContext.Provider>
+    </InfiniteSelectActionsContext>
   )
-}
-
-/** 在 `InfiniteSelect` 的 `footer` 内取 clear/close/当前选择。用在 footer 之外会抛错(fail-fast)。 */
-export function useInfiniteSelectActions<T = unknown>(): InfiniteSelectActions<T> {
-  const ctx = useContext(InfiniteSelectActionsContext)
-  if (!ctx) {
-    throw new Error('useInfiniteSelectActions 必须用在 InfiniteSelect 的 footer 内')
-  }
-  return ctx as InfiniteSelectActions<T>
 }
 
 /** 弹层底部动作条容器(shadcn 薄部件:`data-slot` + `cn` 合并 + 透传)。塞进 `InfiniteSelect` 的 `footer`。 */

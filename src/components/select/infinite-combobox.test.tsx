@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { InfiniteCombobox, useInfiniteComboboxState } from './infinite-combobox'
 import type { InfiniteSelectAdapterProps } from './use-infinite-list'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { InfiniteCombobox } from './infinite-combobox'
+import { useInfiniteComboboxState } from './infinite-combobox-state'
 
 interface Item {
   id: string
@@ -35,7 +36,7 @@ beforeEach(() => {
     },
   )
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if ((Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture === undefined) {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -70,14 +71,14 @@ function MultiHarness({ onChange }: { onChange: (items: Item[], ids: string[]) =
       onChange={onChange}
       state={state}
       list={staticList([{ id: 'c', label: 'Gamma' }])}
-      getOption={(item) => ({ id: item.id, label: item.label })}
+      getOption={item => ({ id: item.id, label: item.label })}
     >
       <button type='button'>Open</button>
     </InfiniteCombobox>
   )
 }
 
-describe('InfiniteCombobox multi-select', () => {
+describe('infiniteCombobox multi-select', () => {
   it('keeps preselected ids whose items were never loaded when toggling another', () => {
     // value=['a','b'] but only 'c' is in the loaded page — a,b have no item object.
     // Toggling 'c' must yield ids ['a','b','c'], not collapse to ['c'].

@@ -1,23 +1,25 @@
-import { useCallback, useMemo, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-
+import type { ReactNode } from 'react'
 import type { RoleView } from '#/generated/api-types'
 
+import type { InfiniteComboboxChildren } from '@/components/select/infinite-combobox'
+
+import type { ControllableSelectionProps, InfiniteSelectOption } from '@/components/select/infinite-select'
+import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useInfiniteRoleOptions } from '@/api/roles'
+import { InfiniteCombobox } from '@/components/select/infinite-combobox'
 import {
-  InfiniteCombobox,
   getInfiniteComboboxSelectionProps,
   useInfiniteComboboxState,
-  type InfiniteComboboxChildren,
-} from '@/components/select/infinite-combobox'
+} from '@/components/select/infinite-combobox-state'
 import {
+
   InfiniteSelectEmpty,
   InfiniteSelectError,
   InfiniteSelectLoading,
   InfiniteSelectLoadingMore,
+
   InfiniteSelectRetry,
-  type ControllableSelectionProps,
-  type InfiniteSelectOption,
 } from '@/components/select/infinite-select'
 
 interface RoleInfiniteSelectCommonProps {
@@ -45,8 +47,8 @@ interface RoleInfiniteSelectCommonProps {
   slots?: ReactNode
 }
 
-export type RoleInfiniteSelectProps = RoleInfiniteSelectCommonProps &
-  ControllableSelectionProps<RoleView>
+export type RoleInfiniteSelectProps = RoleInfiniteSelectCommonProps
+  & ControllableSelectionProps<RoleView>
 
 /**
  * 角色候选选择器,复用 infinite-select 基座 + `listRoles` 目录。
@@ -86,9 +88,9 @@ export function RoleInfiniteSelect(props: RoleInfiniteSelectProps) {
     return {
       ...list,
       items: list.items.filter(
-        (role) =>
-          role.name.toLowerCase().includes(query) ||
-          role.display_name.toLowerCase().includes(query),
+        role =>
+          role.name.toLowerCase().includes(query)
+          || role.display_name.toLowerCase().includes(query),
       ),
     }
   }, [list, query])
@@ -125,12 +127,12 @@ export function RoleInfiniteSelect(props: RoleInfiniteSelectProps) {
       getOption={getOption}
       list={filteredList}
       searchPlaceholder={searchPlaceholder}
-      slots={
+      slots={(
         <>
           {stateSlots}
           {slots}
         </>
-      }
+      )}
       state={combobox}
       {...selectionProps}
     >

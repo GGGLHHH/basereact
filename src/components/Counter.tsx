@@ -1,5 +1,6 @@
-import { MotionValue, motion, useSpring, useTransform } from 'motion/react'
+import type { MotionValue } from 'motion/react'
 import type React from 'react'
+import { motion, useSpring, useTransform } from 'motion/react'
 import { useEffect } from 'react'
 
 type PlaceValue = number | '.'
@@ -50,20 +51,28 @@ interface DigitProps {
   digitStyle?: React.CSSProperties
 }
 
+// 小数点位不需要任何 hook,数字位要 useSpring + useEffect。写在同一个组件里,
+// hook 的调用数量就随 place 变化 —— 一旦某个位置在小数点和数字之间切换,React
+// 的 hook 序列就对不上。拆成两个组件后,各自的序列才是固定的。
 function Digit({ place, value, height, digitStyle }: DigitProps) {
-  // Decimal point digit
   if (place === '.') {
-    return (
-      <span
-        className='relative inline-flex items-center justify-center'
-        style={{ height, width: 'fit-content', ...digitStyle }}
-      >
-        .
-      </span>
-    )
+    return <DecimalPointDigit digitStyle={digitStyle} height={height} />
   }
+  return <NumericDigit digitStyle={digitStyle} height={height} place={place} value={value} />
+}
 
-  // Numeric digit
+function DecimalPointDigit({ height, digitStyle }: Omit<DigitProps, 'place' | 'value'>) {
+  return (
+    <span
+      className='relative inline-flex items-center justify-center'
+      style={{ height, width: 'fit-content', ...digitStyle }}
+    >
+      .
+    </span>
+  )
+}
+
+function NumericDigit({ place, value, height, digitStyle }: Omit<DigitProps, 'place'> & { place: number }) {
   const valueRoundedToPlace = getValueRoundedToPlace(value, place)
   const animatedValue = useSpring(valueRoundedToPlace)
 
@@ -198,7 +207,7 @@ export default function Counter({
   return (
     <span style={{ ...defaultContainerStyle, ...containerStyle }}>
       <span style={{ ...defaultCounterStyle, ...counterStyle }}>
-        {places.map((place) => (
+        {places.map(place => (
           <Digit
             key={place}
             place={place}

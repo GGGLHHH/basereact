@@ -1,7 +1,6 @@
-import { Outlet, createFileRoute } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { NestedLayout } from './-nested-layout'
 
 // 一级父路由:/admin/nested。route.tsx = 布局(标题 + Outlet 承载子路由),
 // 同目录 index.tsx = 该路径自身的落地内容。菜单标题只挂在 route.tsx,
@@ -17,22 +16,3 @@ export const Route = createFileRoute('/admin/_shell/nested')({
     order: 3,
   },
 })
-
-function NestedLayout() {
-  const { t } = useTranslation()
-  const { t: tr } = useTranslation('route')
-  return (
-    <Card className='flex-1'>
-      <CardHeader>
-        <CardTitle>
-          {t('nested.level1Prefix')}
-          {tr('titles.nested')}
-        </CardTitle>
-        <CardDescription>{t('nested.parentLayoutDescription')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Outlet />
-      </CardContent>
-    </Card>
-  )
-}

@@ -1,23 +1,25 @@
-import { useCallback, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-
+import type { ReactNode } from 'react'
 import type { AdminUserView } from '#/generated/api-types'
 
+import type { InfiniteComboboxChildren } from '@/components/select/infinite-combobox'
+
+import type { ControllableSelectionProps, InfiniteSelectOption } from '@/components/select/infinite-select'
+import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useInfiniteUserOptions } from '@/api/users'
+import { InfiniteCombobox } from '@/components/select/infinite-combobox'
 import {
-  InfiniteCombobox,
   getInfiniteComboboxSelectionProps,
   useInfiniteComboboxState,
-  type InfiniteComboboxChildren,
-} from '@/components/select/infinite-combobox'
+} from '@/components/select/infinite-combobox-state'
 import {
+
   InfiniteSelectEmpty,
   InfiniteSelectError,
   InfiniteSelectLoading,
   InfiniteSelectLoadingMore,
+
   InfiniteSelectRetry,
-  type ControllableSelectionProps,
-  type InfiniteSelectOption,
 } from '@/components/select/infinite-select'
 
 interface UserInfiniteSelectCommonProps {
@@ -47,8 +49,8 @@ interface UserInfiniteSelectCommonProps {
   slots?: ReactNode
 }
 
-export type UserInfiniteSelectProps = UserInfiniteSelectCommonProps &
-  ControllableSelectionProps<AdminUserView>
+export type UserInfiniteSelectProps = UserInfiniteSelectCommonProps
+  & ControllableSelectionProps<AdminUserView>
 
 /**
  * User-specific select wrapper combining user queries and `InfiniteCombobox`.
@@ -83,7 +85,7 @@ export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
   const getOption = useCallback(
     (user: AdminUserView): InfiniteSelectOption => ({
       id: user.id,
-      label: user.display_name || user.username,
+      label: (user.display_name ?? '') || user.username,
     }),
     [],
   )
@@ -112,12 +114,12 @@ export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
       getOption={getOption}
       list={list}
       searchPlaceholder={searchPlaceholder}
-      slots={
+      slots={(
         <>
           {stateSlots}
           {slots}
         </>
-      }
+      )}
       state={combobox}
       {...selectionProps}
     >

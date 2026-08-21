@@ -1,6 +1,6 @@
-import { Outlet, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { Spinner } from '@/components/ui/spinner'
+import { AdminLayout, AdminPending } from './-admin-layout'
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,
@@ -16,16 +16,3 @@ export const Route = createFileRoute('/admin')({
     hideInMenu: true,
   },
 })
-
-function AdminPending() {
-  return (
-    <div className='flex min-h-svh items-center justify-center'>
-      <Spinner className='size-6' />
-    </div>
-  )
-}
-
-// ponytail: 纯 Outlet 壳。有 auth 后在 beforeLoad 加登录态守卫。
-function AdminLayout() {
-  return <Outlet />
-}

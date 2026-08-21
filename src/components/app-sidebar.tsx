@@ -1,14 +1,17 @@
 'use client'
 
-import * as React from 'react'
+import type { TFunction } from 'i18next'
+import type { AdminMenuEntry } from '@/lib/route-menu'
+import { IconChevronRight, IconCommand, IconLayoutRows, IconWaveSine } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useRouter, useRouterState } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
 
+import { Link, useRouter, useRouterState } from '@tanstack/react-router'
+import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { myPermissionsQueryOptions } from '@/api/auth'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { movingHighlightItemProps } from '@/components/moving-highlight-item-props'
 import { NavUser } from '@/components/nav-user'
-import { movingHighlightItemProps } from '@/components/moving-highlight'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -39,12 +42,9 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
+
 import { buildAdminMenu, pickActiveMenuUrl } from '@/lib/route-menu'
 import { cn } from '@/lib/utils'
-import { IconChevronRight, IconLayoutRows, IconWaveSine, IconCommand } from '@tabler/icons-react'
-
-import type { TFunction } from 'i18next'
-import type { AdminMenuEntry } from '@/lib/route-menu'
 
 // This is sample data.
 const data = {
@@ -70,7 +70,7 @@ const data = {
 // sidebar 的 [&_svg]:size-4/shrink-0 只保护 svg;unocss span 图标要自带尺寸和
 // shrink-0,否则收起(icon 模式)时被压变形。
 function MenuIcon({ icon }: { icon?: string }) {
-  if (!icon) {
+  if (icon === undefined || icon === '') {
     return null
   }
   return (
@@ -90,8 +90,8 @@ function MenuIcon({ icon }: { icon?: string }) {
 // 高亮之间自带缝,故 hover 与激活不贴死——且**容器不加任何间距**(gap/space-y 对 Base UI
 // 弹层脆:submenu 开合会增删父层子元素,容器间距随之抖动)。z-0 让 item 成层叠上下文,
 // pill(-z-10)沉到文字下、popup 背景上。满盒 bg 用 ! 顶掉(与展开态 highlightProps 同一手法)。
-const FLYOUT_PILL =
-  "z-0 before:absolute before:inset-x-1 before:inset-y-0.5 before:-z-10 before:rounded-sm before:content-['']"
+const FLYOUT_PILL
+  = 'z-0 before:absolute before:inset-x-1 before:inset-y-0.5 before:-z-10 before:rounded-sm before:content-[\'\']'
 // 叶子/自身项:hover 画 accent pill(顶掉 focus:bg-accent 满盒)。
 const FLYOUT_ITEM_CLASS = `${FLYOUT_PILL} focus:bg-transparent! focus:before:bg-accent`
 // 有子项的 SubTrigger:另带 data-open / data-popup-open 满盒 bg,一并顶掉再画 pill。
@@ -128,7 +128,7 @@ function FlyoutMenuNode({
         <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
-        {node.children.map((child) => (
+        {node.children.map(child => (
           <FlyoutMenuNode
             key={child.url}
             node={child}
@@ -174,32 +174,38 @@ function MenuNodeItem({
     className: cn(highlight && 'hover:bg-transparent! data-active:bg-transparent!'),
   }
 
-  // 折叠态受控:初始展开 = 命中当前路由;导航进入该分支时自动展开(effect 只开不
-  // 关,用户仍可手动折叠)。受控避免 defaultOpen 随路由变化触发 Base UI 的
+  // 折叠态受控:初始展开 = 命中当前路由;导航进入该分支时自动展开(只开不关,用户
+  // 仍可手动折叠)。受控避免 defaultOpen 随路由变化触发 Base UI 的
   // "uncontrolled 组件初始化后又改 default" 告警。hooks 无条件在顶部,叶子分支不用。
+  // 自动展开在渲染期比对上一次的 isActive 完成(React 官方的「props 变化时调整 state」),
+  // 不放 effect:effect 里补 setOpen 会先提交一帧折叠态再纠正。
   const [open, setOpen] = React.useState(isActive)
-  React.useEffect(() => {
+  const [wasActive, setWasActive] = React.useState(isActive)
+  if (wasActive !== isActive) {
+    setWasActive(isActive)
     if (isActive) {
       setOpen(true)
     }
-  }, [isActive])
+  }
 
-  const childrenSub = hasChildren ? (
-    <CollapsibleContent>
-      <SidebarMenuSub>
-        {node.children.map((child) => (
-          <MenuNodeItem
-            key={child.url}
-            activeUrl={activeUrl}
-            depth={depth + 1}
-            node={child}
-            pathname={pathname}
-            t={t}
-          />
-        ))}
-      </SidebarMenuSub>
-    </CollapsibleContent>
-  ) : null
+  const childrenSub = hasChildren
+    ? (
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {node.children.map(child => (
+              <MenuNodeItem
+                key={child.url}
+                activeUrl={activeUrl}
+                depth={depth + 1}
+                node={child}
+                pathname={pathname}
+                t={t}
+              />
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      )
+    : null
 
   const chevron = (
     <IconChevronRight className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
@@ -230,12 +236,12 @@ function MenuNodeItem({
                 子层 SubmenuTrigger 默认 openOnHover,故多级也悬停展开。 */}
             <DropdownMenuTrigger
               openOnHover
-              render={
+              render={(
                 <SidebarMenuButton
                   isActive={isActive}
                   tooltip={label}
                 />
-              }
+              )}
             >
               <MenuIcon icon={node.icon} />
               <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
@@ -253,7 +259,7 @@ function MenuNodeItem({
                 <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {node.children.map((child) => (
+              {node.children.map(child => (
                 <FlyoutMenuNode
                   key={child.url}
                   node={child}
@@ -274,13 +280,13 @@ function MenuNodeItem({
         render={<SidebarMenuItem />}
       >
         <CollapsibleTrigger
-          render={
+          render={(
             <SidebarMenuButton
               isActive={isActive}
               tooltip={label}
               {...highlightProps}
             />
-          }
+          )}
         >
           <MenuIcon icon={node.icon} />
           <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
@@ -315,13 +321,13 @@ function MenuNodeItem({
       {/* SidebarMenuSubButton 默认渲染 <a>;作折叠触发器时强制成 <button>,
           否则 Base UI 报 "button 期望原生 <button>"(叶子仍用 Link 保持 <a>)。 */}
       <CollapsibleTrigger
-        render={
+        render={(
           <SidebarMenuSubButton
             isActive={isActive}
             render={<button type='button' />}
             {...highlightProps}
           />
-        }
+        )}
       >
         <MenuIcon icon={node.icon} />
         <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
@@ -337,7 +343,7 @@ function MenuNodeItem({
 // fullPath 前缀决定嵌套层级。
 function NavAdminRoutes() {
   const router = useRouter()
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const pathname = useRouterState({ select: state => state.location.pathname })
   const { t } = useTranslation('route')
   // 权限集与守卫共用一份缓存(同 queryKey);守卫若已按需取过则零请求。
   // 未加载时 permissions 为 [],声明了准入的条目 fail-closed 先隐藏。
@@ -356,11 +362,11 @@ function NavAdminRoutes() {
   // 高亮容器上提到 AppSidebar(包含头/内容/底),这里只出菜单分组。
   return (
     <>
-      {groups.map((group) => (
+      {groups.map(group => (
         <SidebarGroup key={group.labelKey}>
           <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
           <SidebarMenu>
-            {group.entries.map((entry) => (
+            {group.entries.map(entry => (
               <MenuNodeItem
                 key={entry.url}
                 activeUrl={activeUrl}
@@ -381,10 +387,10 @@ export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  user: { avatar: string; email: string; name: string }
+  user: { avatar: string, email: string, name: string }
 }) {
   const { state } = useSidebar()
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const pathname = useRouterState({ select: s => s.location.pathname })
   const enabled = state === 'expanded'
   // 头/底 chrome 项也纳入滑动高亮:包一层 data-mh-item 盒作 pill 目标(chrome 组件不透传
   // props 到内层按钮,故在此外包);并抹掉内层 SidebarMenuButton 自身的 hover 底色——它与

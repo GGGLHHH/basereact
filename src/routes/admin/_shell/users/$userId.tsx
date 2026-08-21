@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { userQueryOptions } from '@/api/users'
-import { UserDetailPage } from '@/business/user/user-detail-page'
+
+import { UserDetailRoute } from './-user-detail-route'
 
 // 详情页,/admin/users/$userId(挂在 users 布局之下)。edit 用尾下划线段
 // 从本路由去嵌套 → 编辑整屏替换详情而非套进来,故本路由是叶子(无 Outlet)。
@@ -15,8 +16,3 @@ export const Route = createFileRoute('/admin/_shell/users/$userId')({
     accessPolicyKeys: ['getUser'],
   },
 })
-
-function UserDetailRoute() {
-  const { userId } = Route.useParams()
-  return <UserDetailPage userId={userId} />
-}
