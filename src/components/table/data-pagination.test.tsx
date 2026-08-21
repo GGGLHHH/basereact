@@ -11,7 +11,7 @@ afterEach(() => {
   cleanup()
 })
 
-describe('DataPagination', () => {
+describe('dataPagination', () => {
   it('renders copied limit controls and emits page changes', async () => {
     const handlePageChange = vi.fn<(page: number) => void>()
 

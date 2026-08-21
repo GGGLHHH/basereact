@@ -1,4 +1,5 @@
-import { useInfiniteQuery, type QueryKey } from '@tanstack/react-query'
+import type { QueryKey } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
 
 /**
@@ -92,17 +93,18 @@ export function useInfiniteCursorList<TItem, TExtraParams extends object = objec
       queryFn({
         ...((baseParams ?? {}) as TExtraParams),
         limit: pageSize,
-        ...(pageParam ? { cursor: pageParam } : {}),
+        ...(pageParam !== undefined && pageParam !== '' ? { cursor: pageParam } : {}),
       }),
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: lastPage => lastPage.nextCursor ?? undefined,
   })
 
   const items = useMemo<TItem[]>(() => {
-    if (!query.data) return EMPTY_ITEMS as unknown as TItem[]
+    if (!query.data)
+      return EMPTY_ITEMS as unknown as TItem[]
     const out: TItem[] = []
-    for (const page of query.data.pages) {
-      if (page.items?.length) out.push(...page.items)
-    }
+    // `items: null` is how the backend spells an empty page; flatten it as [].
+    for (const page of query.data.pages)
+      out.push(...(page.items ?? []))
     return out
   }, [query.data])
 

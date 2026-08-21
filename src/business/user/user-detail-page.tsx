@@ -25,6 +25,9 @@ export function UserDetailPage({ userId }: { userId: string }) {
     return null
   }
 
+  // 富化的显示名可能悬空(null/undefined),空串与缺失同等对待 → 回退登录名。
+  const displayName = user.display_name ?? ''
+
   return (
     <Card className='mx-auto w-full max-w-2xl'>
       {/* 身份凭证头:头像 + 名 + 验证章 + 账号编号戳 + 角色权限 chips。 */}
@@ -39,7 +42,7 @@ export function UserDetailPage({ userId }: { userId: string }) {
               src={user.avatar_url ?? undefined}
             />
             <AvatarFallback className='text-lg'>
-              {nameInitials(user.display_name || user.username)}
+              {nameInitials(displayName || user.username)}
             </AvatarFallback>
           </Avatar>
           <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -48,8 +51,9 @@ export function UserDetailPage({ userId }: { userId: string }) {
               <VerifiedBadge verified={user.email_verified} />
             </div>
             <p className='truncate text-sm text-muted-foreground'>
-              @{user.username}
-              {user.display_name ? ` · ${user.display_name}` : ''}
+              @
+              {user.username}
+              {displayName === '' ? '' : ` · ${displayName}`}
             </p>
             <AccountStamp
               id={user.id}

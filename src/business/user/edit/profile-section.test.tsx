@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { ProfileResponse } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ProfileResponse } from '#/generated/api-types'
+import { ProfileSection } from './profile-section'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
@@ -26,8 +28,6 @@ vi.mock('@/api/profile', () => ({
   useUpdateUserProfile: () => ({ isPending: false, mutateAsync: h.update }),
   useUploadUserAvatar: () => ({ isPending: false, mutateAsync: h.upload }),
 }))
-
-import { ProfileSection } from './profile-section'
 
 function fakeProfile(overrides: Partial<ProfileResponse> = {}): ProfileResponse {
   return {
@@ -58,11 +58,11 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('ProfileSection', () => {
+describe('profileSection', () => {
   it('seeds display name and phone from the loaded profile', () => {
     render(<ProfileSection userId='u1' />)
-    expect((screen.getByLabelText('Display name') as HTMLInputElement).value).toBe('Ada Lovelace')
-    expect((screen.getByLabelText('Phone') as HTMLInputElement).value).toBe('123')
+    expect(screen.getByLabelText<HTMLInputElement>('Display name').value).toBe('Ada Lovelace')
+    expect(screen.getByLabelText<HTMLInputElement>('Phone').value).toBe('123')
   })
 
   it('saves a full-replace PutProfileRequest carrying the current avatar id, clearing emptied fields', async () => {
@@ -84,7 +84,7 @@ describe('ProfileSection', () => {
     h.profile = null
     h.error = { status: 404 }
     render(<ProfileSection userId='u1' />)
-    expect((screen.getByLabelText('Display name') as HTMLInputElement).value).toBe('')
+    expect(screen.getByLabelText<HTMLInputElement>('Display name').value).toBe('')
   })
 
   it('shows a retry error state (never an empty form) when load fails non-404, so Save cannot wipe the profile', () => {

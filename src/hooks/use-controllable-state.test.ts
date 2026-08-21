@@ -17,7 +17,7 @@ describe('useControllableState', () => {
     )
     expect(result.current[0]).toBe(1)
 
-    act(() => result.current[1]((prev) => prev + 1)) // (prev) => next 更新器
+    act(() => result.current[1](prev => prev + 1)) // (prev) => next 更新器
     expect(result.current[0]).toBe(2)
     expect(onChange).toHaveBeenLastCalledWith(2)
   })

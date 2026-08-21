@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { AdminUserView } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AdminUserView } from '#/generated/api-types'
+import { UserDetailPage } from './user-detail-page'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
@@ -20,8 +22,6 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => h.navigate,
   useRouter: () => ({ history: { back: () => {} } }),
 }))
-
-import { UserDetailPage } from './user-detail-page'
 
 function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
   return {
@@ -49,7 +49,7 @@ beforeEach(() => {
       disconnect() {}
     },
   )
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if (typeof (Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture !== 'function') {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -63,7 +63,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('UserDetailPage', () => {
+describe('userDetailPage', () => {
   it('renders the loaded user fields', () => {
     render(<UserDetailPage userId='u1' />)
     expect(screen.getAllByText('ada').length).toBeGreaterThan(0)

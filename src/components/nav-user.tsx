@@ -1,9 +1,9 @@
+import { IconLogout, IconSelector, IconUserCircle } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
 
+import { useTranslation } from 'react-i18next'
 import { useLogout } from '@/api/auth'
 import { useMyProfile } from '@/api/profile'
-import { nameInitials } from '@/lib/display-name'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { IconSelector, IconUserCircle, IconLogout } from '@tabler/icons-react'
+import { nameInitials } from '@/lib/display-name'
 
 export function NavUser({
   user,
@@ -40,7 +40,8 @@ export function NavUser({
 
   const avatarSrc = profile?.avatar_url ?? user.avatar
   // 首字母兜底:优先 display_name,空则回退登录名(nameInitials 空名→'?')。
-  const fallback = nameInitials(profile?.display_name || user.name)
+  const displayName = profile?.display_name ?? ''
+  const fallback = nameInitials(displayName === '' ? user.name : displayName)
 
   function handleLogout() {
     // 登出接口失败也照样去登录页:本地会话状态已不可信。
@@ -55,12 +56,12 @@ export function NavUser({
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
+            render={(
               <SidebarMenuButton
                 size='lg'
                 className='aria-expanded:bg-muted'
               />
-            }
+            )}
           >
             <Avatar>
               <AvatarImage

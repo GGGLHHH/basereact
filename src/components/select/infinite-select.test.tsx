@@ -1,15 +1,16 @@
 // @vitest-environment happy-dom
 
+import type { InfiniteSelectOption } from './infinite-select'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   InfiniteSelect,
   InfiniteSelectEmpty,
   InfiniteSelectError,
   InfiniteSelectLoading,
+
   InfiniteSelectRetry,
-  type InfiniteSelectOption,
 } from './infinite-select'
 
 Element.prototype.scrollIntoView = vi.fn<() => void>()
@@ -18,10 +19,12 @@ afterEach(() => {
   cleanup()
 })
 
-const getOption = (item: { id: string; label: string }): InfiniteSelectOption => ({
-  id: item.id,
-  label: item.label,
-})
+function getOption(item: { id: string, label: string }): InfiniteSelectOption {
+  return {
+    id: item.id,
+    label: item.label,
+  }
+}
 
 // 状态插槽:context 驱动,按 InfiniteSelect 的状态自渲染;底层零文案,文案由 children 注入。
 const slots = (
@@ -35,7 +38,7 @@ const slots = (
   </>
 )
 
-describe('InfiniteSelect state slots', () => {
+describe('infiniteSelect state slots', () => {
   it('shows the empty slot when there are no items (and nothing else)', () => {
     render(
       <InfiniteSelect

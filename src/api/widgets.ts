@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
 import type {
   AdminListWidgetsQuery,
   CreateWidget,
   ListWidgetsQuery,
   UpdateWidget,
 } from '#/generated/api-types'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   adminListWidgets as adminListWidgetsApi,
   createWidget as createWidgetApi,
@@ -71,7 +71,7 @@ export function useCreateWidget() {
 export function useUpdateWidget() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: UpdateWidget }) =>
+    mutationFn: ({ id, request }: { id: string, request: UpdateWidget }) =>
       updateWidgetApi({ body: request, path: { id } }),
     onSuccess: (widget, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.widgets.all })

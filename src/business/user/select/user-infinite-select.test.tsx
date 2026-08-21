@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { ReactNode } from 'react'
+import type { AdminUserView, ListUsersQuery, Page_AdminUserView } from '#/generated/api-types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { type ReactNode } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AdminUserView, ListUsersQuery, Page_AdminUserView } from '#/generated/api-types'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const listUsersMock = vi.fn<(options: { query?: ListUsersQuery }) => Promise<Page_AdminUserView>>()
 
@@ -95,7 +95,7 @@ beforeEach(() => {
       },
     )
   }
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if (typeof (Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture !== 'function') {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -115,7 +115,7 @@ async function loadComponent() {
   return import('./user-infinite-select')
 }
 
-describe('UserInfiniteSelect', () => {
+describe('userInfiniteSelect', () => {
   it('renders the trigger children without fetching', async () => {
     listUsersMock.mockResolvedValue(buildPage(1, 20))
     const { UserInfiniteSelect } = await loadComponent()
@@ -222,7 +222,7 @@ describe('UserInfiniteSelect', () => {
     )
 
     await flushQueries()
-    const input = screen.getByPlaceholderText('Search user by name') as HTMLInputElement
+    const input = screen.getByPlaceholderText('Search user by name')
     fireEvent.change(input, { target: { value: 'ali' } })
 
     act(() => {

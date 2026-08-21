@@ -1,13 +1,14 @@
+import type { ComponentProps } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useMemo, type ComponentProps } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { useAdminLogin, useLogin } from '@/api/auth'
+import { Field, FieldGroup } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup } from '@/components/field'
 import { getErrorMessage } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 
@@ -43,7 +44,8 @@ export function LoginForm({
     onSubmit: async ({ value }) => {
       try {
         await login.mutateAsync(value)
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
@@ -63,10 +65,10 @@ export function LoginForm({
           <CardDescription>{t('auth.login.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+          <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
             <FieldGroup>
               <form.AppField name='identifier'>
-                {(field) => (
+                {field => (
                   <field.TextField
                     label={t('auth.login.identifierLabel')}
                     placeholder={t('auth.login.identifierPlaceholder')}
@@ -75,18 +77,18 @@ export function LoginForm({
                 )}
               </form.AppField>
               <form.AppField name='password'>
-                {(field) => (
+                {field => (
                   <field.PasswordField
                     label={t('auth.login.passwordLabel')}
                     required
-                    labelEnd={
+                    labelEnd={(
                       <a
                         href='#'
                         className='ml-auto inline-block text-sm underline-offset-4 hover:underline'
                       >
                         {t('auth.login.forgotPassword')}
                       </a>
-                    }
+                    )}
                   />
                 )}
               </form.AppField>

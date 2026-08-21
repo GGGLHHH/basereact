@@ -17,7 +17,8 @@ function collectFiles(dir: string): string[] {
     const full = join(dir, entry.name)
     if (entry.isDirectory()) {
       out.push(...collectFiles(full))
-    } else {
+    }
+    else {
       out.push(full)
     }
   }

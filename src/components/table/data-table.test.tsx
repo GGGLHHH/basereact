@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createColumnHelper } from '@tanstack/react-table'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DataTable } from './data-table'
@@ -50,7 +50,7 @@ afterEach(() => {
   cleanup()
 })
 
-describe('DataTable', () => {
+describe('dataTable', () => {
   it('creates the table instance and renders the shared scroll viewport', () => {
     const { container } = render(
       <DataTable
@@ -114,10 +114,10 @@ describe('DataTable', () => {
     )
 
     const nameHeader = Array.from(container.querySelectorAll('[data-slot="table-head"]')).find(
-      (cell) => cell.textContent === 'Name',
+      cell => cell.textContent === 'Name',
     ) as HTMLElement
     const actionHeader = Array.from(container.querySelectorAll('[data-slot="table-head"]')).find(
-      (cell) => cell.textContent === 'Actions',
+      cell => cell.textContent === 'Actions',
     ) as HTMLElement
 
     expect(nameHeader.style.position).toBe('sticky')
@@ -161,14 +161,14 @@ describe('DataTable', () => {
     )
 
     const nameHeader = Array.from(container.querySelectorAll('[data-slot="table-head"]')).find(
-      (cell) => cell.textContent === 'Name',
+      cell => cell.textContent === 'Name',
     ) as HTMLElement
     const actionHeader = Array.from(container.querySelectorAll('[data-slot="table-head"]')).find(
-      (cell) => cell.textContent === 'Actions',
+      cell => cell.textContent === 'Actions',
     ) as HTMLElement
     const firstRowCells = Array.from(
-      container.querySelectorAll('[data-slot="table-body"] [data-slot="table-cell"]'),
-    ) as HTMLElement[]
+      container.querySelectorAll<HTMLElement>('[data-slot="table-body"] [data-slot="table-cell"]'),
+    )
 
     expect(nameHeader.style.width).toBe('')
     expect(nameHeader.style.minWidth).toBe('')

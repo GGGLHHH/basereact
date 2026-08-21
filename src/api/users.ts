@@ -1,12 +1,6 @@
-import {
-  keepPreviousData,
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 
+import type { BaseInfiniteListOptions } from '#/components/select/use-infinite-list'
 import type {
   AdminUserView,
   CreateUserRequest,
@@ -14,6 +8,18 @@ import type {
   Page_AdminUserView,
   UpdateUserRequest,
 } from '#/generated/api-types'
+import {
+  keepPreviousData,
+
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import {
+
+  useInfiniteCursorList,
+} from '#/components/select/use-infinite-list'
 import {
   createUser as createUserApi,
   deleteUser as deleteUserApi,
@@ -23,16 +29,12 @@ import {
   setUserRoles as setUserRolesApi,
   updateUser as updateUserApi,
 } from '#/generated/client'
-import {
-  useInfiniteCursorList,
-  type BaseInfiniteListOptions,
-} from '#/components/select/use-infinite-list'
 import { queryKeys } from '#/lib/query-keys'
 
 // 列表查询按 {page,size} 分片缓存,key 前缀 [users.all,'list'] 命中所有已缓存分页
 // (不含 detail / options-infinite)。乐观更新:mutation 影响 AdminUserView(含富化的
 // display_name/avatar,故 profile/头像也算)时,先就地打补丁列表行 + detail 让 UI 即刻反映
-//(补丁用的是 mutation 返回的服务器真值,非猜测),再 invalidate 但 **refetchType:'none'**:
+// (补丁用的是 mutation 返回的服务器真值,非猜测),再 invalidate 但 **refetchType:'none'**:
 // 只标记 stale、**不立即重取**——否则默认会重取活跃查询,把刚种的乐观值覆盖(编辑页的
 // detail 就是活跃的)。stale 标记让下次 mount/focus(refetchOnMount)时再取校正。
 const USERS_LIST_KEY = [...queryKeys.users.all, 'list']
@@ -43,16 +45,14 @@ export function patchUserInLists(
   id: string,
   patch: (user: AdminUserView) => AdminUserView,
 ): void {
-  queryClient.setQueriesData<Page_AdminUserView>({ queryKey: USERS_LIST_KEY }, (old) =>
-    old ? { ...old, items: old.items.map((u) => (u.id === id ? patch(u) : u)) } : old,
-  )
+  queryClient.setQueriesData<Page_AdminUserView>({ queryKey: USERS_LIST_KEY }, old =>
+    old ? { ...old, items: old.items.map(u => (u.id === id ? patch(u) : u)) } : old)
 }
 
 /** 从所有已缓存 users.list 分页里移除某用户(删除乐观反映)。 */
 export function removeUserFromLists(queryClient: QueryClient, id: string): void {
-  queryClient.setQueriesData<Page_AdminUserView>({ queryKey: USERS_LIST_KEY }, (old) =>
-    old ? { ...old, items: old.items.filter((u) => u.id !== id) } : old,
-  )
+  queryClient.setQueriesData<Page_AdminUserView>({ queryKey: USERS_LIST_KEY }, old =>
+    old ? { ...old, items: old.items.filter(u => u.id !== id) } : old)
 }
 
 export function useUsers(request?: ListUsersQuery, options?: { enabled?: boolean }) {
@@ -93,7 +93,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: UpdateUserRequest }) =>
+    mutationFn: ({ id, request }: { id: string, request: UpdateUserRequest }) =>
       updateUserApi({ body: request, path: { id } }),
     onSuccess: (user, { id }) => {
       patchUserInLists(queryClient, id, () => user) // 乐观:列表行即刻替换
@@ -120,7 +120,7 @@ export function useDeleteUser() {
 export function useSetUserRoles() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, roles }: { id: string; roles: string[] }) =>
+    mutationFn: ({ id, roles }: { id: string, roles: string[] }) =>
       setUserRolesApi({ body: { roles }, path: { id } }),
     onSuccess: (user, { id }) => {
       patchUserInLists(queryClient, id, () => user) // 乐观:列表行即刻替换(新角色)
@@ -133,7 +133,7 @@ export function useSetUserRoles() {
 // 管理员重置密码(POST /users/{id}/password,无需旧密码)。返回 void。
 export function useResetUserPassword() {
   return useMutation({
-    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
+    mutationFn: ({ id, newPassword }: { id: string, newPassword: string }) =>
       resetUserPasswordApi({ body: { new_password: newPassword }, path: { id } }),
   })
 }
@@ -155,7 +155,8 @@ export interface UseInfiniteUserOptionsOptions extends BaseInfiniteListOptions {
  */
 export function useInfiniteUserOptions(options: UseInfiniteUserOptionsOptions = {}) {
   const { search, ...rest } = options
-  const username = search?.trim() || undefined
+  const trimmedSearch = search?.trim()
+  const username = trimmedSearch === undefined || trimmedSearch === '' ? undefined : trimmedSearch
 
   return useInfiniteCursorList<AdminUserView, { username?: string }>({
     ...rest,
@@ -165,9 +166,9 @@ export function useInfiniteUserOptions(options: UseInfiniteUserOptionsOptions = 
         query: {
           size: limit,
           cursor: cursor ?? '',
-          ...(usernameParam ? { username: usernameParam } : {}),
+          ...(usernameParam === undefined ? {} : { username: usernameParam }),
         },
-      }).then((res) => ({
+      }).then(res => ({
         items: res.items,
         nextCursor:
           res.page_info.mode === 'cursor' ? (res.page_info.next_cursor ?? undefined) : undefined,

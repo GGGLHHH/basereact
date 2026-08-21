@@ -1,18 +1,18 @@
 // 实时:SSE(/admin/auth/auth-events/stream)。EventSource 同源走 httponly cookie 鉴权,自动重连。
 // 新事件置顶 tape;KPI/图表/分布 = stats 快照 + 快照之后的 SSE 事件逐条叠加(见 useLiveStats)。
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-
-import type { AuthEvent } from './types'
-
-import { toAuthEvent } from './data'
+import type { AuthEventRow } from '#/generated/api-types'
 
 import type { MappedStats } from './data'
 
-import type { AuthEventRow } from '#/generated/api-types'
+import type { AuthEvent } from './types'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { streamAuthEvents } from '#/generated/api'
+
 import { API_BASE_URL } from '#/lib/api-client'
+import { toAuthEvent } from './data'
 
 // path 来自生成的 path builder(同 profile.ts 的 buildSetUserAvatarPath 套路)——
 // EventSource 要的是纯 URL 不是 fetch,绕过 fetch 客户端但仍吃后端真路径,不手写字面量。
@@ -26,8 +26,10 @@ export interface AuthEventStream {
   connected: boolean
   paused: boolean
   togglePaused: () => void
-  /** 连续失败次数,每次成功 open 清零——EventSource 原生 API 拿不到响应状态码,分不清
-   *  网络抖一下还是会话真死了,页面拿这个数去判断"该不该借道 ky 探一次会话"。 */
+  /**
+   * 连续失败次数,每次成功 open 清零——EventSource 原生 API 拿不到响应状态码,分不清
+   *  网络抖一下还是会话真死了,页面拿这个数去判断"该不该借道 ky 探一次会话"。
+   */
   errorStreak: number
 }
 
@@ -36,7 +38,7 @@ export function useAuthEventStream(): AuthEventStream {
   const [connected, setConnected] = useState(false)
   const [paused, setPaused] = useState(false)
   const [errorStreak, setErrorStreak] = useState(0)
-  const freshId = useRef<string | null>(null)
+  const freshIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (paused) {
@@ -49,28 +51,34 @@ export function useAuthEventStream(): AuthEventStream {
     }
     es.onerror = () => {
       setConnected(false) // EventSource 自动重连
-      setErrorStreak((n) => n + 1)
+      setErrorStreak(n => n + 1)
     }
-    es.addEventListener('auth_event', (e) => {
+    // SSE 帧的 data 永远是文本(MessageEvent<string>),标出来 JSON.parse 才不是在吃 any。
+    const onAuthEvent = (e: MessageEvent<string>) => {
       let row: AuthEventRow
       try {
-        row = JSON.parse((e as MessageEvent).data) as AuthEventRow
-      } catch {
+        row = JSON.parse(e.data) as AuthEventRow
+      }
+      catch {
         return
       }
       const ev = toAuthEvent(row)
-      freshId.current = ev.id
-      setEvents((prev) => [ev, ...prev].slice(0, CAP))
-    })
-    return () => es.close()
+      freshIdRef.current = ev.id
+      setEvents(prev => [ev, ...prev].slice(0, CAP))
+    }
+    es.addEventListener('auth_event', onAuthEvent)
+    return () => {
+      es.removeEventListener('auth_event', onAuthEvent)
+      es.close()
+    }
   }, [paused])
 
   return {
     events,
-    freshId: freshId.current,
+    freshId: freshIdRef.current,
     connected,
     paused,
-    togglePaused: () => setPaused((p) => !p),
+    togglePaused: () => setPaused(p => !p),
     errorStreak,
   }
 }
@@ -81,16 +89,16 @@ export function useAuthEventStream(): AuthEventStream {
 // auth-log.tsx)——新事件要立刻上 tape,这层只挡"重算图表/分布"这种贵操作的触发频率。
 function useThrottledValue<T>(value: T, ms: number): T {
   const [throttled, setThrottled] = useState(value)
-  const lastAt = useRef(0)
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const lastAtRef = useRef(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
-    const wait = Math.max(0, ms - (Date.now() - lastAt.current))
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => {
-      lastAt.current = Date.now()
+    const wait = Math.max(0, ms - (Date.now() - lastAtRef.current))
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      lastAtRef.current = Date.now()
       setThrottled(value)
     }, wait)
-    return () => clearTimeout(timer.current)
+    return () => clearTimeout(timerRef.current)
   }, [value, ms])
   return throttled
 }
@@ -127,20 +135,20 @@ function foldEvent(acc: MappedStats, e: AuthEvent): MappedStats {
 
   let reasons = acc.reasons
   if (fail && e.failureReason) {
-    const i = reasons.findIndex((r) => r.key === e.failureReason)
-    reasons =
-      i >= 0
+    const i = reasons.findIndex(r => r.key === e.failureReason)
+    reasons
+      = i >= 0
         ? reasons.map((r, idx) => (idx === i ? { ...r, count: r.count + 1 } : r))
         : [...reasons, { key: e.failureReason, count: 1 }]
   }
 
-  const ti = acc.types.findIndex((t) => t.key === e.eventType)
-  const types =
-    ti >= 0
+  const ti = acc.types.findIndex(t => t.key === e.eventType)
+  const types
+    = ti >= 0
       ? acc.types.map((t, idx) => (idx === ti ? { ...t, count: t.count + 1 } : t))
       : [...acc.types, { key: e.eventType, count: 1 }]
 
-  const ii = acc.topIps.findIndex((i) => i.ip === e.ip)
+  const ii = acc.topIps.findIndex(i => i.ip === e.ip)
   const topIps = (
     ii >= 0
       ? acc.topIps.map((i, idx) =>
@@ -174,7 +182,7 @@ function foldEvent(acc: MappedStats, e: AuthEvent): MappedStats {
 // 下次快照刷新自然更新。ponytail: 需要精确可加一个后端"新增独立 IP"字段。
 export function useLiveStats(base: MappedStats, baseAt: number, events: AuthEvent[]): MappedStats {
   return useMemo(() => {
-    const fresh = events.filter((e) => new Date(e.occurredAt).getTime() > baseAt).reverse()
+    const fresh = events.filter(e => new Date(e.occurredAt).getTime() > baseAt).reverse()
     return fresh.reduce(foldEvent, base)
   }, [base, baseAt, events])
 }

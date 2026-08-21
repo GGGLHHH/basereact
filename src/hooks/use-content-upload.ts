@@ -1,8 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-
 import type { ContentResponse, PrepareUploadRequest } from '#/generated/api-types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import i18next from 'i18next'
+
+import { useEffect, useState } from 'react'
 import {
   confirmUpload,
   deleteContent,
@@ -10,17 +11,16 @@ import {
   updateContent,
   uploadContent,
 } from '#/generated/client'
-import i18next from 'i18next'
 
 import { queryKeys } from '#/lib/query-keys'
 
-export type ContentUploadPhase =
-  | 'confirming'
-  | 'done'
-  | 'error'
-  | 'idle'
-  | 'preparing'
-  | 'uploading'
+export type ContentUploadPhase
+  = | 'confirming'
+    | 'done'
+    | 'error'
+    | 'idle'
+    | 'preparing'
+    | 'uploading'
 
 export interface ContentUploadInput {
   file: File
@@ -53,16 +53,23 @@ function buildMultipartForm(
   // file part 的 content-type 是回退路径唯一的 mime 通道:file.type 可能为空
   // (.md/无扩展名),必须带上申报的 contentType,否则与直传路径落库 mime 不一致。
   form.append('file', new File([file], file.name, { type: contentType }), file.name)
-  if (request?.name != null) form.append('name', request.name)
-  if (request?.tags?.length) form.append('tags', request.tags.join(','))
-  if (request?.document_type != null) form.append('document_type', request.document_type)
-  if (request?.tenant_id != null) form.append('tenant_id', request.tenant_id)
+  if (request?.name != null)
+    form.append('name', request.name)
+  const tags = request?.tags ?? []
+  if (tags.length > 0)
+    form.append('tags', tags.join(','))
+  if (request?.document_type != null)
+    form.append('document_type', request.document_type)
+  if (request?.tenant_id != null)
+    form.append('tenant_id', request.tenant_id)
   return form
 }
 
 export async function uploadContentFlow(input: ContentUploadInput): Promise<ContentResponse> {
   // prepare 里申报的 mime 必须和直传 PUT 的 Content-Type 一致(预签名校验)。
-  const contentType = input.request?.mime_type || input.file.type || 'application/octet-stream'
+  // mime_type 缺省或为空串都算"没申报",与 file.type 为空一样往后退一档。
+  const contentType
+    = (input.request?.mime_type ?? '') || input.file.type || 'application/octet-stream'
 
   input.onProgress?.('preparing')
   const prepared = await prepareUpload({
@@ -74,7 +81,8 @@ export async function uploadContentFlow(input: ContentUploadInput): Promise<Cont
   })
 
   // upload_url = null:后端不支持直传,按 openapi 注释回退 multipart 一步上传。
-  if (!prepared.upload_url) {
+  const uploadUrl = prepared.upload_url
+  if (uploadUrl == null || uploadUrl === '') {
     input.onProgress?.('uploading')
     const uploaded = await uploadContent({
       body: buildMultipartForm(input.file, input.request, contentType),
@@ -104,7 +112,7 @@ export async function uploadContentFlow(input: ContentUploadInput): Promise<Cont
   }
 
   input.onProgress?.('uploading')
-  await putUploadFile(prepared.upload_url, input.file, contentType)
+  await putUploadFile(uploadUrl, input.file, contentType)
 
   input.onProgress?.('confirming')
   // ponytail: confirm 幂等(后端注明重试安全),但 mutation 级重试会整个 flow
@@ -124,7 +132,7 @@ export function useContentUpload() {
   })
 }
 
-const UPLOAD_PROGRESS_PHASE_RANGES: Record<ContentUploadPhase, { max: number; start: number }> = {
+const UPLOAD_PROGRESS_PHASE_RANGES: Record<ContentUploadPhase, { max: number, start: number }> = {
   confirming: { max: 98, start: 80 },
   done: { max: 100, start: 100 },
   error: { max: 0, start: 0 },
@@ -134,23 +142,36 @@ const UPLOAD_PROGRESS_PHASE_RANGES: Record<ContentUploadPhase, { max: number; st
 }
 
 export function useSimulatedUploadProgress(phase: ContentUploadPhase): number {
-  const [progress, setProgress] = useState(0)
+  // 进度和它属于哪一相绑在同一个 state 里,换相时才能在渲染期就认出「这是上一相的
+  // 残值」。否则只能在 effect 里同步重置 —— 那会先渲染一帧旧进度再纠正。
+  const [tracked, setTracked] = useState<{ phase: ContentUploadPhase, progress: number }>(() => ({
+    phase,
+    progress: UPLOAD_PROGRESS_PHASE_RANGES[phase].start,
+  }))
+
+  const progress = tracked.phase === phase
+    ? tracked.progress
+    : UPLOAD_PROGRESS_PHASE_RANGES[phase].start
 
   useEffect(() => {
     const range = UPLOAD_PROGRESS_PHASE_RANGES[phase]
-    setProgress(range.start)
 
+    // 起点即终点的相(idle/error/done)没有可爬的区间,不必起定时器。
     if (range.start >= range.max) {
       return
     }
 
     const timer = window.setInterval(() => {
-      setProgress((current) => {
-        if (current >= range.max) {
-          return range.max
+      setTracked((current) => {
+        const base = current.phase === phase ? current.progress : range.start
+        if (base >= range.max) {
+          return { phase, progress: range.max }
         }
 
-        return Math.min(current + Math.max(1, Math.round((range.max - current) * 0.18)), range.max)
+        return {
+          phase,
+          progress: Math.min(base + Math.max(1, Math.round((range.max - base) * 0.18)), range.max),
+        }
       })
     }, 300)
 

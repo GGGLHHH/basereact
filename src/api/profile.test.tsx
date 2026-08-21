@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import type { ReactNode } from 'react'
 import type { ContentResponse, ProfileResponse } from '#/generated/api-types'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+import { renderHook, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { getMyProfile, putProfile } from '#/generated/client'
 import { uploadContentFlow } from '#/hooks/use-content-upload'
@@ -64,7 +64,7 @@ describe('profileQueryOptions', () => {
 })
 
 describe('useUpdateProfile', () => {
-  it('PUTs a full-replace body to /profiles/{user_id} and seeds the profile.me cache', async () => {
+  it('pUTs a full-replace body to /profiles/{user_id} and seeds the profile.me cache', async () => {
     const updated = fakeProfile({ avatar_content_id: 'c9', display_name: 'New Name', phone: '123' })
     vi.mocked(putProfile).mockResolvedValue(updated)
 

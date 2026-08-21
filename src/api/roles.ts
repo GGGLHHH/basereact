@@ -1,18 +1,19 @@
-import { useQuery } from '@tanstack/react-query'
+import type { BaseInfiniteListOptions } from '#/components/select/use-infinite-list'
 
 import type { RoleView } from '#/generated/api-types'
-import { listRoles as listRolesApi } from '#/generated/client'
+import { useQuery } from '@tanstack/react-query'
 import {
+
   useInfiniteCursorList,
-  type BaseInfiniteListOptions,
 } from '#/components/select/use-infinite-list'
+import { listRoles as listRolesApi } from '#/generated/client'
 import { queryKeys } from '#/lib/query-keys'
 
 // 全量角色目录(小而有界,单页返回)。用于按名→id 映射(编辑页回填用户当前角色)。
 export function useRoles(options?: { enabled?: boolean }) {
   return useQuery({
     enabled: options?.enabled ?? true,
-    queryFn: () => listRolesApi({}).then((res) => res.items),
+    queryFn: () => listRolesApi({}).then(res => res.items),
     queryKey: queryKeys.roles.list(),
   })
 }
@@ -26,7 +27,7 @@ export function useInfiniteRoleOptions(options: BaseInfiniteListOptions = {}) {
     ...options,
     queryKey: queryKeys.roles.optionsInfiniteList(),
     queryFn: ({ limit, cursor }) =>
-      listRolesApi({ query: { cursor: cursor ?? '', size: limit } }).then((res) => ({
+      listRolesApi({ query: { cursor: cursor ?? '', size: limit } }).then(res => ({
         items: res.items,
         nextCursor:
           res.page_info.mode === 'cursor' ? (res.page_info.next_cursor ?? undefined) : undefined,

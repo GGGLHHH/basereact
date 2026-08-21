@@ -1,9 +1,9 @@
-import * as React from 'react'
-
 import { ScrollArea as ScrollAreaPrimitive } from '@base-ui/react/scroll-area'
 
-import { cn } from '@/lib/utils'
+import * as React from 'react'
+
 import { ScrollBar } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 
 // Project scroll-area wrapper. `@/components/ui/scroll-area` stays byte-identical to the official
 // shadcn base-vega registry source; the project's orientation / showScrollbars / viewport* API

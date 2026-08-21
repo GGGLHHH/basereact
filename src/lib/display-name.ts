@@ -4,7 +4,7 @@ export function nameInitials(name?: string | null): string {
   const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
   const letters = words
     .slice(0, 2)
-    .map((word) => word[0])
+    .map(word => word[0])
     .join('')
   return (letters || '?').toUpperCase()
 }

@@ -3,14 +3,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { DeleteUserDialog } from './delete-user-dialog'
+
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
 const h = vi.hoisted(() => ({ mutateAsync: vi.fn(), pending: false }))
 vi.mock('@/api/users', () => ({
   useDeleteUser: () => ({ isPending: h.pending, mutateAsync: h.mutateAsync }),
 }))
-
-import { DeleteUserDialog } from './delete-user-dialog'
 
 beforeEach(() => {
   h.mutateAsync.mockReset().mockResolvedValue(undefined)
@@ -23,7 +23,7 @@ beforeEach(() => {
       disconnect() {}
     },
   )
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if (typeof (Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture !== 'function') {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -39,7 +39,7 @@ afterEach(() => {
 
 const target = { id: 'u1', username: 'ada' }
 
-describe('DeleteUserDialog', () => {
+describe('deleteUserDialog', () => {
   it('names the target user in the confirmation copy', () => {
     render(
       <DeleteUserDialog

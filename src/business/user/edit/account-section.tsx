@@ -1,13 +1,13 @@
+import type { AdminUserView } from '#/generated/api-types'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
 import { z } from 'zod'
 
-import type { AdminUserView } from '#/generated/api-types'
-
 import { useUpdateUser } from '@/api/users'
-import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Field, FieldGroup } from '@/components/field'
+import { formSubmitHandler, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
@@ -23,7 +23,7 @@ export function AccountSection({ user }: { user: AdminUserView }) {
         email: z.string(),
         username: z
           .string()
-          .refine((value) => value.trim().length > 0, t('users.validation.usernameRequired')),
+          .refine(value => value.trim().length > 0, t('users.validation.usernameRequired')),
       }),
     [t],
   )
@@ -37,7 +37,8 @@ export function AccountSection({ user }: { user: AdminUserView }) {
           id: user.id,
           request: { email: value.email.trim() || null, username: value.username.trim() },
         })
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
@@ -50,10 +51,10 @@ export function AccountSection({ user }: { user: AdminUserView }) {
       description={t('users.edit.accountDescription')}
       title={t('users.edit.accountTitle')}
     >
-      <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
         <FieldGroup>
           <form.AppField name='username'>
-            {(field) => (
+            {field => (
               <field.TextField
                 label={t('users.columns.username')}
                 placeholder={t('users.form.usernamePlaceholder')}
@@ -62,7 +63,7 @@ export function AccountSection({ user }: { user: AdminUserView }) {
             )}
           </form.AppField>
           <form.AppField name='email'>
-            {(field) => (
+            {field => (
               <field.TextField
                 label={t('users.columns.email')}
                 placeholder={t('users.form.emailPlaceholder')}

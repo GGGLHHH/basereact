@@ -1,15 +1,15 @@
+import type { ChangeEvent } from 'react'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
 import { toast } from 'sonner'
 
-import type { ChangeEvent } from 'react'
-
 import { useMyProfile, useUpdateProfile, useUploadAvatar } from '@/api/profile'
+import { Field, FieldGroup } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldGroup } from '@/components/field'
 import { Spinner } from '@/components/ui/spinner'
 import { getErrorMessage } from '@/lib/api-client'
 import { nameInitials } from '@/lib/display-name'
@@ -50,12 +50,13 @@ export function ProfilePage() {
       const content = await uploadAvatar.mutateAsync(file)
       // 成功:采纳新 objectURL,撤销上一枚本地 URL(服务端 avatar_url 非 objectURL,
       // localUrlRef 为 null 时跳过撤销)。
-      if (localUrlRef.current) {
+      if (localUrlRef.current !== null) {
         URL.revokeObjectURL(localUrlRef.current)
       }
       localUrlRef.current = nextUrl
       setAvatarContentId(content.id)
-    } catch (error) {
+    }
+    catch (error) {
       // 失败:撤销这枚失败 URL,预览与 id 一起回退到选前状态。
       URL.revokeObjectURL(nextUrl)
       setPreview(prevPreview)
@@ -84,7 +85,8 @@ export function ProfilePage() {
           },
         })
         toast.success(t('profile.saved'))
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
       }
     },
@@ -110,11 +112,13 @@ export function ProfilePage() {
               />
               <AvatarFallback>{nameInitials(profile.display_name)}</AvatarFallback>
             </Avatar>
-            {uploadAvatar.isPending ? (
-              <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
-                <Spinner className='size-4' />
-              </span>
-            ) : null}
+            {uploadAvatar.isPending
+              ? (
+                  <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
+                    <Spinner className='size-4' />
+                  </span>
+                )
+              : null}
           </div>
           <div className='flex flex-col gap-1'>
             <Button
@@ -133,14 +137,16 @@ export function ProfilePage() {
             type='file'
             accept='image/*'
             className='hidden'
-            onChange={onPickFile}
+            onChange={(event) => {
+              void onPickFile(event)
+            }}
           />
         </div>
 
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
           <FieldGroup>
             <form.AppField name='display_name'>
-              {(field) => (
+              {field => (
                 <field.TextField
                   label={t('profile.displayName')}
                   placeholder={t('profile.displayNamePlaceholder')}
@@ -148,7 +154,7 @@ export function ProfilePage() {
               )}
             </form.AppField>
             <form.AppField name='phone'>
-              {(field) => (
+              {field => (
                 <field.TextField
                   label={t('profile.phone')}
                   placeholder={t('profile.phonePlaceholder')}

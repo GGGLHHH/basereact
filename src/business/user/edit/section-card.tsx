@@ -12,11 +12,14 @@ export function EditSectionCard({
   description?: ReactNode
   children: ReactNode
 }) {
+  // description 是 ReactNode:空串/undefined 都算"没给",此时不占 CardHeader 的行距。
+  const hasDescription = Boolean(description)
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
+        {hasDescription ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>

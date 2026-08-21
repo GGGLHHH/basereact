@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { RoleView } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { RoleView } from '#/generated/api-types'
+import { UserCreatePage } from './user-create-page'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
@@ -32,8 +34,6 @@ vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ history: { back: () => {} } }),
 }))
 
-import { UserCreatePage } from './user-create-page'
-
 beforeEach(() => {
   h.mutateAsync.mockReset().mockResolvedValue({ id: 'new-id' })
   h.navigate.mockReset().mockResolvedValue(undefined)
@@ -45,7 +45,7 @@ beforeEach(() => {
       disconnect() {}
     },
   )
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if (typeof (Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture !== 'function') {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -59,7 +59,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('UserCreatePage', () => {
+describe('userCreatePage', () => {
   it('submits a CreateUserRequest with trimmed email and no roles when none picked', async () => {
     render(<UserCreatePage />)
 
@@ -133,7 +133,7 @@ describe('UserCreatePage', () => {
     fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'secret' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
 
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await new Promise(resolve => setTimeout(resolve, 30))
     expect(h.mutateAsync).not.toHaveBeenCalled()
   })
 })

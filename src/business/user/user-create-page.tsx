@@ -1,18 +1,18 @@
+import type { RoleView } from '#/generated/api-types'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { z } from 'zod'
 
-import type { RoleView } from '#/generated/api-types'
+import { z } from 'zod'
 
 import { useCreateUser } from '@/api/users'
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/field'
+import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
 export function UserCreatePage() {
@@ -34,7 +34,7 @@ export function UserCreatePage() {
         // transform——那会改写字段值,和 TanStack Form 的 onChange 校验相互干扰。
         username: z
           .string()
-          .refine((value) => value.trim().length > 0, t('users.validation.usernameRequired')),
+          .refine(value => value.trim().length > 0, t('users.validation.usernameRequired')),
       }),
     [t],
   )
@@ -50,7 +50,8 @@ export function UserCreatePage() {
           roles: roleIds,
           username: value.username.trim(),
         })
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
@@ -66,10 +67,10 @@ export function UserCreatePage() {
         <CardDescription>{t('users.create.description')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
           <FieldGroup>
             <form.AppField name='username'>
-              {(field) => (
+              {field => (
                 <field.TextField
                   label={t('users.columns.username')}
                   placeholder={t('users.form.usernamePlaceholder')}
@@ -78,7 +79,7 @@ export function UserCreatePage() {
               )}
             </form.AppField>
             <form.AppField name='password'>
-              {(field) => (
+              {field => (
                 <field.PasswordField
                   label={t('users.form.password')}
                   placeholder={t('users.form.passwordPlaceholder')}
@@ -87,7 +88,7 @@ export function UserCreatePage() {
               )}
             </form.AppField>
             <form.AppField name='email'>
-              {(field) => (
+              {field => (
                 <field.TextField
                   label={t('users.columns.email')}
                   placeholder={t('users.form.emailPlaceholder')}
@@ -111,20 +112,22 @@ export function UserCreatePage() {
                   variant='outline'
                 >
                   <span className='flex flex-1 flex-wrap items-center gap-1'>
-                    {roleIds.length === 0 ? (
-                      <span className='text-muted-foreground'>
-                        {t('users.form.rolesPlaceholder')}
-                      </span>
-                    ) : (
-                      roleItems.map((role) => (
-                        <Badge
-                          key={role.id}
-                          variant='secondary'
-                        >
-                          {role.display_name || role.name}
-                        </Badge>
-                      ))
-                    )}
+                    {roleIds.length === 0
+                      ? (
+                          <span className='text-muted-foreground'>
+                            {t('users.form.rolesPlaceholder')}
+                          </span>
+                        )
+                      : (
+                          roleItems.map(role => (
+                            <Badge
+                              key={role.id}
+                              variant='secondary'
+                            >
+                              {role.display_name || role.name}
+                            </Badge>
+                          ))
+                        )}
                   </span>
                   <span className='i-lucide-chevron-down size-4 shrink-0 opacity-50' />
                 </Button>

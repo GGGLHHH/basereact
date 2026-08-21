@@ -1,11 +1,12 @@
+import type { AdminUserView } from '#/generated/api-types'
+import type { UserRowActions } from './user-table-columns'
+
 import { useMemo } from 'react'
+
 import { useTranslation } from 'react-i18next'
 
-import type { AdminUserView } from '#/generated/api-types'
-
 import { DataTable } from '@/components/table/data-table'
-
-import { createUserColumns, type UserRowActions } from './user-table-columns'
+import { createUserColumns } from './user-table-columns'
 
 interface UserTableProps extends UserRowActions {
   data: AdminUserView[]

@@ -1,8 +1,8 @@
+import type { ComponentProps } from 'react'
 import { useDebounceFn } from 'ahooks'
-import { type ComponentProps } from 'react'
 
-import { useControllableState } from '@/hooks/use-controllable-state'
 import { Input } from '@/components/ui/input'
+import { useControllableState } from '@/hooks/use-controllable-state'
 import { cn } from '@/lib/utils'
 
 export interface SearchInputProps extends Omit<
@@ -43,9 +43,12 @@ export function SearchInput({
     onChange,
     fallback: '',
   })
+  // ahooks 把 run 的类型转发给 lodash 的 `DebouncedFunc`,而本仓库没装 @types/lodash,
+  // run 会落成 error type(any 传染到调用处)。按 useDebounceFn 的 d.ts 收窄回真实签名:
+  // run 就是「同参数的 fn,返回值可能因去抖而缺席」,这里只当副作用用,返回 void。
   const { run: commit } = useDebounceFn((raw: string) => onSearch(raw.trim() || undefined), {
     wait: debounceMs,
-  })
+  }) as { run: (raw: string) => void }
 
   return (
     <div className={cn('relative', className)}>

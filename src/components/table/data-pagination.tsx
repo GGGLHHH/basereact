@@ -1,3 +1,13 @@
+import type { ReactNode } from 'react'
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+} from '@tabler/icons-react'
+import { useControllableValue } from 'ahooks'
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Pagination,
   PaginationContent,
@@ -13,22 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
-} from '@tabler/icons-react'
-import { useControllableValue } from 'ahooks'
-import { useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import type { ReactNode } from 'react'
 
 const DEFAULT_LIMIT_OPTIONS = [10, 20, 50, 100]
-const NAV_BUTTON_CLASS =
-  'h-8 w-8 rounded-lg border border-border bg-card p-0 text-foreground shadow-none transition-colors hover:bg-muted hover:text-foreground [&_svg]:h-4 [&_svg]:w-4'
-const SELECT_TRIGGER_CLASS =
-  'h-9 w-20 rounded-lg border-border bg-card px-3 text-sm font-normal text-foreground shadow-xs'
+const NAV_BUTTON_CLASS
+  = 'h-8 w-8 rounded-lg border border-border bg-card p-0 text-foreground shadow-none transition-colors hover:bg-muted hover:text-foreground [&_svg]:h-4 [&_svg]:w-4'
+const SELECT_TRIGGER_CLASS
+  = 'h-9 w-20 rounded-lg border-border bg-card px-3 text-sm font-normal text-foreground shadow-xs'
 const TEXT_CLASS = 'whitespace-nowrap text-sm font-medium text-foreground'
 
 interface DataPaginationProps {
@@ -45,7 +45,7 @@ interface DataPaginationProps {
   page?: number
   // 摘要文案(如「N of total」)收敛进分页器内:摘要在左、控件在右(justify-between)。
   // count 由外部给(如当前页行数 / 总数),分页器自身不知数据。
-  summary?: (state: { count: number; limit: number; page: number; total: number }) => ReactNode
+  summary?: (state: { count: number, limit: number, page: number, total: number }) => ReactNode
   summaryClassName?: string
 }
 
@@ -94,27 +94,33 @@ export function DataPagination(props: DataPaginationProps) {
   }
 
   const goPrevious = () => {
-    if (canPrevious) setPage(page - 1)
+    if (canPrevious)
+      setPage(page - 1)
   }
   const goFirst = () => {
-    if (canPrevious) setPage(1)
+    if (canPrevious)
+      setPage(1)
   }
   const goNext = () => {
-    if (canNext) setPage(page + 1)
+    if (canNext)
+      setPage(page + 1)
   }
   const goLast = () => {
-    if (canNext) setPage(totalPages)
+    if (canNext)
+      setPage(totalPages)
   }
 
   return (
     <div className={cn('flex items-center justify-between gap-4', className)}>
-      {summary ? (
-        <div className={cn('text-sm text-muted-foreground', summaryClassName)}>
-          {summary({ count: count ?? 0, limit, page, total })}
-        </div>
-      ) : (
-        <div />
-      )}
+      {summary
+        ? (
+            <div className={cn('text-sm text-muted-foreground', summaryClassName)}>
+              {summary({ count: count ?? 0, limit, page, total })}
+            </div>
+          )
+        : (
+            <div />
+          )}
       <div className='flex items-center gap-8'>
         {showLimitChanger && (
           <div className='flex items-center gap-2'>
@@ -122,7 +128,9 @@ export function DataPagination(props: DataPaginationProps) {
             <Select
               value={String(limit)}
               onValueChange={(value) => {
-                if (value) handleLimitChange(value)
+                // 清空(null)与空串都不是有效的每页条数,忽略。
+                if (value !== null && value !== '')
+                  handleLimitChange(value)
               }}
             >
               <SelectTrigger

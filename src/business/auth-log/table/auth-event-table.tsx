@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-
 import type { AuthEvent } from '#/routes/admin/_shell/-auth-log/types'
+import { useMemo } from 'react'
+
+import { useTranslation } from 'react-i18next'
 
 import { DataTable } from '@/components/table/data-table'
 

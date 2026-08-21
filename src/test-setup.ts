@@ -21,12 +21,10 @@ function memoryStorage(): Storage {
     get length() {
       return store.size
     },
-  } as Storage
+  }
 }
 
 const target = globalThis as unknown as Record<string, Storage | undefined>
 for (const name of ['localStorage', 'sessionStorage']) {
-  if (target[name] == null) {
-    target[name] = memoryStorage()
-  }
+  target[name] ??= memoryStorage()
 }

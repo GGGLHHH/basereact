@@ -1,7 +1,7 @@
-import '@tanstack/react-router'
-
 import type { AccessPolicyKey } from '#/generated/access-policies'
+
 import type route from '#/i18n/locales/en-US/route.json'
+import '@tanstack/react-router'
 
 // route.json 拆两块:titles(页面/菜单标题)、menuGroups(菜单分组标签)。
 // key 带对象前缀,消费端 t('titles.x') / t('menuGroups.x')。

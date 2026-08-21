@@ -1,16 +1,17 @@
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
-import { defineConfig, loadEnv } from 'vite'
-import UnoCSS from 'unocss/vite'
-import { codeInspectorPlugin } from 'code-inspector-plugin'
-import { openapiCodegen } from 'vite-plugin-openapi-codegen'
-import { devtools } from '@tanstack/devtools-vite'
-
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { nitro } from 'nitro/vite'
-
-import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { devtools } from '@tanstack/devtools-vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import viteReact from '@vitejs/plugin-react'
+import { codeInspectorPlugin } from 'code-inspector-plugin'
+
+import { nitro } from 'nitro/vite'
+import UnoCSS from 'unocss/vite'
+
+import { defineConfig, loadEnv } from 'vite'
+import { openapiCodegen } from 'vite-plugin-openapi-codegen'
 
 // 端口不写死:读仓库根的 .env(没有该文件也行,?? 后的兜底即原来的值)。见 .env.example。
 // envDir 用本文件所在目录而非 cwd —— vitest.config.ts 也调本函数,不能假定 cwd。

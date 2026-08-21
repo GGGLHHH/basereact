@@ -10,7 +10,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('SearchInput', () => {
+describe('searchInput', () => {
   it('debounces and normalizes (trim → undefined) before emitting onSearch', () => {
     vi.useFakeTimers()
     const onSearch = vi.fn<(v: string | undefined) => void>()

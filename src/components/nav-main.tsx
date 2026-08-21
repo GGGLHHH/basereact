@@ -1,3 +1,5 @@
+import { IconChevronRight } from '@tabler/icons-react'
+import { useTranslation } from 'react-i18next'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
@@ -9,8 +11,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
-import { IconChevronRight } from '@tabler/icons-react'
-import { useTranslation } from 'react-i18next'
 
 export function NavMain({
   items,
@@ -31,7 +31,7 @@ export function NavMain({
     <SidebarGroup>
       <SidebarGroupLabel>{t('nav.main.platform')}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {items.map(item => (
           <Collapsible
             key={item.title}
             defaultOpen={item.isActive}
@@ -45,7 +45,7 @@ export function NavMain({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {item.items?.map((subItem) => (
+                {item.items?.map(subItem => (
                   <SidebarMenuSubItem key={subItem.title}>
                     <SidebarMenuSubButton render={<a href={subItem.url} />}>
                       <span>{subItem.title}</span>

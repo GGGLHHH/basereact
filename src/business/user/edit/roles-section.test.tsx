@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { AdminUserView, RoleView } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AdminUserView, RoleView } from '#/generated/api-types'
+import { RolesSection } from './roles-section'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
@@ -35,8 +37,6 @@ vi.mock('@/api/users', () => ({
   useSetUserRoles: () => ({ isPending: false, mutateAsync: h.mutateAsync }),
 }))
 
-import { RolesSection } from './roles-section'
-
 function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
   return {
     avatar_url: null,
@@ -62,7 +62,7 @@ beforeEach(() => {
       disconnect() {}
     },
   )
-  if (!(Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture) {
+  if (typeof (Element.prototype as { hasPointerCapture?: unknown }).hasPointerCapture !== 'function') {
     Element.prototype.hasPointerCapture = vi.fn<() => boolean>(() => false)
     Element.prototype.releasePointerCapture = vi.fn<() => void>()
     Element.prototype.setPointerCapture = vi.fn<() => void>()
@@ -76,8 +76,8 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('RolesSection', () => {
-  it("seeds the user's current roles by mapping names to catalog labels", () => {
+describe('rolesSection', () => {
+  it('seeds the user\'s current roles by mapping names to catalog labels', () => {
     render(<RolesSection user={fakeUser({ roles: ['admin'] })} />)
     // roles:['admin'] (name) → catalog id r-admin → label 'Admin' shown in the trigger.
     expect(screen.getByText('Admin')).toBeTruthy()

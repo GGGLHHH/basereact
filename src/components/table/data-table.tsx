@@ -1,20 +1,20 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { cn } from '@/lib/utils'
 import type {
   Column,
   ColumnDef,
   ColumnPinningState,
-  Table as TableType,
   TableMeta,
+  Table as TableType,
 } from '@tanstack/react-table'
+import type { CSSProperties, ReactNode } from 'react'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
 import { ScrollArea } from '@/components/scroll-area'
-import { Spinner } from '@/components/ui/spinner'
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table'
+import { Spinner } from '@/components/ui/spinner'
+import { cn } from '@/lib/utils'
 
 import { DataPagination } from './data-pagination'
 
@@ -25,8 +25,8 @@ const AUTO_FIT_SAFETY_BUFFER = 4
 const INFINITE_SCROLL_THRESHOLD_PX = 64
 
 const DEFAULT_CARD_CLASSNAME = 'rounded-[8px] border border-border bg-card shadow-xs'
-const GALLERY_CARD_CLASSNAME =
-  'overflow-hidden rounded-[28px] border border-border bg-card shadow-sm'
+const GALLERY_CARD_CLASSNAME
+  = 'overflow-hidden rounded-[28px] border border-border bg-card shadow-sm'
 
 export type DataTableVariant = 'default' | 'gallery'
 
@@ -51,7 +51,7 @@ export interface DataTablePaginationState {
   onPageChange?: (page: number) => void
   page: number
   showLimitChanger?: boolean
-  summary?: (state: { count: number; limit: number; page: number; total: number }) => ReactNode
+  summary?: (state: { count: number, limit: number, page: number, total: number }) => ReactNode
   summaryClassName?: string
   total: number
 }
@@ -83,20 +83,23 @@ const STABLE_ANCESTOR_SLOTS = new Set([
 ])
 
 function getColumnDefId<TData>(columnDef: ColumnDef<TData, any>): string | undefined {
-  if (columnDef.id) return columnDef.id
+  if (columnDef.id !== undefined && columnDef.id !== '')
+    return columnDef.id
 
   const accessorKey = (columnDef as { accessorKey?: unknown }).accessorKey
-  if (typeof accessorKey === 'string') return accessorKey.replace(/\./g, '_')
-  if (typeof accessorKey === 'number') return String(accessorKey)
+  if (typeof accessorKey === 'string')
+    return accessorKey.replace(/\./g, '_')
+  if (typeof accessorKey === 'number')
+    return String(accessorKey)
 
   return typeof columnDef.header === 'string' ? columnDef.header : undefined
 }
 
 function hasExplicitColumnSizing<TData>(columnDef: ColumnDef<TData, any>): boolean {
   return (
-    columnDef.size !== undefined ||
-    columnDef.minSize !== undefined ||
-    columnDef.maxSize !== undefined
+    columnDef.size !== undefined
+    || columnDef.minSize !== undefined
+    || columnDef.maxSize !== undefined
   )
 }
 
@@ -106,7 +109,7 @@ function getExplicitlySizedColumnIds<TData>(columns: ColumnDef<TData, any>[]): S
   const collect = (columnDefs: ColumnDef<TData, any>[]) => {
     for (const columnDef of columnDefs) {
       const id = getColumnDefId(columnDef)
-      if (id && hasExplicitColumnSizing(columnDef)) {
+      if (id !== undefined && id !== '' && hasExplicitColumnSizing(columnDef)) {
         ids.add(id)
       }
 
@@ -125,7 +128,8 @@ function findLimitedHeightAncestor(start: HTMLElement): HTMLElement {
   let cur: HTMLElement | null = start.parentElement
   while (cur && cur !== document.body) {
     const slot = cur.dataset.slot
-    if (slot && STABLE_ANCESTOR_SLOTS.has(slot)) return cur
+    if (slot !== undefined && STABLE_ANCESTOR_SLOTS.has(slot))
+      return cur
     cur = cur.parentElement
   }
   return document.documentElement
@@ -140,28 +144,30 @@ function measureReservedAfter(start: HTMLElement, end: HTMLElement): number {
     const parentStyle = window.getComputedStyle(parent)
     const children = Array.from(parent.children) as HTMLElement[]
     const idx = children.indexOf(cur)
-    if (idx < 0) break
+    if (idx < 0)
+      break
 
     let prevBottom = cur.getBoundingClientRect().bottom
     for (let i = idx + 1; i < children.length; i++) {
       const sibling = children[i]
       const sStyle = window.getComputedStyle(sibling)
       if (
-        sStyle.display === 'none' ||
-        sStyle.position === 'absolute' ||
-        sStyle.position === 'fixed'
+        sStyle.display === 'none'
+        || sStyle.position === 'absolute'
+        || sStyle.position === 'fixed'
       ) {
         continue
       }
       const sRect = sibling.getBoundingClientRect()
       const gap = sRect.top - prevBottom
-      if (gap > 0) reserved += gap
+      if (gap > 0)
+        reserved += gap
       reserved += sRect.height
       prevBottom = sRect.bottom
     }
 
     if (parent !== end) {
-      reserved += parseFloat(parentStyle.paddingBottom) || 0
+      reserved += Number.parseFloat(parentStyle.paddingBottom) || 0
     }
 
     cur = parent
@@ -177,8 +183,8 @@ function computeAutoFitHeight(container: HTMLElement, safetyBuffer: number): num
   // documentElement's height includes the table itself, so measuring its rect
   // feeds our own height back into the computation (2px/frame ratchet collapse
   // in document-flow layouts). The viewport is the stable bound there.
-  const ancestorBottom =
-    ancestor === document.documentElement
+  const ancestorBottom
+    = ancestor === document.documentElement
       ? window.innerHeight
       : ancestor.getBoundingClientRect().bottom
   return ancestorBottom - containerRect.top - reserved - safetyBuffer
@@ -194,15 +200,18 @@ function useAutoFitHeight(
   containerRef: React.RefObject<HTMLElement | null>,
   { enabled, minHeight, safetyBuffer }: UseAutoFitHeightOptions,
 ): number | undefined {
-  const [height, setHeight] = useState<number | undefined>(undefined)
+  // The measurement only means anything while auto-fit is on, so the disabled
+  // case is derived during render instead of reset from inside the effect
+  // (which would cost an extra render on every toggle).
+  const [measured, setMeasured] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (!enabled) {
-      setHeight(undefined)
       return
     }
     const container = containerRef.current
-    if (!container || typeof window === 'undefined') return
+    if (!container || typeof window === 'undefined')
+      return
 
     let rafId = 0
     const ancestor = findLimitedHeightAncestor(container)
@@ -211,9 +220,10 @@ function useAutoFitHeight(
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
         const node = containerRef.current
-        if (!node) return
+        if (!node)
+          return
         const next = computeAutoFitHeight(node, safetyBuffer)
-        setHeight(Math.max(Math.round(next), minHeight))
+        setMeasured(Math.max(Math.round(next), minHeight))
       })
     }
 
@@ -222,7 +232,8 @@ function useAutoFitHeight(
     let cur: HTMLElement | null = container
     const observed = new Set<Element>()
     const observe = (el: Element) => {
-      if (observed.has(el)) return
+      if (observed.has(el))
+        return
       observed.add(el)
       observer.observe(el)
     }
@@ -235,15 +246,15 @@ function useAutoFitHeight(
         const idx = children.indexOf(cur)
         for (let i = idx + 1; i < children.length; i++) observe(children[i])
       }
-      if (cur === ancestor) break
+      if (cur === ancestor)
+        break
       cur = cur.parentElement
     }
 
-    const ancestorScrollOff = (() => {
-      if (ancestor === document.documentElement) return () => {}
-      ancestor.addEventListener('scroll', recompute, { passive: true })
-      return () => ancestor.removeEventListener('scroll', recompute)
-    })()
+    // documentElement doesn't scroll itself — its "scroll" fires on window, and
+    // the layout it bounds only changes on resize, which is covered below.
+    const scrollAncestor = ancestor === document.documentElement ? null : ancestor
+    scrollAncestor?.addEventListener('scroll', recompute, { passive: true })
 
     window.addEventListener('resize', recompute)
     recompute()
@@ -251,12 +262,12 @@ function useAutoFitHeight(
     return () => {
       cancelAnimationFrame(rafId)
       observer.disconnect()
-      ancestorScrollOff()
+      scrollAncestor?.removeEventListener('scroll', recompute)
       window.removeEventListener('resize', recompute)
     }
   }, [enabled, minHeight, safetyBuffer, containerRef])
 
-  return height
+  return enabled ? measured : undefined
 }
 
 type PinnedCellLayer = 'body' | 'header'
@@ -280,7 +291,8 @@ function getPinnedColumnStyle<TData>(
         boxSizing: 'border-box',
       }
 
-  if (!pinned) return baseStyle
+  if (pinned === false)
+    return baseStyle
 
   // Background lives in classes (see PINNED_BODY_CELL_CLASSNAME / the header's
   // bg-muted): an opaque inline background would paint over the row's
@@ -364,8 +376,8 @@ function DataTableSurface<TData>({
 
   const virtualItems = rowVirtualizer.getVirtualItems()
   const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
-  const paddingBottom =
-    virtualItems.length > 0
+  const paddingBottom
+    = virtualItems.length > 0
       ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
       : 0
 
@@ -445,7 +457,7 @@ function DataTableSurface<TData>({
             ref={tableHeaderRef}
             className='bg-muted'
           >
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, idx, arr) => (
                   <TableHead
@@ -466,66 +478,70 @@ function DataTableSurface<TData>({
             ))}
           </TableHeader>
           <TableBody className='[&_tr:last-child]:border-b-0!'>
-            {hasData ? (
-              <>
-                {paddingTop > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingTop}px` }} />
-                  </tr>
-                )}
-                {virtualItems.map((virtualRow) => {
-                  const row = rows[virtualRow.index]
-                  return (
-                    <TableRow
-                      key={row.id}
-                      className={cn(
-                        'transition-colors hover:bg-muted',
-                        onRowClick ? 'cursor-pointer' : '',
-                      )}
-                      data-state={row.getIsSelected() && 'selected'}
-                      onClick={() => onRowClick?.(row.original)}
-                      style={{ height: `${rowHeight}px` }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className={cn(cell.column.getIsPinned() && PINNED_BODY_CELL_CLASSNAME)}
-                          style={getPinnedColumnStyle(
-                            cell.column,
-                            'body',
-                            explicitlySizedColumnIds,
+            {hasData
+              ? (
+                  <>
+                    {paddingTop > 0 && (
+                      <tr>
+                        <td style={{ height: `${paddingTop}px` }} />
+                      </tr>
+                    )}
+                    {virtualItems.map((virtualRow) => {
+                      const row = rows[virtualRow.index]
+                      return (
+                        <TableRow
+                          key={row.id}
+                          className={cn(
+                            'transition-colors hover:bg-muted',
+                            onRowClick ? 'cursor-pointer' : '',
                           )}
+                          data-state={row.getIsSelected() && 'selected'}
+                          onClick={() => onRowClick?.(row.original)}
+                          style={{ height: `${rowHeight}px` }}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  )
-                })}
-                {paddingBottom > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingBottom}px` }} />
-                  </tr>
+                          {row.getVisibleCells().map(cell => (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(cell.column.getIsPinned() !== false && PINNED_BODY_CELL_CLASSNAME)}
+                              style={getPinnedColumnStyle(
+                                cell.column,
+                                'body',
+                                explicitlySizedColumnIds,
+                              )}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      )
+                    })}
+                    {paddingBottom > 0 && (
+                      <tr>
+                        <td style={{ height: `${paddingBottom}px` }} />
+                      </tr>
+                    )}
+                  </>
+                )
+              : (
+                  <TableRow>
+                    <TableCell
+                      className='h-24 text-center'
+                      colSpan={table.getAllLeafColumns().length}
+                    >
+                      {emptyMessage}
+                    </TableCell>
+                  </TableRow>
                 )}
-              </>
-            ) : (
-              <TableRow>
-                <TableCell
-                  className='h-24 text-center'
-                  colSpan={table.getAllLeafColumns().length}
-                >
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </ScrollArea>
-      {infiniteScroll?.isFetchingNextPage && infiniteScroll.loadingMoreLabel ? (
-        <p className='py-3 text-center text-xs text-muted-foreground'>
-          {infiniteScroll.loadingMoreLabel}
-        </p>
-      ) : null}
+      {infiniteScroll?.isFetchingNextPage === true && Boolean(infiniteScroll.loadingMoreLabel)
+        ? (
+            <p className='py-3 text-center text-xs text-muted-foreground'>
+              {infiniteScroll.loadingMoreLabel}
+            </p>
+          )
+        : null}
     </div>
   )
 }
@@ -547,12 +563,16 @@ function TableLoadingOverlay({
   return (
     <div className='relative'>
       {children}
-      {isLoading ? (
-        <div className='absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-md bg-background/50 backdrop-blur-sm'>
-          <Spinner className='size-8' />
-          {text ? <p className='text-sm font-medium text-muted-foreground'>{text}</p> : null}
-        </div>
-      ) : null}
+      {isLoading
+        ? (
+            <div className='absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 rounded-md bg-background/50 backdrop-blur-sm'>
+              <Spinner className='size-8' />
+              {text !== undefined && text !== ''
+                ? <p className='text-sm font-medium text-muted-foreground'>{text}</p>
+                : null}
+            </div>
+          )
+        : null}
     </div>
   )
 }
@@ -590,11 +610,11 @@ export function DataTable<TData>({
   const pinnedColumnsKey = JSON.stringify(pinnedColumns ?? null)
   useEffect(() => {
     table.setColumnPinning(pinnedColumns ?? {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react/exhaustive-deps
   }, [table, pinnedColumnsKey])
 
-  const chromeClassName =
-    className ?? (variant === 'gallery' ? GALLERY_CARD_CLASSNAME : DEFAULT_CARD_CLASSNAME)
+  const chromeClassName
+    = className ?? (variant === 'gallery' ? GALLERY_CARD_CLASSNAME : DEFAULT_CARD_CLASSNAME)
   const count = pagination?.count ?? data.length
   const tableContent = (
     <DataTableSurface
@@ -621,20 +641,22 @@ export function DataTable<TData>({
       >
         {tableContent}
       </TableLoadingOverlay>
-      {pagination ? (
-        <DataPagination
-          className={cn(pagination.containerClassName, pagination.className)}
-          count={count}
-          limit={pagination.limit}
-          page={pagination.page}
-          showLimitChanger={pagination.showLimitChanger}
-          summary={pagination.summary}
-          summaryClassName={pagination.summaryClassName}
-          total={pagination.total}
-          onLimitChange={pagination.onLimitChange}
-          onPageChange={pagination.onPageChange}
-        />
-      ) : null}
+      {pagination
+        ? (
+            <DataPagination
+              className={cn(pagination.containerClassName, pagination.className)}
+              count={count}
+              limit={pagination.limit}
+              page={pagination.page}
+              showLimitChanger={pagination.showLimitChanger}
+              summary={pagination.summary}
+              summaryClassName={pagination.summaryClassName}
+              total={pagination.total}
+              onLimitChange={pagination.onLimitChange}
+              onPageChange={pagination.onPageChange}
+            />
+          )
+        : null}
     </>
   )
 }

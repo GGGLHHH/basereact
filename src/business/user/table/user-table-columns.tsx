@@ -1,8 +1,8 @@
-import { createColumnHelper } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 
 import type { TFunction } from 'i18next'
-import type { ColumnDef } from '@tanstack/react-table'
 import type { AdminUserView } from '#/generated/api-types'
+import { createColumnHelper } from '@tanstack/react-table'
 
 import { dash } from '@/business/common'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -31,46 +31,52 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
     size: 132,
     cell: ({ row }) => (
       <div className='flex items-center gap-0.5'>
-        {actions.onView ? (
-          <Button
-            aria-label={t('action.view')}
-            onClick={(event) => {
-              event.stopPropagation()
-              actions.onView?.(row.original)
-            }}
-            size='icon-sm'
-            variant='ghost'
-          >
-            <span className='i-lucide-eye size-4' />
-          </Button>
-        ) : null}
-        {actions.onEdit ? (
-          <Button
-            aria-label={t('action.edit')}
-            onClick={(event) => {
-              event.stopPropagation()
-              actions.onEdit?.(row.original)
-            }}
-            size='icon-sm'
-            variant='ghost'
-          >
-            <span className='i-lucide-pencil size-4' />
-          </Button>
-        ) : null}
-        {actions.onDelete ? (
-          <Button
-            aria-label={t('action.delete')}
-            className='text-destructive hover:text-destructive'
-            onClick={(event) => {
-              event.stopPropagation()
-              actions.onDelete?.(row.original)
-            }}
-            size='icon-sm'
-            variant='ghost'
-          >
-            <span className='i-lucide-trash-2 size-4' />
-          </Button>
-        ) : null}
+        {actions.onView
+          ? (
+              <Button
+                aria-label={t('action.view')}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  actions.onView?.(row.original)
+                }}
+                size='icon-sm'
+                variant='ghost'
+              >
+                <span className='i-lucide-eye size-4' />
+              </Button>
+            )
+          : null}
+        {actions.onEdit
+          ? (
+              <Button
+                aria-label={t('action.edit')}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  actions.onEdit?.(row.original)
+                }}
+                size='icon-sm'
+                variant='ghost'
+              >
+                <span className='i-lucide-pencil size-4' />
+              </Button>
+            )
+          : null}
+        {actions.onDelete
+          ? (
+              <Button
+                aria-label={t('action.delete')}
+                className='text-destructive hover:text-destructive'
+                onClick={(event) => {
+                  event.stopPropagation()
+                  actions.onDelete?.(row.original)
+                }}
+                size='icon-sm'
+                variant='ghost'
+              >
+                <span className='i-lucide-trash-2 size-4' />
+              </Button>
+            )
+          : null}
       </div>
     ),
   })
@@ -94,7 +100,7 @@ export function createUserColumns(
                 alt={u.display_name ?? u.username}
                 src={u.avatar_url ?? undefined}
               />
-              <AvatarFallback>{nameInitials(u.display_name || u.username)}</AvatarFallback>
+              <AvatarFallback>{nameInitials((u.display_name ?? '') || u.username)}</AvatarFallback>
             </Avatar>
             <div className='flex min-w-0 flex-col'>
               <span className='truncate font-medium'>{u.username}</span>
@@ -104,29 +110,31 @@ export function createUserColumns(
         )
       },
     }),
+    // cell 一律从 row.original 取值:列表声明为 UserColumnDef(= ColumnDef<_, any>,
+    // data-table 的异构列表要求),getValue() 会跟着退化成 any;row 始终是强类型的。
     columnHelper.accessor('display_name', {
       header: t('users.columns.displayName'),
-      cell: ({ getValue }) => dash(getValue()),
+      cell: ({ row }) => dash(row.original.display_name),
     }),
     columnHelper.accessor('roles', {
       header: t('users.columns.roles'),
       size: 180,
-      cell: ({ getValue }) => (
+      cell: ({ row }) => (
         <RoleBadges
           className='flex-nowrap'
           max={2}
-          roles={getValue()}
+          roles={row.original.roles}
         />
       ),
     }),
     columnHelper.accessor('email_verified', {
       header: t('users.columns.emailVerified'),
-      cell: ({ getValue }) => <VerifiedBadge verified={getValue()} />,
+      cell: ({ row }) => <VerifiedBadge verified={row.original.email_verified} />,
     }),
     columnHelper.accessor('created_at', {
       header: t('users.columns.createdAt'),
-      cell: ({ getValue }) => (
-        <span className='text-sm text-muted-foreground'>{formatDateTime(getValue())}</span>
+      cell: ({ row }) => (
+        <span className='text-sm text-muted-foreground'>{formatDateTime(row.original.created_at)}</span>
       ),
     }),
   ]

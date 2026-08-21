@@ -3,14 +3,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { PasswordSection } from './password-section'
+
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
 const h = vi.hoisted(() => ({ mutateAsync: vi.fn() }))
 vi.mock('@/api/users', () => ({
   useResetUserPassword: () => ({ isPending: false, mutateAsync: h.mutateAsync }),
 }))
-
-import { PasswordSection } from './password-section'
 
 beforeEach(() => {
   h.mutateAsync.mockReset().mockResolvedValue(undefined)
@@ -21,7 +21,7 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('PasswordSection', () => {
+describe('passwordSection', () => {
   it('resets the password to the entered value', async () => {
     render(<PasswordSection userId='u1' />)
 
@@ -39,7 +39,7 @@ describe('PasswordSection', () => {
     fireEvent.change(screen.getByLabelText(/New password/), { target: { value: 'ab' } })
     fireEvent.click(screen.getByRole('button', { name: 'Reset password' }))
 
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await new Promise(resolve => setTimeout(resolve, 30))
     expect(h.mutateAsync).not.toHaveBeenCalled()
   })
 })

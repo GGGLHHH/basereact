@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import type { ContentResponse, ObjectResponse } from '#/generated/api-types'
+
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   confirmUpload,
@@ -70,7 +70,7 @@ describe('uploadContentFlow', () => {
     const phases: string[] = []
     const result = await uploadContentFlow({
       file,
-      onProgress: (phase) => phases.push(phase),
+      onProgress: phase => phases.push(phase),
       request: { name: 'Hello' },
     })
 
@@ -105,13 +105,13 @@ describe('uploadContentFlow', () => {
     const phases: string[] = []
     const result = await uploadContentFlow({
       file,
-      onProgress: (phase) => phases.push(phase),
+      onProgress: phase => phases.push(phase),
       request: { name: 'Hello', tags: ['a', 'b'] },
     })
 
     expect(fetchMock).not.toHaveBeenCalled()
     expect(confirmUpload).not.toHaveBeenCalled()
-    const form = vi.mocked(uploadContent).mock.calls[0]?.[0].body as FormData
+    const form = vi.mocked(uploadContent).mock.calls[0]?.[0].body
     const filePart = form.get('file') as File
     expect(filePart.name).toBe('hello.txt')
     expect(filePart.type).toBe('text/plain')
@@ -149,7 +149,7 @@ describe('uploadContentFlow', () => {
     expect(prepareUpload).toHaveBeenCalledWith({
       body: { description: 'quarterly', file_name: 'report.md', mime_type: 'text/markdown' },
     })
-    const form = vi.mocked(uploadContent).mock.calls[0]?.[0].body as FormData
+    const form = vi.mocked(uploadContent).mock.calls[0]?.[0].body
     // file.type 为空时 part 的 mime 必须来自申报值,两条路径落库一致
     expect((form.get('file') as File).type).toBe('text/markdown')
     expect(updateContent).toHaveBeenCalledWith({

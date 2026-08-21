@@ -1,5 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { useControllableValue } from 'ahooks'
-import { type Dispatch, type SetStateAction } from 'react'
 
 export interface ControllableStateOptions<T> {
   /** 受控值。传了(非 undefined)即受控:state 恒等于此 prop。 */
@@ -37,9 +37,12 @@ export function useControllableState<T>({
   // 只在有值时挂键:ahooks 用 hasOwnProperty('value') 判受控,若把 undefined 也塞进去
   // 会被误判成「受控但值为 undefined」,输入框就锁死在 undefined。
   const props: ControllableStateOptions<T> = {}
-  if (value !== undefined) props.value = value
-  if (defaultValue !== undefined) props.defaultValue = defaultValue
-  if (onChange) props.onChange = onChange
+  if (value !== undefined)
+    props.value = value
+  if (defaultValue !== undefined)
+    props.defaultValue = defaultValue
+  if (onChange)
+    props.onChange = onChange
 
   return useControllableValue<T>(props, fallback === undefined ? {} : { defaultValue: fallback })
 }

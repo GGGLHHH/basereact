@@ -9,42 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as R404RouteImport } from './routes/404'
-import { Route as R403RouteImport } from './routes/403'
-import { Route as FrontendRouteRouteImport } from './routes/frontend/route'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as FrontendIndexRouteImport } from './routes/frontend/index'
+import { Route as R403RouteImport } from './routes/403'
+import { Route as R404RouteImport } from './routes/404'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as FrontendRouteRouteImport } from './routes/frontend/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as FrontendLoginRouteImport } from './routes/frontend/login'
-import { Route as FrontendShellRouteImport } from './routes/frontend/_shell'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminShellRouteImport } from './routes/admin/_shell'
-import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
-import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
-import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
-import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
-import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
-import { Route as AdminShellAuthLogRouteImport } from './routes/admin/_shell/auth-log'
-import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as FrontendIndexRouteImport } from './routes/frontend/index'
+import { Route as FrontendShellRouteImport } from './routes/frontend/_shell'
+import { Route as FrontendLoginRouteImport } from './routes/frontend/login'
 import { Route as AdminShell403RouteImport } from './routes/admin/_shell/403'
-import { Route as AdminShellUsersRouteRouteImport } from './routes/admin/_shell/users/route'
+import { Route as AdminShell404RouteImport } from './routes/admin/_shell/404'
+import { Route as AdminShellAuthLogRouteImport } from './routes/admin/_shell/auth-log'
+import { Route as AdminShellHomeRouteImport } from './routes/admin/_shell/home'
 import { Route as AdminShellNestedRouteRouteImport } from './routes/admin/_shell/nested/route'
-import { Route as AdminShellUsersIndexRouteImport } from './routes/admin/_shell/users/index'
+import { Route as AdminShellProfileRouteImport } from './routes/admin/_shell/profile'
+import { Route as AdminShellUsersRouteRouteImport } from './routes/admin/_shell/users/route'
+import { Route as AdminShellWidgetsRouteImport } from './routes/admin/_shell/widgets'
+import { Route as FrontendShellAboutRouteImport } from './routes/frontend/_shell/about'
+import { Route as FrontendShellHomeRouteImport } from './routes/frontend/_shell/home'
 import { Route as AdminShellNestedIndexRouteImport } from './routes/admin/_shell/nested/index'
-import { Route as AdminShellUsersNewRouteImport } from './routes/admin/_shell/users/new'
-import { Route as AdminShellUsersUserIdRouteImport } from './routes/admin/_shell/users/$userId'
 import { Route as AdminShellNestedOverviewRouteImport } from './routes/admin/_shell/nested/overview'
 import { Route as AdminShellNestedReportsRouteRouteImport } from './routes/admin/_shell/nested/reports/route'
+import { Route as AdminShellUsersIndexRouteImport } from './routes/admin/_shell/users/index'
+import { Route as AdminShellUsersUserIdRouteImport } from './routes/admin/_shell/users/$userId'
+import { Route as AdminShellUsersNewRouteImport } from './routes/admin/_shell/users/new'
 import { Route as AdminShellNestedReportsIndexRouteImport } from './routes/admin/_shell/nested/reports/index'
-import { Route as AdminShellUsersUserIdEditRouteImport } from './routes/admin/_shell/users/$userId_.edit'
 import { Route as AdminShellNestedReportsDailyRouteImport } from './routes/admin/_shell/nested/reports/daily'
 import { Route as AdminShellNestedReportsRegionsRouteRouteImport } from './routes/admin/_shell/nested/reports/regions/route'
+import { Route as AdminShellUsersUserIdEditRouteImport } from './routes/admin/_shell/users/$userId_.edit'
 import { Route as AdminShellNestedReportsRegionsIndexRouteImport } from './routes/admin/_shell/nested/reports/regions/index'
 
-const R404Route = R404RouteImport.update({
-  id: '/404',
-  path: '/404',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const R403Route = R403RouteImport.update({
@@ -52,9 +52,9 @@ const R403Route = R403RouteImport.update({
   path: '/403',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FrontendRouteRoute = FrontendRouteRouteImport.update({
-  id: '/frontend',
-  path: '/frontend',
+const R404Route = R404RouteImport.update({
+  id: '/404',
+  path: '/404',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -62,67 +62,42 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const FrontendRouteRoute = FrontendRouteRouteImport.update({
+  id: '/frontend',
+  path: '/frontend',
   getParentRoute: () => rootRouteImport,
-} as any)
-const FrontendIndexRoute = FrontendIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => FrontendRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const FrontendLoginRoute = FrontendLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => FrontendRouteRoute,
-} as any)
-const FrontendShellRoute = FrontendShellRouteImport.update({
+const AdminShellRoute = AdminShellRouteImport.update({
   id: '/_shell',
-  getParentRoute: () => FrontendRouteRoute,
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminShellRoute = AdminShellRouteImport.update({
+const FrontendIndexRoute = FrontendIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FrontendRouteRoute,
+} as any)
+const FrontendShellRoute = FrontendShellRouteImport.update({
   id: '/_shell',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => FrontendRouteRoute,
 } as any)
-const FrontendShellHomeRoute = FrontendShellHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => FrontendShellRoute,
+const FrontendLoginRoute = FrontendLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => FrontendRouteRoute,
 } as any)
-const FrontendShellAboutRoute = FrontendShellAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => FrontendShellRoute,
-} as any)
-const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
-  id: '/widgets',
-  path: '/widgets',
-  getParentRoute: () => AdminShellRoute,
-} as any)
-const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AdminShellRoute,
-} as any)
-const AdminShellHomeRoute = AdminShellHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AdminShellRoute,
-} as any)
-const AdminShellAuthLogRoute = AdminShellAuthLogRouteImport.update({
-  id: '/auth-log',
-  path: '/auth-log',
+const AdminShell403Route = AdminShell403RouteImport.update({
+  id: '/403',
+  path: '/403',
   getParentRoute: () => AdminShellRoute,
 } as any)
 const AdminShell404Route = AdminShell404RouteImport.update({
@@ -130,14 +105,14 @@ const AdminShell404Route = AdminShell404RouteImport.update({
   path: '/404',
   getParentRoute: () => AdminShellRoute,
 } as any)
-const AdminShell403Route = AdminShell403RouteImport.update({
-  id: '/403',
-  path: '/403',
+const AdminShellAuthLogRoute = AdminShellAuthLogRouteImport.update({
+  id: '/auth-log',
+  path: '/auth-log',
   getParentRoute: () => AdminShellRoute,
 } as any)
-const AdminShellUsersRouteRoute = AdminShellUsersRouteRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminShellHomeRoute = AdminShellHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => AdminShellRoute,
 } as any)
 const AdminShellNestedRouteRoute = AdminShellNestedRouteRouteImport.update({
@@ -145,25 +120,35 @@ const AdminShellNestedRouteRoute = AdminShellNestedRouteRouteImport.update({
   path: '/nested',
   getParentRoute: () => AdminShellRoute,
 } as any)
-const AdminShellUsersIndexRoute = AdminShellUsersIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminShellUsersRouteRoute,
+const AdminShellProfileRoute = AdminShellProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellUsersRouteRoute = AdminShellUsersRouteRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellWidgetsRoute = AdminShellWidgetsRouteImport.update({
+  id: '/widgets',
+  path: '/widgets',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const FrontendShellAboutRoute = FrontendShellAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => FrontendShellRoute,
+} as any)
+const FrontendShellHomeRoute = FrontendShellHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => FrontendShellRoute,
 } as any)
 const AdminShellNestedIndexRoute = AdminShellNestedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminShellNestedRouteRoute,
-} as any)
-const AdminShellUsersNewRoute = AdminShellUsersNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AdminShellUsersRouteRoute,
-} as any)
-const AdminShellUsersUserIdRoute = AdminShellUsersUserIdRouteImport.update({
-  id: '/$userId',
-  path: '/$userId',
-  getParentRoute: () => AdminShellUsersRouteRoute,
 } as any)
 const AdminShellNestedOverviewRoute =
   AdminShellNestedOverviewRouteImport.update({
@@ -177,17 +162,26 @@ const AdminShellNestedReportsRouteRoute =
     path: '/reports',
     getParentRoute: () => AdminShellNestedRouteRoute,
   } as any)
+const AdminShellUsersIndexRoute = AdminShellUsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminShellUsersRouteRoute,
+} as any)
+const AdminShellUsersUserIdRoute = AdminShellUsersUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminShellUsersRouteRoute,
+} as any)
+const AdminShellUsersNewRoute = AdminShellUsersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminShellUsersRouteRoute,
+} as any)
 const AdminShellNestedReportsIndexRoute =
   AdminShellNestedReportsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AdminShellNestedReportsRouteRoute,
-  } as any)
-const AdminShellUsersUserIdEditRoute =
-  AdminShellUsersUserIdEditRouteImport.update({
-    id: '/$userId_/edit',
-    path: '/$userId/edit',
-    getParentRoute: () => AdminShellUsersRouteRoute,
   } as any)
 const AdminShellNestedReportsDailyRoute =
   AdminShellNestedReportsDailyRouteImport.update({
@@ -200,6 +194,12 @@ const AdminShellNestedReportsRegionsRouteRoute =
     id: '/regions',
     path: '/regions',
     getParentRoute: () => AdminShellNestedReportsRouteRoute,
+  } as any)
+const AdminShellUsersUserIdEditRoute =
+  AdminShellUsersUserIdEditRouteImport.update({
+    id: '/$userId_/edit',
+    path: '/$userId/edit',
+    getParentRoute: () => AdminShellUsersRouteRoute,
   } as any)
 const AdminShellNestedReportsRegionsIndexRoute =
   AdminShellNestedReportsRegionsIndexRouteImport.update({
@@ -406,11 +406,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/404': {
-      id: '/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof R404RouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/403': {
@@ -420,11 +420,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R403RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/frontend': {
-      id: '/frontend'
-      path: '/frontend'
-      fullPath: '/frontend'
-      preLoaderRoute: typeof FrontendRouteRouteImport
+    '/404': {
+      id: '/404'
+      path: '/404'
+      fullPath: '/404'
+      preLoaderRoute: typeof R404RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -434,46 +434,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/frontend': {
+      id: '/frontend'
+      path: '/frontend'
+      fullPath: '/frontend'
+      preLoaderRoute: typeof FrontendRouteRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/frontend/': {
-      id: '/frontend/'
-      path: '/'
-      fullPath: '/frontend/'
-      preLoaderRoute: typeof FrontendIndexRouteImport
-      parentRoute: typeof FrontendRouteRoute
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/frontend/login': {
-      id: '/frontend/login'
-      path: '/login'
-      fullPath: '/frontend/login'
-      preLoaderRoute: typeof FrontendLoginRouteImport
-      parentRoute: typeof FrontendRouteRoute
-    }
-    '/frontend/_shell': {
-      id: '/frontend/_shell'
-      path: ''
-      fullPath: '/frontend'
-      preLoaderRoute: typeof FrontendShellRouteImport
-      parentRoute: typeof FrontendRouteRoute
-    }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/_shell': {
@@ -483,46 +455,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/frontend/_shell/home': {
-      id: '/frontend/_shell/home'
-      path: '/home'
-      fullPath: '/frontend/home'
-      preLoaderRoute: typeof FrontendShellHomeRouteImport
-      parentRoute: typeof FrontendShellRoute
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
-    '/frontend/_shell/about': {
-      id: '/frontend/_shell/about'
-      path: '/about'
-      fullPath: '/frontend/about'
-      preLoaderRoute: typeof FrontendShellAboutRouteImport
-      parentRoute: typeof FrontendShellRoute
+    '/frontend/': {
+      id: '/frontend/'
+      path: '/'
+      fullPath: '/frontend/'
+      preLoaderRoute: typeof FrontendIndexRouteImport
+      parentRoute: typeof FrontendRouteRoute
     }
-    '/admin/_shell/widgets': {
-      id: '/admin/_shell/widgets'
-      path: '/widgets'
-      fullPath: '/admin/widgets'
-      preLoaderRoute: typeof AdminShellWidgetsRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/frontend/_shell': {
+      id: '/frontend/_shell'
+      path: ''
+      fullPath: '/frontend'
+      preLoaderRoute: typeof FrontendShellRouteImport
+      parentRoute: typeof FrontendRouteRoute
     }
-    '/admin/_shell/profile': {
-      id: '/admin/_shell/profile'
-      path: '/profile'
-      fullPath: '/admin/profile'
-      preLoaderRoute: typeof AdminShellProfileRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/frontend/login': {
+      id: '/frontend/login'
+      path: '/login'
+      fullPath: '/frontend/login'
+      preLoaderRoute: typeof FrontendLoginRouteImport
+      parentRoute: typeof FrontendRouteRoute
     }
-    '/admin/_shell/home': {
-      id: '/admin/_shell/home'
-      path: '/home'
-      fullPath: '/admin/home'
-      preLoaderRoute: typeof AdminShellHomeRouteImport
-      parentRoute: typeof AdminShellRoute
-    }
-    '/admin/_shell/auth-log': {
-      id: '/admin/_shell/auth-log'
-      path: '/auth-log'
-      fullPath: '/admin/auth-log'
-      preLoaderRoute: typeof AdminShellAuthLogRouteImport
+    '/admin/_shell/403': {
+      id: '/admin/_shell/403'
+      path: '/403'
+      fullPath: '/admin/403'
+      preLoaderRoute: typeof AdminShell403RouteImport
       parentRoute: typeof AdminShellRoute
     }
     '/admin/_shell/404': {
@@ -532,18 +497,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShell404RouteImport
       parentRoute: typeof AdminShellRoute
     }
-    '/admin/_shell/403': {
-      id: '/admin/_shell/403'
-      path: '/403'
-      fullPath: '/admin/403'
-      preLoaderRoute: typeof AdminShell403RouteImport
+    '/admin/_shell/auth-log': {
+      id: '/admin/_shell/auth-log'
+      path: '/auth-log'
+      fullPath: '/admin/auth-log'
+      preLoaderRoute: typeof AdminShellAuthLogRouteImport
       parentRoute: typeof AdminShellRoute
     }
-    '/admin/_shell/users': {
-      id: '/admin/_shell/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminShellUsersRouteRouteImport
+    '/admin/_shell/home': {
+      id: '/admin/_shell/home'
+      path: '/home'
+      fullPath: '/admin/home'
+      preLoaderRoute: typeof AdminShellHomeRouteImport
       parentRoute: typeof AdminShellRoute
     }
     '/admin/_shell/nested': {
@@ -553,12 +518,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellNestedRouteRouteImport
       parentRoute: typeof AdminShellRoute
     }
-    '/admin/_shell/users/': {
-      id: '/admin/_shell/users/'
-      path: '/'
-      fullPath: '/admin/users/'
-      preLoaderRoute: typeof AdminShellUsersIndexRouteImport
-      parentRoute: typeof AdminShellUsersRouteRoute
+    '/admin/_shell/profile': {
+      id: '/admin/_shell/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AdminShellProfileRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/users': {
+      id: '/admin/_shell/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminShellUsersRouteRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/widgets': {
+      id: '/admin/_shell/widgets'
+      path: '/widgets'
+      fullPath: '/admin/widgets'
+      preLoaderRoute: typeof AdminShellWidgetsRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/frontend/_shell/about': {
+      id: '/frontend/_shell/about'
+      path: '/about'
+      fullPath: '/frontend/about'
+      preLoaderRoute: typeof FrontendShellAboutRouteImport
+      parentRoute: typeof FrontendShellRoute
+    }
+    '/frontend/_shell/home': {
+      id: '/frontend/_shell/home'
+      path: '/home'
+      fullPath: '/frontend/home'
+      preLoaderRoute: typeof FrontendShellHomeRouteImport
+      parentRoute: typeof FrontendShellRoute
     }
     '/admin/_shell/nested/': {
       id: '/admin/_shell/nested/'
@@ -566,20 +559,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/nested/'
       preLoaderRoute: typeof AdminShellNestedIndexRouteImport
       parentRoute: typeof AdminShellNestedRouteRoute
-    }
-    '/admin/_shell/users/new': {
-      id: '/admin/_shell/users/new'
-      path: '/new'
-      fullPath: '/admin/users/new'
-      preLoaderRoute: typeof AdminShellUsersNewRouteImport
-      parentRoute: typeof AdminShellUsersRouteRoute
-    }
-    '/admin/_shell/users/$userId': {
-      id: '/admin/_shell/users/$userId'
-      path: '/$userId'
-      fullPath: '/admin/users/$userId'
-      preLoaderRoute: typeof AdminShellUsersUserIdRouteImport
-      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/overview': {
       id: '/admin/_shell/nested/overview'
@@ -595,19 +574,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShellNestedReportsRouteRouteImport
       parentRoute: typeof AdminShellNestedRouteRoute
     }
+    '/admin/_shell/users/': {
+      id: '/admin/_shell/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminShellUsersIndexRouteImport
+      parentRoute: typeof AdminShellUsersRouteRoute
+    }
+    '/admin/_shell/users/$userId': {
+      id: '/admin/_shell/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminShellUsersUserIdRouteImport
+      parentRoute: typeof AdminShellUsersRouteRoute
+    }
+    '/admin/_shell/users/new': {
+      id: '/admin/_shell/users/new'
+      path: '/new'
+      fullPath: '/admin/users/new'
+      preLoaderRoute: typeof AdminShellUsersNewRouteImport
+      parentRoute: typeof AdminShellUsersRouteRoute
+    }
     '/admin/_shell/nested/reports/': {
       id: '/admin/_shell/nested/reports/'
       path: '/'
       fullPath: '/admin/nested/reports/'
       preLoaderRoute: typeof AdminShellNestedReportsIndexRouteImport
       parentRoute: typeof AdminShellNestedReportsRouteRoute
-    }
-    '/admin/_shell/users/$userId_/edit': {
-      id: '/admin/_shell/users/$userId_/edit'
-      path: '/$userId/edit'
-      fullPath: '/admin/users/$userId/edit'
-      preLoaderRoute: typeof AdminShellUsersUserIdEditRouteImport
-      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/reports/daily': {
       id: '/admin/_shell/nested/reports/daily'
@@ -622,6 +615,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/nested/reports/regions'
       preLoaderRoute: typeof AdminShellNestedReportsRegionsRouteRouteImport
       parentRoute: typeof AdminShellNestedReportsRouteRoute
+    }
+    '/admin/_shell/users/$userId_/edit': {
+      id: '/admin/_shell/users/$userId_/edit'
+      path: '/$userId/edit'
+      fullPath: '/admin/users/$userId/edit'
+      preLoaderRoute: typeof AdminShellUsersUserIdEditRouteImport
+      parentRoute: typeof AdminShellUsersRouteRoute
     }
     '/admin/_shell/nested/reports/regions/': {
       id: '/admin/_shell/nested/reports/regions/'

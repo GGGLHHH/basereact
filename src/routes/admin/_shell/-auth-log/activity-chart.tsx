@@ -1,8 +1,8 @@
+import type { HourBucket } from './types'
+import type { ChartConfig } from '@/components/ui/chart'
+
 import { useTranslation } from 'react-i18next'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
-
-import type { ChartConfig } from '@/components/ui/chart'
-import type { HourBucket } from './types'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
@@ -86,12 +86,12 @@ export function ActivityChart({ data }: { data: HourBucket[] }) {
               className='font-mono text-[0.65rem]'
             />
             <ChartTooltip
-              content={
+              content={(
                 <ChartTooltipContent
-                  labelFormatter={(v) => hm(String(v))}
+                  labelFormatter={v => hm(String(v))}
                   className='font-mono'
                 />
-              }
+              )}
             />
             {/* 失败在下(贴底、显眼),成功堆其上 —— 失败带是你要盯的信号。 */}
             <Area

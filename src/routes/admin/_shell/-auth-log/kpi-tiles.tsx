@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next'
-
 import type { Kpi } from './types'
+
+import { useTranslation } from 'react-i18next'
 
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -27,12 +27,12 @@ function Tile({ label, toneVar, children, foot }: TileProps) {
         {label}
       </div>
       <div className='mt-3'>{children}</div>
-      {foot ? <div className='mt-2 text-xs text-muted-foreground'>{foot}</div> : null}
+      {foot != null ? <div className='mt-2 text-xs text-muted-foreground'>{foot}</div> : null}
     </Card>
   )
 }
 
-function Trend({ delta, invert = false }: { delta: number; invert?: boolean }) {
+function Trend({ delta, invert = false }: { delta: number, invert?: boolean }) {
   // invert=true:上升是坏事(失败数)→ 红;否则上升是常态 → muted。
   const up = delta >= 0
   const bad = invert ? up : false
@@ -65,11 +65,13 @@ export function KpiTiles({ kpi }: { kpi: Kpi }) {
       <Tile
         label={t('authLog.kpi.events')}
         toneVar='var(--auth-accent)'
-        foot={
+        foot={(
           <span>
-            <Trend delta={kpi.totalDelta} /> {t('authLog.kpi.vsPrev')}
+            <Trend delta={kpi.totalDelta} />
+            {' '}
+            {t('authLog.kpi.vsPrev')}
           </span>
-        }
+        )}
       >
         <RollNumber value={kpi.totalEvents} />
       </Tile>
@@ -77,14 +79,14 @@ export function KpiTiles({ kpi }: { kpi: Kpi }) {
       <Tile
         label={t('authLog.kpi.successRate')}
         toneVar='var(--auth-success)'
-        foot={
+        foot={(
           <div className='h-1 w-full overflow-hidden rounded-full bg-muted'>
             <div
               className='h-full rounded-full transition-[width] duration-700'
               style={{ width: `${kpi.successRate * 100}%`, background: 'var(--auth-success)' }}
             />
           </div>
-        }
+        )}
       >
         <span className='flex items-baseline gap-0.5'>
           <RollNumber value={ratePct} />
@@ -95,15 +97,16 @@ export function KpiTiles({ kpi }: { kpi: Kpi }) {
       <Tile
         label={t('authLog.kpi.failed')}
         toneVar='var(--auth-fail)'
-        foot={
+        foot={(
           <span>
             <Trend
               delta={kpi.failedDelta}
               invert
-            />{' '}
+            />
+            {' '}
             {t('authLog.kpi.vsPrev')}
           </span>
-        }
+        )}
       >
         <RollNumber
           value={kpi.failedCount}

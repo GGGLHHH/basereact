@@ -1,6 +1,6 @@
-import { isStaticDataGranted } from '#/lib/access-control'
-
 import type { StaticDataRouteOption } from '@tanstack/react-router'
+
+import { isStaticDataGranted } from '#/lib/access-control'
 
 // 分组键指向 route 命名空间(消费端 t() 译),与 titleKey/menuTitleKey 同范式。
 type GroupKey = NonNullable<StaticDataRouteOption['groupKey']>
@@ -63,9 +63,9 @@ export function buildAdminMenu<TPath extends string>(
   for (const route of Object.values(routesById)) {
     const staticData = route.options.staticData ?? {}
     if (
-      route.fullPath.startsWith('/admin/') &&
-      !staticData.hideInMenu &&
-      (staticData.menuTitleKey || staticData.menuTitle)
+      route.fullPath.startsWith('/admin/')
+      && !staticData.hideInMenu
+      && ((staticData.menuTitleKey ?? '') !== '' || (staticData.menuTitle ?? '') !== '')
     ) {
       nodes.push({
         children: [],
@@ -89,16 +89,17 @@ export function buildAdminMenu<TPath extends string>(
     let parent: WorkNode<TPath> | undefined
     for (const candidate of byDepth) {
       if (
-        candidate !== node &&
-        node.fullPath.startsWith(`${candidate.fullPath}/`) &&
-        (!parent || candidate.fullPath.length > parent.fullPath.length)
+        candidate !== node
+        && node.fullPath.startsWith(`${candidate.fullPath}/`)
+        && (!parent || candidate.fullPath.length > parent.fullPath.length)
       ) {
         parent = candidate
       }
     }
     if (parent) {
       parent.children.push(node)
-    } else {
+    }
+    else {
       roots.push(node)
     }
   }
@@ -106,9 +107,9 @@ export function buildAdminMenu<TPath extends string>(
   // 授权裁剪 + 同级排序 + 抹掉内部字段,自顶向下递归(未授权即断子树)。
   const prune = (list: WorkNode<TPath>[]): AdminMenuEntry<TPath>[] =>
     list
-      .filter((node) => isStaticDataGranted(node.staticData, permissions))
+      .filter(node => isStaticDataGranted(node.staticData, permissions))
       .sort((a, b) => a.order - b.order || a.fullPath.localeCompare(b.fullPath))
-      .map((node) => ({
+      .map(node => ({
         children: prune(node.children),
         icon: node.icon,
         label: node.label,
@@ -125,7 +126,8 @@ export function buildAdminMenu<TPath extends string>(
     const existing = groups.get(root.group)
     if (existing) {
       existing.push(root)
-    } else {
+    }
+    else {
       groups.set(root.group, [root])
     }
   }
@@ -152,8 +154,8 @@ export function pickActiveMenuUrl<TPath extends string>(
   const visit = (entries: AdminMenuEntry<TPath>[]): void => {
     for (const entry of entries) {
       if (
-        (pathname === entry.url || pathname.startsWith(`${entry.url}/`)) &&
-        (best === undefined || entry.url.length > best.length)
+        (pathname === entry.url || pathname.startsWith(`${entry.url}/`))
+        && (best === undefined || entry.url.length > best.length)
       ) {
         best = entry.url
       }

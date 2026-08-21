@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { AdminUserView } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AdminUserView } from '#/generated/api-types'
+import { AccountSection } from './account-section'
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
@@ -11,8 +13,6 @@ const h = vi.hoisted(() => ({ mutateAsync: vi.fn() }))
 vi.mock('@/api/users', () => ({
   useUpdateUser: () => ({ isPending: false, mutateAsync: h.mutateAsync }),
 }))
-
-import { AccountSection } from './account-section'
 
 function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
   return {
@@ -37,11 +37,11 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('AccountSection', () => {
+describe('accountSection', () => {
   it('seeds username/email and saves an UpdateUserRequest (email cleared to null)', async () => {
     render(<AccountSection user={fakeUser()} />)
 
-    expect((screen.getByLabelText(/Username/) as HTMLInputElement).value).toBe('ada')
+    expect(screen.getByLabelText<HTMLInputElement>(/Username/).value).toBe('ada')
 
     fireEvent.change(screen.getByLabelText(/Username/), { target: { value: 'ada2' } })
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: '' } })

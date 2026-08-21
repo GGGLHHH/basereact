@@ -21,8 +21,10 @@ export function hm(iso: string): string {
 /** 相对现在的粗粒度时长(表次要列)。 */
 export function ago(iso: string, now = Date.now()): string {
   const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000))
-  if (s < 60) return `${s}s`
-  if (s < 3600) return `${Math.floor(s / 60)}m`
+  if (s < 60)
+    return `${s}s`
+  if (s < 3600)
+    return `${Math.floor(s / 60)}m`
   return `${Math.floor(s / 3600)}h`
 }
 

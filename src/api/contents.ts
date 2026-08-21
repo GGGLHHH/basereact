@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
 import type {
   CreateContentRequest,
   SetContentMetadataRequest,
   UpdateContentRequest,
   UploadContentRequest,
 } from '#/generated/api-types'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   createContent as createContentApi,
@@ -75,7 +75,7 @@ export function useUploadContent() {
 export function useUpdateContent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: UpdateContentRequest }) =>
+    mutationFn: ({ id, request }: { id: string, request: UpdateContentRequest }) =>
       updateContentApi({ body: request, path: { id } }),
     onSuccess: (content, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.contents.all })
@@ -97,7 +97,7 @@ export function useDeleteContent() {
 export function useSetContentMetadata() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: SetContentMetadataRequest }) =>
+    mutationFn: ({ id, request }: { id: string, request: SetContentMetadataRequest }) =>
       setContentMetadataApi({ body: request, path: { id } }),
     onSuccess: (_, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.contents.metadata(id) })

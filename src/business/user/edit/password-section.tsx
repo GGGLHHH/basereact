@@ -4,8 +4,8 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { useResetUserPassword } from '@/api/users'
-import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Field, FieldGroup } from '@/components/field'
+import { formSubmitHandler, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
@@ -26,7 +26,8 @@ export function PasswordSection({ userId }: { userId: string }) {
     onSubmit: async ({ value }) => {
       try {
         await reset.mutateAsync({ id: userId, newPassword: value.newPassword })
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
@@ -40,10 +41,10 @@ export function PasswordSection({ userId }: { userId: string }) {
       description={t('users.edit.passwordDescription')}
       title={t('users.edit.passwordTitle')}
     >
-      <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
         <FieldGroup>
           <form.AppField name='newPassword'>
-            {(field) => (
+            {field => (
               <field.PasswordField
                 autoComplete='new-password'
                 label={t('users.form.newPassword')}

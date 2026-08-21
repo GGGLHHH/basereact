@@ -29,7 +29,7 @@ describe('isStaticDataGranted', () => {
     expect(isStaticDataGranted({}, [])).toBe(true)
   })
 
-  it('ANDs accessPolicyKeys', () => {
+  it('aNDs accessPolicyKeys', () => {
     const staticData = { accessPolicyKeys: ['adminListWidgets', 'purgePreview'] as const }
     expect(declaresAccessPolicy(staticData)).toBe(true)
     expect(
@@ -44,7 +44,7 @@ describe('isStaticDataGranted', () => {
     expect(isStaticDataGranted(staticData, ['users:admin'])).toBe(false)
   })
 
-  it('ORs accessPolicyAnyOf groups', () => {
+  it('oRs accessPolicyAnyOf groups', () => {
     const staticData = {
       accessPolicyAnyOf: [['adminListWidgets'], ['listWidgets']] as const,
     }
@@ -54,7 +54,7 @@ describe('isStaticDataGranted', () => {
     expect(isStaticDataGranted(staticData, ['contents:read'])).toBe(false)
   })
 
-  it('ANDs both fields when a route declares keys and anyOf together', () => {
+  it('aNDs both fields when a route declares keys and anyOf together', () => {
     // 文档上互斥,但类型不强制;并存时两约束都要过(不短路丢 keys)。
     const staticData = {
       accessPolicyAnyOf: [['listWidgets']] as const,

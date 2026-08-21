@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-
 import type { AdminUserView } from '#/generated/api-types'
+import { useTranslation } from 'react-i18next'
+
+import { toast } from 'sonner'
 
 import { useDeleteUser } from '@/api/users'
 import {
@@ -39,7 +39,8 @@ export function DeleteUserDialog({ user, open, onOpenChange, onDeleted }: Delete
       toast.success(t('users.delete.success'))
       onOpenChange(false)
       onDeleted?.()
-    } catch (error) {
+    }
+    catch (error) {
       toast.error(getErrorMessage(error))
     }
   }
@@ -60,7 +61,10 @@ export function DeleteUserDialog({ user, open, onOpenChange, onDeleted }: Delete
           <AlertDialogCancel disabled={del.isPending}>{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={del.isPending}
-            onClick={handleConfirm}
+            onClick={() => {
+              // handleConfirm 自己 catch 并 toast,这里只把 promise 从事件回调里摘掉。
+              void handleConfirm()
+            }}
             variant='destructive'
           >
             {t('users.delete.confirm')}

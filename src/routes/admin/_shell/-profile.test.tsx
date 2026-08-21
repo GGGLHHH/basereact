@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
+import type { ProfileResponse } from '#/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ProfileResponse } from '#/generated/api-types'
+import { ProfilePage } from './-profile-page'
 
 // i18n 走全局测试实例(vitest-setup 内联 en 资源),文案按英文断言,不再 mock。
 
@@ -31,8 +33,6 @@ vi.mock('@/api/profile', () => ({
   useUploadAvatar: () => ({ isPending: h.state.uploadPending, mutateAsync: h.mutateUpload }),
 }))
 
-import { ProfilePage } from './-profile-page'
-
 function fakeProfile(overrides: Partial<ProfileResponse> = {}): ProfileResponse {
   return {
     avatar_content_id: 'c0',
@@ -56,18 +56,18 @@ afterEach(() => {
   cleanup()
 })
 
-describe('ProfilePage', () => {
+describe('profilePage', () => {
   it('seeds the form fields from the loaded profile', () => {
     render(<ProfilePage />)
-    expect((screen.getByLabelText('Display name') as HTMLInputElement).value).toBe('Old Name')
-    expect((screen.getByLabelText('Phone') as HTMLInputElement).value).toBe('p0')
+    expect(screen.getByLabelText<HTMLInputElement>('Display name').value).toBe('Old Name')
+    expect(screen.getByLabelText<HTMLInputElement>('Phone').value).toBe('p0')
   })
 
   it('disables Save while an avatar upload is in flight (no stale-id save)', () => {
     h.state.uploadPending = true
     render(<ProfilePage />)
     expect(
-      (screen.getByRole('button', { name: 'Save changes' }) as HTMLButtonElement).disabled,
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Save changes' }).disabled,
     ).toBe(true)
   })
 

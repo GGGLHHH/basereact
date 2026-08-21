@@ -26,11 +26,12 @@ export function RoleBadges({
       <span className={cn('text-xs text-muted-foreground', className)}>{t('users.noRoles')}</span>
     )
   }
-  const shown = max ? roles.slice(0, max) : roles
+  // max 未给(或 0)= 不截断,全展开。
+  const shown = max !== undefined && max !== 0 ? roles.slice(0, max) : roles
   const extra = roles.length - shown.length
   return (
     <span className={cn('flex flex-wrap items-center gap-1', className)}>
-      {shown.map((role) => (
+      {shown.map(role => (
         <Badge
           key={role}
           className='gap-1'
@@ -43,7 +44,14 @@ export function RoleBadges({
           {role}
         </Badge>
       ))}
-      {extra > 0 ? <span className='text-xs text-muted-foreground'>+{extra}</span> : null}
+      {extra > 0
+        ? (
+            <span className='text-xs text-muted-foreground'>
+              +
+              {extra}
+            </span>
+          )
+        : null}
     </span>
   )
 }
@@ -51,33 +59,35 @@ export function RoleBadges({
 /** 邮箱验证印章:已验证带 check(点 primary),否则 muted outline。 */
 export function VerifiedBadge({ verified }: { verified: boolean }) {
   const { t } = useTranslation('common')
-  return verified ? (
-    <Badge
-      className='gap-1 text-primary'
-      variant='secondary'
-    >
-      <span
-        aria-hidden
-        className='i-lucide-badge-check size-3'
-      />
-      {t('users.verified')}
-    </Badge>
-  ) : (
-    <Badge
-      className='gap-1 text-muted-foreground'
-      variant='outline'
-    >
-      <span
-        aria-hidden
-        className='i-lucide-shield-alert size-3'
-      />
-      {t('users.unverified')}
-    </Badge>
-  )
+  return verified
+    ? (
+        <Badge
+          className='gap-1 text-primary'
+          variant='secondary'
+        >
+          <span
+            aria-hidden
+            className='i-lucide-badge-check size-3'
+          />
+          {t('users.verified')}
+        </Badge>
+      )
+    : (
+        <Badge
+          className='gap-1 text-muted-foreground'
+          variant='outline'
+        >
+          <span
+            aria-hidden
+            className='i-lucide-shield-alert size-3'
+          />
+          {t('users.unverified')}
+        </Badge>
+      )
 }
 
 /** 机器 id 的"账号编号"戳:大写微标签 + 等宽 id。 */
-export function AccountStamp({ label, id }: { label: ReactNode; id: string }) {
+export function AccountStamp({ label, id }: { label: ReactNode, id: string }) {
   return (
     <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
       <span className='font-medium tracking-wide uppercase'>{label}</span>
@@ -87,7 +97,7 @@ export function AccountStamp({ label, id }: { label: ReactNode; id: string }) {
 }
 
 /** 大写微标签 + 值的字段行(详情/编辑元信息共用)。 */
-export function FieldRow({ label, value }: { label: ReactNode; value: ReactNode }) {
+export function FieldRow({ label, value }: { label: ReactNode, value: ReactNode }) {
   return (
     <div className='flex flex-col gap-1'>
       <dt className='text-xs font-medium tracking-wide text-muted-foreground uppercase'>{label}</dt>

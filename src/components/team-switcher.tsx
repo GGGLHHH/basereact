@@ -1,8 +1,9 @@
 'use client'
 
+import { IconPlus, IconSelector } from '@tabler/icons-react'
 import * as React from 'react'
-import { useTranslation } from 'react-i18next'
 
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { IconSelector, IconPlus } from '@tabler/icons-react'
 
 export function TeamSwitcher({
   teams,
@@ -32,8 +32,9 @@ export function TeamSwitcher({
 }) {
   const { t } = useTranslation()
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState(teams[0])
-  if (!activeTeam) {
+  // teams 可能是空数组(索引访问的类型不体现这点),state 显式带上 undefined。
+  const [activeTeam, setActiveTeam] = React.useState<(typeof teams)[number] | undefined>(teams[0])
+  if (activeTeam === undefined) {
     return null
   }
   return (
@@ -41,12 +42,12 @@ export function TeamSwitcher({
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
+            render={(
               <SidebarMenuButton
                 size='lg'
                 className='data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground'
               />
-            }
+            )}
           >
             <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
               {activeTeam.logo}
@@ -77,7 +78,10 @@ export function TeamSwitcher({
                     {team.logo}
                   </div>
                   {team.name}
-                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                  <DropdownMenuShortcut>
+                    ⌘
+                    {index + 1}
+                  </DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>

@@ -10,9 +10,10 @@ const localeModules = import.meta.glob<{ default: ResourceLanguage }>('./locales
 
 async function loadLocaleResource(language: string, namespace: string): Promise<ResourceLanguage> {
   const moduleKey = `./locales/${normalizeLocale(language)}/${namespace}.json`
-  const loader = localeModules[moduleKey]
+  const loader: (() => Promise<{ default: ResourceLanguage }>) | undefined
+    = localeModules[moduleKey]
 
-  if (!loader) {
+  if (loader === undefined) {
     throw new Error(`Missing locale resource: ${moduleKey}`)
   }
 

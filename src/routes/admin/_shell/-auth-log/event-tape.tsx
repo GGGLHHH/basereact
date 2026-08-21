@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next'
-
 import type { AuthEvent } from './types'
+
+import { useTranslation } from 'react-i18next'
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,7 @@ import { EVENT_META, TONE_GLYPH, TONE_VAR } from './palette'
 
 const CAP = 40
 
-function TapeRow({ e, fresh }: { e: AuthEvent; fresh: boolean }) {
+function TapeRow({ e, fresh }: { e: AuthEvent, fresh: boolean }) {
   const { t } = useTranslation('common')
   const meta = EVENT_META[e.eventType]
   const tone = TONE_VAR[meta.tone]
@@ -74,20 +74,22 @@ export function EventTape({
           className='flex items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-[0.7rem] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
           aria-pressed={!paused}
         >
-          {!paused ? (
-            <span className='relative flex size-2'>
-              <span className='absolute inline-flex size-full animate-ping rounded-full bg-auth-success opacity-70 motion-reduce:hidden' />
-              <span className='relative inline-flex size-2 rounded-full bg-auth-success' />
-            </span>
-          ) : (
-            <span className='size-2 rounded-full bg-muted-foreground' />
-          )}
+          {!paused
+            ? (
+                <span className='relative flex size-2'>
+                  <span className='absolute inline-flex size-full animate-ping rounded-full bg-auth-success opacity-70 motion-reduce:hidden' />
+                  <span className='relative inline-flex size-2 rounded-full bg-auth-success' />
+                </span>
+              )
+            : (
+                <span className='size-2 rounded-full bg-muted-foreground' />
+              )}
           {!paused ? t('authLog.tape.live') : t('authLog.tape.paused')}
         </button>
       </CardHeader>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
-        {rows.map((e) => (
+        {rows.map(e => (
           <TapeRow
             key={e.id}
             e={e}

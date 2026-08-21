@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import type { ChangeEvent } from 'react'
+import type { ProfileResponse } from '#/generated/api-types'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
 import { toast } from 'sonner'
 
-import type { ProfileResponse } from '#/generated/api-types'
-
 import { useUpdateUserProfile, useUploadUserAvatar, useUserProfile } from '@/api/profile'
+import { Field, FieldGroup } from '@/components/field'
 import { formSubmitHandler, useAppForm } from '@/components/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { Field, FieldGroup } from '@/components/field'
 import { getErrorMessage } from '@/lib/api-client'
 import { nameInitials } from '@/lib/display-name'
 
@@ -30,37 +31,41 @@ export function ProfileSection({ userId }: { userId: string }) {
       description={t('users.edit.profileDescription')}
       title={t('users.edit.profileTitle')}
     >
-      {isLoading ? (
-        <div className='flex justify-center py-6'>
-          <Spinner className='size-6' />
-        </div>
-      ) : isError && !notFound ? (
-        <div className='flex flex-col items-center gap-3 py-6 text-sm text-muted-foreground'>
-          <span>{t('loading.failed')}</span>
-          <Button
-            onClick={() => {
-              void refetch()
-            }}
-            size='sm'
-            variant='outline'
-          >
-            {t('action.retry')}
-          </Button>
-        </div>
-      ) : (
-        // profile 解析(成功或 404)后才挂 form:defaultValues 只在挂载取一次,
-        // 晚到的数据不会回灌,故用加载门 + key 保证按最终 profile 播种。
-        <ProfileForm
-          key={profile?.updated_at ?? 'empty'}
-          profile={profile ?? null}
-          userId={userId}
-        />
-      )}
+      {isLoading
+        ? (
+            <div className='flex justify-center py-6'>
+              <Spinner className='size-6' />
+            </div>
+          )
+        : isError && !notFound
+          ? (
+              <div className='flex flex-col items-center gap-3 py-6 text-sm text-muted-foreground'>
+                <span>{t('loading.failed')}</span>
+                <Button
+                  onClick={() => {
+                    void refetch()
+                  }}
+                  size='sm'
+                  variant='outline'
+                >
+                  {t('action.retry')}
+                </Button>
+              </div>
+            )
+          : (
+              // profile 解析(成功或 404)后才挂 form:defaultValues 只在挂载取一次,
+              // 晚到的数据不会回灌,故用加载门 + key 保证按最终 profile 播种。
+              <ProfileForm
+                key={profile?.updated_at ?? 'empty'}
+                profile={profile ?? null}
+                userId={userId}
+              />
+            )}
     </EditSectionCard>
   )
 }
 
-function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResponse | null }) {
+function ProfileForm({ userId, profile }: { userId: string, profile: ProfileResponse | null }) {
   const { t } = useTranslation('common')
   const update = useUpdateUserProfile()
   const uploadAvatar = useUploadUserAvatar(userId)
@@ -78,7 +83,7 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
   // objectURL,否则每次头像上传都泄漏一个 blob。ref 仅在上传成功后写,故恒安全。
   useEffect(
     () => () => {
-      if (localUrlRef.current) {
+      if (localUrlRef.current !== null) {
         URL.revokeObjectURL(localUrlRef.current)
       }
     },
@@ -98,12 +103,13 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
     try {
       // auto-bind:上传即绑定,返回更新后的资料 → 取其 avatar_content_id(表单 Save 时随全量 PUT 保留)。
       const updated = await uploadAvatar.mutateAsync(file)
-      if (localUrlRef.current) {
+      if (localUrlRef.current !== null) {
         URL.revokeObjectURL(localUrlRef.current)
       }
       localUrlRef.current = nextUrl
       setAvatarContentId(updated.avatar_content_id ?? null)
-    } catch (error) {
+    }
+    catch (error) {
       URL.revokeObjectURL(nextUrl)
       setPreview(prevPreview)
       setAvatarContentId(prevContentId)
@@ -124,7 +130,8 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
           },
           userId,
         })
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
@@ -143,11 +150,13 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
             />
             <AvatarFallback>{nameInitials(profile?.display_name)}</AvatarFallback>
           </Avatar>
-          {uploadAvatar.isPending ? (
-            <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
-              <Spinner className='size-4' />
-            </span>
-          ) : null}
+          {uploadAvatar.isPending
+            ? (
+                <span className='absolute inset-0 flex items-center justify-center rounded-full bg-background/60'>
+                  <Spinner className='size-4' />
+                </span>
+              )
+            : null}
         </div>
         <div className='flex flex-col gap-1'>
           <Button
@@ -164,16 +173,18 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
         <input
           accept='image/*'
           className='hidden'
-          onChange={onPickFile}
+          onChange={(event) => {
+            void onPickFile(event)
+          }}
           ref={fileInputRef}
           type='file'
         />
       </div>
 
-      <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
         <FieldGroup>
           <form.AppField name='display_name'>
-            {(field) => (
+            {field => (
               <field.TextField
                 label={t('users.columns.displayName')}
                 placeholder={t('users.form.displayNamePlaceholder')}
@@ -181,7 +192,7 @@ function ProfileForm({ userId, profile }: { userId: string; profile: ProfileResp
             )}
           </form.AppField>
           <form.AppField name='phone'>
-            {(field) => (
+            {field => (
               <field.TextField
                 label={t('users.form.phone')}
                 placeholder={t('users.form.phonePlaceholder')}

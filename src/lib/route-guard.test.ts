@@ -48,7 +48,8 @@ async function caught(promise: Promise<unknown>): Promise<unknown> {
   try {
     await promise
     return undefined
-  } catch (error) {
+  }
+  catch (error) {
     return error
   }
 }
@@ -197,7 +198,8 @@ describe('requireAdminGuest', () => {
     let error: unknown
     try {
       requireAdminGuest(queryClient)
-    } catch (thrown) {
+    }
+    catch (thrown) {
       error = thrown
     }
     expect(redirectTarget(error)).toBe('/admin/home')
@@ -276,7 +278,8 @@ describe('requireUserGuest', () => {
     let error: unknown
     try {
       requireUserGuest(queryClient)
-    } catch (thrown) {
+    }
+    catch (thrown) {
       error = thrown
     }
     expect(redirectTarget(error)).toBe('/frontend/home')

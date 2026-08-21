@@ -2,9 +2,10 @@
 // 快照之后不再轮询——SSE 送来的每条事件本身就够把 KPI/图表/分布/列表继续往前滚
 // (见 use-live.ts 的 useLiveStats),大屏该有的样子:一次快照 + 纯推送,没有"定时问一遍"。
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import type { AuthEventRow, AuthStats } from '#/generated/api-types'
 
 import type {
+  AuthEvent,
   AuthEventType,
   AuthOutcome,
   Count,
@@ -13,11 +14,10 @@ import type {
   IpStat,
   Kpi,
 } from './types'
-import type { AuthEventRow, AuthStats } from '#/generated/api-types'
+
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { listAuthEvents, statsAuthEvents } from '#/generated/client'
-
-import type { AuthEvent } from './types'
 
 const STATS_KEY = ['auth-events', 'stats'] as const
 const LIST_KEY = ['auth-events', 'list'] as const
@@ -39,8 +39,10 @@ export function useAuthEventsList(size = 80) {
   })
 }
 
-/** 事件表:**服务端**过滤(`q` 联合模糊搜 actor/identifier/ip 子串 + `outcome` 状态)+ offset 分页 + total。
- *  全历史检索,取代前端对近期流(≤200 条)的内存过滤/切片。`q`/`outcome` 为空即不过滤。 */
+/**
+ * 事件表:**服务端**过滤(`q` 联合模糊搜 actor/identifier/ip 子串 + `outcome` 状态)+ offset 分页 + total。
+ *  全历史检索,取代前端对近期流(≤200 条)的内存过滤/切片。`q`/`outcome` 为空即不过滤。
+ */
 export function useAuthEventsPage(f: {
   page: number
   size: number
@@ -57,8 +59,8 @@ export function useAuthEventsPage(f: {
           page: f.page,
           size: f.size,
           with_total: true,
-          ...(q ? { q } : {}),
-          ...(outcome ? { outcome } : {}),
+          ...(q !== undefined ? { q } : {}),
+          ...(outcome !== undefined ? { outcome } : {}),
         },
       }),
     placeholderData: keepPreviousData,
@@ -115,9 +117,9 @@ export function mapStats(s: AuthStats | undefined): MappedStats {
       totalDelta: s.kpi.total_delta,
       failedDelta: s.kpi.failed_delta,
     },
-    activity: s.activity.map((b) => ({ t: b.t, success: b.success, failure: b.failure })),
-    reasons: s.reasons.map((c) => ({ key: c.key, count: c.count })),
-    types: s.types.map((c) => ({ key: c.key, count: c.count })),
-    topIps: s.top_ips.map((i) => ({ ip: i.ip, failures: i.failures, total: i.total })),
+    activity: s.activity.map(b => ({ t: b.t, success: b.success, failure: b.failure })),
+    reasons: s.reasons.map(c => ({ key: c.key, count: c.count })),
+    types: s.types.map(c => ({ key: c.key, count: c.count })),
+    topIps: s.top_ips.map(i => ({ ip: i.ip, failures: i.failures, total: i.total })),
   }
 }

@@ -148,7 +148,7 @@ it('shares one refresh across concurrent 401s', async () => {
     const request = input as Request
     if (request.url.endsWith('/auth/refresh')) {
       refreshCalls += 1
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      await new Promise(resolve => setTimeout(resolve, 10))
       return jsonResponse(200)
     }
     if (request.headers.get('x-retried-after-refresh') === '1') {

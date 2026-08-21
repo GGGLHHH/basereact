@@ -33,23 +33,31 @@ export function toggleThemeWithTransition(callback: () => void): void {
 
   const transition = document.startViewTransition(async () => {
     callback()
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, 0))
   })
 
-  transition.ready.then(() => {
-    document.documentElement.animate(
-      {
-        clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`],
-      },
-      {
-        duration: 400,
-        easing: 'ease-in-out',
-        pseudoElement: '::view-transition-new(root)',
-      },
-    )
-  })
+  transition.ready
+    .then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`],
+        },
+        {
+          duration: 400,
+          easing: 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)',
+        },
+      )
+    })
+    .catch(() => {
+      // 过渡被跳过(并发切换、prefers-reduced-motion 等)时 ready 会 reject。
+      // 主题本身已经切完,少播一次圆形揭示不影响正确性。
+    })
 
-  transition.finished.finally(() => {
-    document.documentElement.classList.remove('theme-transitioning')
-  })
+  transition.finished
+    .finally(() => {
+      // 无论过渡成功还是被跳过,这个标记都必须摘掉 —— 留着会一直禁用 CSS 过渡。
+      document.documentElement.classList.remove('theme-transitioning')
+    })
+    .catch(() => {})
 }

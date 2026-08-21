@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 //  - Header/row borders use the `border-border` token and rows omit the registry's
 //    has-aria-expanded row highlight.
 // All other table parts are re-exported unchanged.
-export { TableBody, TableFooter, TableHead, TableCell, TableCaption } from '@/components/ui/table'
+export { TableBody, TableCaption, TableCell, TableFooter, TableHead } from '@/components/ui/table'
 
 function Table({
   className,

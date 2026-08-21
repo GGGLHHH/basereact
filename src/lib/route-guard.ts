@@ -1,11 +1,11 @@
-import { redirect } from '@tanstack/react-router'
-
 import type { QueryClient } from '@tanstack/react-query'
+
 import type { ParsedLocation } from '@tanstack/react-router'
 import type { UserResponse } from '#/generated/api-types'
+import { redirect } from '@tanstack/react-router'
 
-import { adminGetMe, getMe } from '#/generated/client'
 import { myPermissionsQueryOptions } from '#/api/auth'
+import { adminGetMe, getMe } from '#/generated/client'
 import { declaresAccessPolicy, isStaticDataGranted } from '#/lib/access-control'
 import { ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE } from '#/lib/api-client'
 import { globalRouter } from '#/lib/global-router'
@@ -56,20 +56,21 @@ export async function requireAdmin(
     // instance 在 getRouter 建 router 时登记,beforeLoad(admin 子树纯客户端)
     // 时必非 null;?? [] 是 SSR 语义上的死分支兜底。
     const declared = (globalRouter.instance?.matchRoutes(location.pathname, location.search) ?? [])
-      .map((match) => match.staticData)
-      .filter((staticData) => declaresAccessPolicy(staticData))
+      .map(match => match.staticData)
+      .filter(staticData => declaresAccessPolicy(staticData))
     if (declared.length > 0) {
       const { permissions } = await queryClient.ensureQueryData({
         ...myPermissionsQueryOptions,
         revalidateIfStale: true,
       })
-      if (!declared.every((staticData) => isStaticDataGranted(staticData, permissions))) {
+      if (!declared.every(staticData => isStaticDataGranted(staticData, permissions))) {
         throw redirect({ to: '/admin/403' })
       }
     }
 
     return { me }
-  } catch (error) {
+  }
+  catch (error) {
     const status = error instanceof ApiErrorClass ? error.status : undefined
     if (status === 401) {
       // 显式匿名标记:后续 /admin/* 访问零网络直转登录(登录成功会清掉)。
@@ -115,7 +116,8 @@ export async function requireUser(queryClient: QueryClient): Promise<{ me: UserR
       revalidateIfStale: true,
     })
     return { me }
-  } catch (error) {
+  }
+  catch (error) {
     const status = error instanceof ApiErrorClass ? error.status : undefined
     if (status === 401) {
       queryClient.setQueryData(queryKeys.auth.me(), null)

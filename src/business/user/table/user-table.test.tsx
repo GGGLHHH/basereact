@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
 import type { AdminUserView } from '#/generated/api-types'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { UserTable } from './user-table'
 
@@ -35,7 +35,7 @@ function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
   }
 }
 
-const noop = () => {}
+function noop() {}
 
 interface Handlers {
   onRowClick?: (user: AdminUserView) => void
@@ -68,7 +68,7 @@ afterEach(() => {
   cleanup()
 })
 
-describe('UserTable actions column', () => {
+describe('userTable actions column', () => {
   it('renders view/edit/delete buttons for each row', () => {
     renderTable({ onView: noop, onEdit: noop, onDelete: noop })
 

@@ -1,8 +1,16 @@
 'use client'
 
+import {
+  IconCheck,
+  IconChevronRight,
+  IconDeviceDesktop,
+  IconMoon,
+  IconSun,
+  IconSunMoon,
+} from '@tabler/icons-react'
 import { useTheme } from 'next-themes'
-import { useTranslation } from 'react-i18next'
 
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +24,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { toggleThemeWithTransition } from '@/lib/theme-transition'
-import {
-  IconCheck,
-  IconChevronRight,
-  IconDeviceDesktop,
-  IconMoon,
-  IconSun,
-  IconSunMoon,
-} from '@tabler/icons-react'
 
 // 主题切换:侧栏底部图标按钮,dropdown 选 浅色/深色/跟随系统(当前项打勾)。
 // 切换走 view-transition 圆形揭示;目标解析色与当前一致时跳过动画(无视觉变化)。
@@ -65,7 +65,7 @@ export function ThemeToggle() {
             align='end'
             className='min-w-40'
           >
-            {THEME_OPTIONS.map((option) => (
+            {THEME_OPTIONS.map(option => (
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSelect(option.value)}

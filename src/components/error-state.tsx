@@ -1,7 +1,7 @@
-import { Link, useRouter } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-
 import type { LinkProps } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
+
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'

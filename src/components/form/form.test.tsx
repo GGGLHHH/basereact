@@ -10,7 +10,7 @@ afterEach(() => {
   cleanup()
 })
 
-describe('TanStack app form fields', () => {
+describe('tanStack app form fields', () => {
   it('binds invalid state and error descriptions to registered input and select fields', async () => {
     const handleSubmit = vi.fn()
 
@@ -30,10 +30,10 @@ describe('TanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
-          <form.AppField name='name'>{(field) => <field.TextField label='Name' />}</form.AppField>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+          <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
-            {(field) => (
+            {field => (
               <field.SelectField
                 label='Category'
                 placeholder='Pick category'
@@ -86,10 +86,10 @@ describe('TanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
-          <form.AppField name='name'>{(field) => <field.TextField label='Name' />}</form.AppField>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+          <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
-            {(field) => (
+            {field => (
               <field.SelectField
                 label='Category'
                 placeholder='Pick category'
@@ -140,8 +140,8 @@ describe('TanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
-          <form.AppField name='name'>{(field) => <field.TextField label='Name' />}</form.AppField>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+          <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
         </form>
       )
     }
@@ -173,10 +173,10 @@ describe('TanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
-          <form.AppField name='name'>{(field) => <field.TextField label='Name' />}</form.AppField>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+          <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
-            {(field) => (
+            {field => (
               <field.SelectField
                 label='Category'
                 placeholder='Pick category'
@@ -209,9 +209,9 @@ describe('TanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(form.handleSubmit)}>
+        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
           <form.AppField name='category'>
-            {(field) => (
+            {field => (
               <field.SelectField
                 label='Category'
                 placeholder='Pick category'
@@ -309,7 +309,7 @@ describe('TanStack app form fields', () => {
 
       return (
         <form.AppField name='password'>
-          {(field) => (
+          {field => (
             <field.PasswordField
               label='Password'
               toggleLabel='Toggle password visibility'

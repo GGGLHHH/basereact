@@ -1,5 +1,7 @@
 'use client'
 
+import { IconArrowForward, IconDots, IconFolder, IconTrash } from '@tabler/icons-react'
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +18,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { IconDots, IconFolder, IconArrowForward, IconTrash } from '@tabler/icons-react'
-import { useTranslation } from 'react-i18next'
 
 export function NavProjects({
   projects,
@@ -34,7 +34,7 @@ export function NavProjects({
     <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
       <SidebarGroupLabel>{t('nav.projects.title')}</SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => (
+        {projects.map(item => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton render={<a href={item.url} />}>
               {item.icon}
@@ -42,12 +42,12 @@ export function NavProjects({
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={
+                render={(
                   <SidebarMenuAction
                     showOnHover
                     className='aria-expanded:bg-muted'
                   />
-                }
+                )}
               >
                 <IconDots />
                 <span className='sr-only'>{t('nav.projects.moreActions')}</span>

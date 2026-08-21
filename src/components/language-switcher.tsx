@@ -1,7 +1,8 @@
 'use client'
 
-import { useTranslation } from 'react-i18next'
+import { IconCheck, IconLanguage } from '@tabler/icons-react'
 
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +21,6 @@ import {
   persistLocale,
   SUPPORTED_LOCALES,
 } from '@/i18n/config'
-import { IconCheck, IconLanguage } from '@tabler/icons-react'
 
 // 语言切换:侧栏底部一枚图标按钮,dropdown 列出各语言(原生名 + 当前项打勾)。
 // changeLanguage 触发 <html lang> 同步(见 i18n/index.ts);持久化在此显式做,
@@ -36,12 +36,12 @@ export function LanguageSwitcher() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
+            render={(
               <SidebarMenuButton
                 aria-label={t('language')}
                 tooltip={LOCALE_NATIVE_NAMES[current]}
               />
-            }
+            )}
           >
             <IconLanguage />
             <span className='group-data-[collapsible=icon]:sr-only'>
@@ -53,7 +53,7 @@ export function LanguageSwitcher() {
             align='end'
             className='min-w-40'
           >
-            {SUPPORTED_LOCALES.map((locale) => (
+            {SUPPORTED_LOCALES.map(locale => (
               <DropdownMenuItem
                 key={locale}
                 onClick={() => {

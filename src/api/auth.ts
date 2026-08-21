@@ -1,5 +1,3 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
 import type {
   ChangePasswordRequest,
   DeleteMeRequest,
@@ -7,6 +5,8 @@ import type {
   RegisterRequest,
   UpdateMeRequest,
 } from '#/generated/api-types'
+
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   adminGetMe as adminGetMeApi,
@@ -16,8 +16,8 @@ import {
   getMe as getMeApi,
   getMyPermissions as getMyPermissionsApi,
   login as loginApi,
-  logout as logoutApi,
   logoutAll as logoutAllApi,
+  logout as logoutApi,
   register as registerApi,
   updateMe as updateMeApi,
 } from '#/generated/client'

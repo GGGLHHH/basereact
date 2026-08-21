@@ -1,11 +1,11 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
 import type {
   AdminUserView,
   ContentResponse,
   ProfileResponse,
   PutProfileRequest,
 } from '#/generated/api-types'
+
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { patchUserInLists } from '#/api/users'
 import { setUserAvatar as buildSetUserAvatarPath } from '#/generated/api'
@@ -30,14 +30,13 @@ function syncUserListFromProfile(
   const displayName = profile.display_name ?? null
   // 列表行 + detail(AdminUserView)都乐观补丁:资料/头像改了 display_name/avatar,
   // 列表与详情即刻反映(用服务器返回真值)。
-  patchUserInLists(queryClient, userId, (u) => ({
+  patchUserInLists(queryClient, userId, u => ({
     ...u,
     avatar_url: avatarUrl,
     display_name: displayName,
   }))
-  queryClient.setQueryData<AdminUserView>(queryKeys.users.detail(userId), (old) =>
-    old ? { ...old, avatar_url: avatarUrl, display_name: displayName } : old,
-  )
+  queryClient.setQueryData<AdminUserView>(queryKeys.users.detail(userId), old =>
+    old ? { ...old, avatar_url: avatarUrl, display_name: displayName } : old)
   // 失活但不立即重取(留住乐观值),下次 mount/focus 再取校正。
   void queryClient.invalidateQueries({ queryKey: queryKeys.users.all, refetchType: 'none' })
 }
@@ -60,7 +59,7 @@ export function useMyProfile(options?: { enabled?: boolean }) {
 export function useUpdateProfile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ userId, request }: { userId: string; request: PutProfileRequest }) =>
+    mutationFn: ({ userId, request }: { userId: string, request: PutProfileRequest }) =>
       putProfileApi({ body: request, path: { user_id: userId } }),
     onSuccess: (profile) => {
       queryClient.setQueryData(queryKeys.profile.me(), profile)
@@ -89,7 +88,7 @@ export function useUserProfile(userId: string, options?: { enabled?: boolean }) 
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ userId, request }: { userId: string; request: PutProfileRequest }) =>
+    mutationFn: ({ userId, request }: { userId: string, request: PutProfileRequest }) =>
       setUserProfileApi({ body: request, path: { id: userId } }),
     onSuccess: (profile, { userId }) => {
       queryClient.setQueryData(queryKeys.profile.detail(userId), profile)

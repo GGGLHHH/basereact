@@ -3,17 +3,17 @@
 // normalization and 401 refresh ladder, minus i18n / toast — port those
 // back from xchangeai-web when this app grows them.
 
-import i18next from 'i18next'
-import ky, { isNetworkError, isTimeoutError } from 'ky'
-import { toast } from 'sonner'
-
+import type { LinkProps } from '@tanstack/react-router'
 import type { Options as KyOptions } from 'ky'
 import type { ErrorBody } from '#/generated/api-types'
 
+import i18next from 'i18next'
+import ky, { isNetworkError, isTimeoutError } from 'ky'
+
+import { toast } from 'sonner'
 import { refresh as buildRefreshPath } from '#/generated/api'
 import { globalRouter } from '#/lib/global-router'
 import { queryKeys } from '#/lib/query-keys'
-import type { LinkProps } from '@tanstack/react-router'
 
 export const API_BASE_URL = '/api/v1'
 export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']
@@ -68,7 +68,7 @@ export class ApiErrorClass extends Error {
 }
 
 function shouldSkipRefresh(request: Request): boolean {
-  return SKIP_REFRESH_SUFFIXES.some((suffix) => request.url.endsWith(suffix))
+  return SKIP_REFRESH_SUFFIXES.some(suffix => request.url.endsWith(suffix))
 }
 
 function isAuthRecoveryRequest(request: Request): boolean {
@@ -111,19 +111,6 @@ function handleAuthFailure() {
   if (!window.location.pathname.startsWith(LOGIN_ROUTE)) {
     window.location.assign(LOGIN_ROUTE)
   }
-}
-
-async function ensureRefreshed(): Promise<void> {
-  // 并发 401 共享同一次刷新;失败的定罪(handleAuthFailure 与否)由 await 方决定,
-  // 因为只有发起方知道自己是不是守卫探针。
-  refreshPromise ??= api
-    .post(buildRefreshPath())
-    .then(() => undefined)
-    .finally(() => {
-      refreshPromise = null
-    })
-
-  return refreshPromise
 }
 
 function retryAfterRefresh(request: Request) {
@@ -180,7 +167,8 @@ export const api = ky.create({
 
           try {
             await ensureRefreshed()
-          } catch {
+          }
+          catch {
             if (!isProbe) {
               handleAuthFailure()
             }
@@ -205,10 +193,26 @@ export const api = ky.create({
   timeout: 300000, // 5 minutes
 })
 
+// 定义在 `api` 之后:它引用 api,而 api 是 const(不提升)。反向的引用没问题 ——
+// api 的 hook 里调这个函数时,函数声明已经提升。
+async function ensureRefreshed(): Promise<void> {
+  // 并发 401 共享同一次刷新;失败的定罪(handleAuthFailure 与否)由 await 方决定,
+  // 因为只有发起方知道自己是不是守卫探针。
+  refreshPromise ??= api
+    .post(buildRefreshPath())
+    .then(() => undefined)
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
 export async function requestJson<T>(path: string, options: ApiRequestOptions): Promise<T> {
   try {
     return await api(path, options).json<T>()
-  } catch (error) {
+  }
+  catch (error) {
     throw createClientError(error)
   }
 }
@@ -216,7 +220,8 @@ export async function requestJson<T>(path: string, options: ApiRequestOptions): 
 export async function requestVoid(path: string, options: ApiRequestOptions): Promise<void> {
   try {
     await api(path, options)
-  } catch (error) {
+  }
+  catch (error) {
     throw createClientError(error)
   }
 }
@@ -228,9 +233,12 @@ async function createApiError(response: Response): Promise<ApiErrorClass> {
   try {
     // Backend's unified error contract; codegen keeps this in sync with the spec.
     const errorData = (await response.clone().json()) as Partial<ErrorBody>
-    errorMessage = errorData.error || errorMessage
+    if (errorData.error !== undefined && errorData.error !== '') {
+      errorMessage = errorData.error
+    }
     errorCode = errorData.code
-  } catch {
+  }
+  catch {
     errorMessage = response.statusText || errorMessage
   }
 

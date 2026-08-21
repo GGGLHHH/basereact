@@ -1,7 +1,7 @@
-import { type ComponentProps } from 'react'
+import type { ComponentProps } from 'react'
 
-import { cn } from '@/lib/utils'
 import { FieldGroup as UIFieldGroup, FieldLabel as UIFieldLabel } from '@/components/ui/field'
+import { cn } from '@/lib/utils'
 
 // Project field wrapper. `@/components/ui/field` stays byte-identical to the official shadcn
 // base-vega registry source. This wrapper keeps three project extensions:
@@ -13,11 +13,11 @@ import { FieldGroup as UIFieldGroup, FieldLabel as UIFieldLabel } from '@/compon
 // All other field parts are re-exported unchanged.
 export {
   Field,
+  FieldContent,
   FieldDescription,
   FieldLegend,
   FieldSeparator,
   FieldSet,
-  FieldContent,
   FieldTitle,
 } from '@/components/ui/field'
 
@@ -67,7 +67,17 @@ function FieldError({
 }) {
   // Only ever surface a single message: render explicit children if provided, otherwise the
   // first error that carries a message. Extra errors are intentionally collapsed to one line.
-  const content = children ? children : (errors?.find((error) => error?.message)?.message ?? null)
+  const firstErrorMessage
+    = errors?.find(error => error?.message !== undefined && error.message !== '')?.message ?? null
+  // "Provided" = a node worth rendering; the falsy ones ('', 0, false, null, undefined) fall
+  // through to the error message, exactly as the previous `||` did.
+  const hasChildren
+    = children !== undefined
+      && children !== null
+      && children !== false
+      && children !== ''
+      && children !== 0
+  const content = hasChildren ? children : firstErrorMessage
 
   const hasContent = content !== null && content !== undefined && content !== ''
 

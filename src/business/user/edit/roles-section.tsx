@@ -1,8 +1,8 @@
+import type { AdminUserView, RoleView } from '#/generated/api-types'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 
-import type { AdminUserView, RoleView } from '#/generated/api-types'
+import { toast } from 'sonner'
 
 import { useRoles } from '@/api/roles'
 import { useSetUserRoles } from '@/api/users'
@@ -24,50 +24,54 @@ export function RolesSection({ user }: { user: AdminUserView }) {
       description={t('users.edit.rolesDescription')}
       title={t('users.edit.rolesTitle')}
     >
-      {isLoading ? (
-        <div className='flex justify-center py-6'>
-          <Spinner className='size-6' />
-        </div>
-      ) : isError ? (
-        // 目录加载失败绝不能渲染可保存的空编辑器:save 是全量替换,空 seed 一存就
-        // 清空用户全部角色(静默数据丢失)。改渲染重试态。
-        <div className='flex flex-col items-center gap-3 py-6 text-sm text-muted-foreground'>
-          <span>{t('loading.failed')}</span>
-          <Button
-            onClick={() => {
-              void refetch()
-            }}
-            size='sm'
-            variant='outline'
-          >
-            {t('action.retry')}
-          </Button>
-        </div>
-      ) : (
-        <RolesEditor
-          key={user.id}
-          catalog={catalog ?? []}
-          user={user}
-        />
-      )}
+      {isLoading
+        ? (
+            <div className='flex justify-center py-6'>
+              <Spinner className='size-6' />
+            </div>
+          )
+        : isError
+          ? (
+              // 目录加载失败绝不能渲染可保存的空编辑器:save 是全量替换,空 seed 一存就
+              // 清空用户全部角色(静默数据丢失)。改渲染重试态。
+              <div className='flex flex-col items-center gap-3 py-6 text-sm text-muted-foreground'>
+                <span>{t('loading.failed')}</span>
+                <Button
+                  onClick={() => {
+                    void refetch()
+                  }}
+                  size='sm'
+                  variant='outline'
+                >
+                  {t('action.retry')}
+                </Button>
+              </div>
+            )
+          : (
+              <RolesEditor
+                key={user.id}
+                catalog={catalog ?? []}
+                user={user}
+              />
+            )}
     </EditSectionCard>
   )
 }
 
 // 后端 setUserRoles 收角色 id;AdminUserView.roles 是名字。用目录桥接:
 // 回填时名→id,展示时 id→label。存活角色名唯一,映射无歧义。
-function RolesEditor({ user, catalog }: { user: AdminUserView; catalog: RoleView[] }) {
+function RolesEditor({ user, catalog }: { user: AdminUserView, catalog: RoleView[] }) {
   const { t } = useTranslation('common')
   const setRoles = useSetUserRoles()
 
-  const nameToId = useMemo(() => new Map(catalog.map((r) => [r.name, r.id])), [catalog])
+  const nameToId = useMemo(() => new Map(catalog.map(r => [r.name, r.id])), [catalog])
   const idToLabel = useMemo(
-    () => new Map(catalog.map((r) => [r.id, r.display_name || r.name])),
+    () => new Map(catalog.map(r => [r.id, r.display_name || r.name])),
     [catalog],
   )
   const initialIds = useMemo(
     () =>
-      user.roles.map((name) => nameToId.get(name)).filter((id): id is string => id !== undefined),
+      user.roles.map(name => nameToId.get(name)).filter((id): id is string => id !== undefined),
     [user.roles, nameToId],
   )
 
@@ -76,7 +80,8 @@ function RolesEditor({ user, catalog }: { user: AdminUserView; catalog: RoleView
   async function save() {
     try {
       await setRoles.mutateAsync({ id: user.id, roles: selectedIds })
-    } catch (error) {
+    }
+    catch (error) {
       toast.error(getErrorMessage(error))
       return
     }
@@ -96,18 +101,20 @@ function RolesEditor({ user, catalog }: { user: AdminUserView; catalog: RoleView
           variant='outline'
         >
           <span className='flex flex-1 flex-wrap items-center gap-1'>
-            {selectedIds.length === 0 ? (
-              <span className='text-muted-foreground'>{t('users.form.rolesPlaceholder')}</span>
-            ) : (
-              selectedIds.map((id) => (
-                <Badge
-                  key={id}
-                  variant='secondary'
-                >
-                  {idToLabel.get(id) ?? id}
-                </Badge>
-              ))
-            )}
+            {selectedIds.length === 0
+              ? (
+                  <span className='text-muted-foreground'>{t('users.form.rolesPlaceholder')}</span>
+                )
+              : (
+                  selectedIds.map(id => (
+                    <Badge
+                      key={id}
+                      variant='secondary'
+                    >
+                      {idToLabel.get(id) ?? id}
+                    </Badge>
+                  ))
+                )}
           </span>
           <span className='i-lucide-chevron-down size-4 shrink-0 opacity-50' />
         </Button>
@@ -115,7 +122,9 @@ function RolesEditor({ user, catalog }: { user: AdminUserView; catalog: RoleView
       <div className='flex justify-end'>
         <Button
           disabled={setRoles.isPending}
-          onClick={save}
+          onClick={() => {
+            void save()
+          }}
           type='button'
         >
           {t('action.save')}

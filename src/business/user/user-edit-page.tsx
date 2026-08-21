@@ -1,7 +1,7 @@
-import { useRouter } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-
 import type { AdminUserView } from '#/generated/api-types'
+import { useRouter } from '@tanstack/react-router'
+
+import { useTranslation } from 'react-i18next'
 
 import { useUser } from '@/api/users'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
 
-import { AccountStamp, FieldRow, VerifiedBadge } from './user-badges'
 import { AccountSection } from './edit/account-section'
 import { PasswordSection } from './edit/password-section'
 import { ProfileSection } from './edit/profile-section'
 import { RolesSection } from './edit/roles-section'
 import { EditSectionCard } from './edit/section-card'
+import { AccountStamp, FieldRow, VerifiedBadge } from './user-badges'
 
 // 分区式编辑:每区 = 一个后端端点,各自独立保存,失败互不牵连。
 // username/email → updateUser;roles → setUserRoles;password → resetUserPassword;
@@ -42,7 +42,7 @@ export function UserEditPage({ userId }: { userId: string }) {
               alt={user.display_name ?? user.username}
               src={user.avatar_url ?? undefined}
             />
-            <AvatarFallback>{nameInitials(user.display_name || user.username)}</AvatarFallback>
+            <AvatarFallback>{nameInitials((user.display_name ?? '') || user.username)}</AvatarFallback>
           </Avatar>
           <div className='flex min-w-0 flex-col gap-1'>
             <div className='flex flex-wrap items-center gap-2'>
