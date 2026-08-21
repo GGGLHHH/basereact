@@ -1,3 +1,7 @@
+# pnpm 11 默认让新发布的版本静置 24h 才可解析。cadenza 由本机同步发版、当天就要用,
+# 静置期只会把 `pnpm add` 悄悄装成上一个版本 —— 关掉,版本由 lockfile 钉住。
+minimumReleaseAge: 0
+
 shellEmulator: true
 
 trustPolicy: no-downgrade

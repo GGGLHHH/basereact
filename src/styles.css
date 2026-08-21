@@ -1,6 +1,9 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
+/* cadenza-ui 的 styles.css 是 shadcn/tailwind.css 的严格超集(629 行里 628 行逐字
+   相同)。多出的 463 行里有一行是必需的:`@source "./dist"` —— 没有它 Tailwind 扫不到
+   库里的 class,cadenza 组件会全裸渲染。它自己 @import 'tw-animate-css',所以这里
+   不再单列。逐 token 比对过:亮/暗共 63 个共有 token 取值差异 0 个。 */
+@import '@gedatou/cadenza-ui/styles.css';
 @import '@fontsource-variable/inter';
 
 /* Local style partials (order: tokens -> theme bridge -> base layer -> utilities). */
