@@ -1,11 +1,11 @@
 import type { AdminUserView } from '#/generated/api-types'
+import { Button } from '@gedatou/cadenza-ui'
 import { useRouter } from '@tanstack/react-router'
 
 import { useTranslation } from 'react-i18next'
 
 import { useUser } from '@/api/users'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+
 import {
   IconCheck,
   IconChevronRight,
@@ -11,12 +13,6 @@ import {
 import { useTheme } from 'next-themes'
 
 import { useTranslation } from 'react-i18next'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -60,7 +56,7 @@ export function ThemeToggle() {
             <span className='group-data-[collapsible=icon]:sr-only'>{t('theme.changeTheme')}</span>
             <IconChevronRight className='ml-auto size-3.5 text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden' />
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          <DropdownMenuPopup
             side={isMobile ? 'bottom' : 'right'}
             align='end'
             className='min-w-40'
@@ -75,7 +71,7 @@ export function ThemeToggle() {
                 {option.value === theme ? <IconCheck className='size-4' /> : null}
               </DropdownMenuItem>
             ))}
-          </DropdownMenuContent>
+          </DropdownMenuPopup>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

@@ -1,6 +1,5 @@
+import { Spinner } from '@gedatou/cadenza-ui'
 import { Outlet } from '@tanstack/react-router'
-
-import { Spinner } from '@/components/ui/spinner'
 
 export function AdminPending() {
   return (

@@ -1,6 +1,6 @@
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@gedatou/cadenza-ui'
 import { IconChevronRight } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -43,7 +43,7 @@ export function NavMain({
               <span>{item.title}</span>
               <IconChevronRight className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
             </CollapsibleTrigger>
-            <CollapsibleContent>
+            <CollapsiblePanel>
               <SidebarMenuSub>
                 {item.items?.map(subItem => (
                   <SidebarMenuSubItem key={subItem.title}>
@@ -53,7 +53,7 @@ export function NavMain({
                   </SidebarMenuSubItem>
                 ))}
               </SidebarMenuSub>
-            </CollapsibleContent>
+            </CollapsiblePanel>
           </Collapsible>
         ))}
       </SidebarMenu>

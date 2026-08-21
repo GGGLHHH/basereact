@@ -1,7 +1,6 @@
+import { Spinner } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-
-import { Spinner } from '@/components/ui/spinner'
 
 // 组件在非路由文件里,拿不到同文件的 Route:改用同 id 的 RouteApi 取 context,
 // 类型与守卫注入的 me 完全一致。

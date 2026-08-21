@@ -2,6 +2,8 @@
 
 import type { TFunction } from 'i18next'
 import type { AdminMenuEntry } from '@/lib/route-menu'
+
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuSubmenu, DropdownMenuSubmenuPopup, DropdownMenuSubmenuTrigger, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
 import { IconChevronRight, IconCommand, IconLayoutRows, IconWaveSine } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 
@@ -15,17 +17,6 @@ import { NavUser } from '@/components/nav-user'
 import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -83,7 +74,7 @@ function MenuIcon({ icon }: { icon?: string }) {
 
 // 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
 // 只切了个不可见的 open。改走向右弹出的 DropdownMenu 飞出层:叶子=Link 直达,
-// 含子=递归 DropdownMenuSub,多级也能点到任意子页。飞出层用 vendored ui/dropdown-menu
+// 含子=递归 DropdownMenuSubmenu,多级也能点到任意子页。飞出层用 vendored ui/dropdown-menu
 // (块流,不加容器间距);项间缝由下面的 pill 内缩给。
 //
 // 飞出项高亮走内缩 ::before pill:pill 四周都内缩(inset-x-1 + inset-y-0.5),相邻两项的
@@ -122,12 +113,12 @@ function FlyoutMenuNode({
     )
   }
   return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger className={cn(FLYOUT_TRIGGER_CLASS, isActive && FLYOUT_ACTIVE_PILL)}>
+    <DropdownMenuSubmenu>
+      <DropdownMenuSubmenuTrigger className={cn(FLYOUT_TRIGGER_CLASS, isActive && FLYOUT_ACTIVE_PILL)}>
         <MenuIcon icon={node.icon} />
         <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent>
+      </DropdownMenuSubmenuTrigger>
+      <DropdownMenuSubmenuPopup>
         {node.children.map(child => (
           <FlyoutMenuNode
             key={child.url}
@@ -136,8 +127,8 @@ function FlyoutMenuNode({
             t={t}
           />
         ))}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+      </DropdownMenuSubmenuPopup>
+    </DropdownMenuSubmenu>
   )
 }
 
@@ -190,7 +181,7 @@ function MenuNodeItem({
 
   const childrenSub = hasChildren
     ? (
-        <CollapsibleContent>
+        <CollapsiblePanel>
           <SidebarMenuSub>
             {node.children.map(child => (
               <MenuNodeItem
@@ -203,7 +194,7 @@ function MenuNodeItem({
               />
             ))}
           </SidebarMenuSub>
-        </CollapsibleContent>
+        </CollapsiblePanel>
       )
     : null
 
@@ -246,7 +237,7 @@ function MenuNodeItem({
               <MenuIcon icon={node.icon} />
               <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
+            <DropdownMenuPopup
               side='right'
               align='start'
               className='min-w-48'
@@ -267,7 +258,7 @@ function MenuNodeItem({
                   t={t}
                 />
               ))}
-            </DropdownMenuContent>
+            </DropdownMenuPopup>
           </DropdownMenu>
         </SidebarMenuItem>
       )

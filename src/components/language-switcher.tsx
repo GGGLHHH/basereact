@@ -1,14 +1,10 @@
 'use client'
 
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+
 import { IconCheck, IconLanguage } from '@tabler/icons-react'
 
 import { useTranslation } from 'react-i18next'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -48,7 +44,7 @@ export function LanguageSwitcher() {
               {LOCALE_NATIVE_NAMES[current]}
             </span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          <DropdownMenuPopup
             side={isMobile ? 'bottom' : 'right'}
             align='end'
             className='min-w-40'
@@ -65,7 +61,7 @@ export function LanguageSwitcher() {
                 {locale === current ? <IconCheck className='size-4' /> : null}
               </DropdownMenuItem>
             ))}
-          </DropdownMenuContent>
+          </DropdownMenuPopup>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

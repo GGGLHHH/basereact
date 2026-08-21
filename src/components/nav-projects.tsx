@@ -1,14 +1,9 @@
 'use client'
 
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+
 import { IconArrowForward, IconDots, IconFolder, IconTrash } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -52,7 +47,7 @@ export function NavProjects({
                 <IconDots />
                 <span className='sr-only'>{t('nav.projects.moreActions')}</span>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
+              <DropdownMenuPopup
                 className='w-fit'
                 side={isMobile ? 'bottom' : 'right'}
                 align={isMobile ? 'end' : 'start'}
@@ -70,7 +65,7 @@ export function NavProjects({
                   <IconTrash />
                   <span>{t('nav.projects.delete')}</span>
                 </DropdownMenuItem>
-              </DropdownMenuContent>
+              </DropdownMenuPopup>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}

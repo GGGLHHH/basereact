@@ -1,19 +1,11 @@
 'use client'
 
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+
 import { IconPlus, IconSelector } from '@tabler/icons-react'
 import * as React from 'react'
 
 import { useTranslation } from 'react-i18next'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -58,16 +50,16 @@ export function TeamSwitcher({
             </div>
             <IconSelector className='ml-auto' />
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          <DropdownMenuPopup
             className='w-fit'
             align='start'
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className='text-xs text-muted-foreground'>
+              <DropdownMenuGroupLabel className='text-xs text-muted-foreground'>
                 {t('teamSwitcher.teams')}
-              </DropdownMenuLabel>
+              </DropdownMenuGroupLabel>
               {teams.map((team, index) => (
                 <DropdownMenuItem
                   key={team.name}
@@ -94,7 +86,7 @@ export function TeamSwitcher({
                 <div className='font-medium text-muted-foreground'>{t('teamSwitcher.addTeam')}</div>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-          </DropdownMenuContent>
+          </DropdownMenuPopup>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

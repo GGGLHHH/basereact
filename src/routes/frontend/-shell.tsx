@@ -1,9 +1,9 @@
+import { Button } from '@gedatou/cadenza-ui'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { meSoftQueryOptions, useLogout } from '@/api/auth'
-import { Button } from '@/components/ui/button'
 
 export function FrontendShell() {
   const { t } = useTranslation(['common', 'route'])

@@ -1,3 +1,4 @@
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
 import { IconLogout, IconSelector, IconUserCircle } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -5,15 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { useLogout } from '@/api/auth'
 import { useMyProfile } from '@/api/profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -76,14 +68,14 @@ export function NavUser({
             </div>
             <IconSelector className='ml-auto size-4' />
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          <DropdownMenuPopup
             className='w-fit'
             side={isMobile ? 'bottom' : 'right'}
             align='end'
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className='p-0 font-normal'>
+              <DropdownMenuGroupLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                   <Avatar>
                     <AvatarImage
@@ -97,7 +89,7 @@ export function NavUser({
                     <span className='truncate text-xs'>{user.email}</span>
                   </div>
                 </div>
-              </DropdownMenuLabel>
+              </DropdownMenuGroupLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => void navigate({ to: '/admin/profile' })}>
@@ -109,7 +101,7 @@ export function NavUser({
               <IconLogout />
               {t('nav.user.logout')}
             </DropdownMenuItem>
-          </DropdownMenuContent>
+          </DropdownMenuPopup>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
