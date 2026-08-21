@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { useUpdateUser } from '@/api/users'
 import { Field, FieldGroup } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
@@ -51,7 +51,7 @@ export function AccountSection({ user }: { user: AdminUserView }) {
       description={t('users.edit.accountDescription')}
       title={t('users.edit.accountTitle')}
     >
-      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+      <form {...formProps(form)}>
         <FieldGroup>
           <form.AppField name='username'>
             {field => (

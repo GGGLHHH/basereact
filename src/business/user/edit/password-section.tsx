@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import { useResetUserPassword } from '@/api/users'
 import { Field, FieldGroup } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
@@ -41,7 +41,7 @@ export function PasswordSection({ userId }: { userId: string }) {
       description={t('users.edit.passwordDescription')}
       title={t('users.edit.passwordTitle')}
     >
-      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+      <form {...formProps(form)}>
         <FieldGroup>
           <form.AppField name='newPassword'>
             {field => (

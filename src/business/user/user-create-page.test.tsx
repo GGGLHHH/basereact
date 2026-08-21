@@ -102,7 +102,12 @@ describe('userCreatePage', () => {
 
     // open the role picker, toggle 'Admin'
     fireEvent.click(screen.getByText('e.g. admin, editor'))
-    fireEvent.click(await screen.findByRole('button', { name: 'Admin' }))
+    {
+      // cadenza 的候选行建在 Base UI Combobox 上,是 role=option 的列表项,
+      // 不再是迁移前那个裸 <button aria-pressed>。
+      const admin = await screen.findByRole('option', { name: 'Admin' })
+      fireEvent.click(admin)
+    }
 
     fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
 

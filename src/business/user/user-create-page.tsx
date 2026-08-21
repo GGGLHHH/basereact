@@ -1,4 +1,5 @@
 import type { RoleView } from '#/generated/api-types'
+import { Button } from '@gedatou/cadenza-ui'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,9 +10,8 @@ import { z } from 'zod'
 import { useCreateUser } from '@/api/users'
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/api-client'
 
@@ -56,7 +56,11 @@ export function UserCreatePage() {
         return
       }
       toast.success(t('users.create.success'))
-      await navigate({ to: '/admin/users' })
+      // cadenza-form 的提交管线不 catch(链尾是 void Promise…finally),
+      // 导航失败会逃逸成无处理的 promise rejection —— 在这里收口。
+      await navigate({ to: '/admin/users' }).catch((error: unknown) => {
+        console.error(error)
+      })
     },
   })
 
@@ -67,7 +71,7 @@ export function UserCreatePage() {
         <CardDescription>{t('users.create.description')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <FieldGroup>
             <form.AppField name='username'>
               {field => (
@@ -99,8 +103,8 @@ export function UserCreatePage() {
             <Field>
               <FieldLabel>{t('users.columns.roles')}</FieldLabel>
               <RoleInfiniteSelect
-                multiple
-                onChange={(items, ids) => {
+                selectionMode='multiple'
+                onValueChange={(items, ids) => {
                   setRoleItems(items)
                   setRoleIds(ids)
                 }}

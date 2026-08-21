@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
-import { formSubmitHandler, useAppForm } from './index'
+import { formProps, useAppForm } from './index'
 
 afterEach(() => {
   cleanup()
@@ -30,7 +30,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
             {field => (
@@ -69,6 +69,39 @@ describe('tanStack app form fields', () => {
     expect(handleSubmit).not.toHaveBeenCalled()
   })
 
+  // formProps 的 noValidate 是唯一挡住原生约束校验的东西:少了它,type='email'
+  // 之类的原生约束会在 submit 事件派发之前弹气泡并中止提交,整条门面管线不跑,
+  // zod 文案永远没机会出场。
+  it('marks the form noValidate so schema validation is the only source of truth', () => {
+    function DemoForm() {
+      const form = useAppForm({
+        defaultValues: { email: '' },
+        validators: { onChange: z.object({ email: z.email('Bad email') }) },
+        onSubmit: vi.fn(),
+      })
+
+      return (
+        <form
+          {...formProps(form)}
+          data-testid='demo'
+        >
+          <form.AppField name='email'>
+            {field => (
+              <field.TextField
+                label='Email'
+                type='email'
+              />
+            )}
+          </form.AppField>
+        </form>
+      )
+    }
+
+    render(<DemoForm />)
+
+    expect(screen.getByTestId('demo')).toHaveProperty('noValidate', true)
+  })
+
   it('keeps field errors hidden until blur during form-level change validation', async () => {
     function DemoForm() {
       const form = useAppForm({
@@ -86,7 +119,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
             {field => (
@@ -140,7 +173,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
         </form>
       )
@@ -173,7 +206,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppField name='name'>{field => <field.TextField label='Name' />}</form.AppField>
           <form.AppField name='category'>
             {field => (
@@ -209,7 +242,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppField name='category'>
             {field => (
               <field.SelectField
@@ -281,7 +314,7 @@ describe('tanStack app form fields', () => {
       })
 
       return (
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <form.AppForm>
             <form.SubmitButton>Save</form.SubmitButton>
           </form.AppForm>

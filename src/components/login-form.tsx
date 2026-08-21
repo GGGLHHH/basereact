@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { useAdminLogin, useLogin } from '@/api/auth'
 import { Field, FieldGroup } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
@@ -50,7 +50,11 @@ export function LoginForm({
         return
       }
       // ponytail: 登录后固定去 surface 首页;要"回跳来源页"时加 redirect search param。
-      await navigate({ to: redirectTo })
+      // 同 user-create-page:cadenza-form 的提交管线不 catch,导航失败
+      // 会逃逸成无处理的 promise rejection —— 在这里收口。
+      await navigate({ to: redirectTo }).catch((error: unknown) => {
+        console.error(error)
+      })
     },
   })
 
@@ -65,7 +69,7 @@ export function LoginForm({
           <CardDescription>{t('auth.login.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+          <form {...formProps(form)}>
             <FieldGroup>
               <form.AppField name='identifier'>
                 {field => (

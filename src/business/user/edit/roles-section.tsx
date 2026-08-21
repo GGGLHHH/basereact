@@ -1,4 +1,5 @@
 import type { AdminUserView, RoleView } from '#/generated/api-types'
+import { Button, Spinner } from '@gedatou/cadenza-ui'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -8,8 +9,6 @@ import { useRoles } from '@/api/roles'
 import { useSetUserRoles } from '@/api/users'
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
@@ -91,8 +90,8 @@ function RolesEditor({ user, catalog }: { user: AdminUserView, catalog: RoleView
   return (
     <div className='flex flex-col gap-3'>
       <RoleInfiniteSelect
-        multiple
-        onChange={(_items, ids) => setSelectedIds(ids)}
+        selectionMode='multiple'
+        onValueChange={(_items, ids) => setSelectedIds(ids)}
         value={selectedIds}
       >
         <Button

@@ -1,59 +1,36 @@
+import type { FieldGroupProps } from '@gedatou/cadenza-ui'
 import type { ComponentProps } from 'react'
 
-import { FieldGroup as UIFieldGroup, FieldLabel as UIFieldLabel } from '@/components/ui/field'
+import { FieldGroup as CadenzaFieldGroup } from '@gedatou/cadenza-ui'
 import { cn } from '@/lib/utils'
 
-// Project field wrapper. `@/components/ui/field` stays byte-identical to the official shadcn
-// base-vega registry source. This wrapper keeps three project extensions:
-//  - FieldLabel gains `require`/`required` props that append a destructive `*` RequiredMark.
+// Project field wrapper over @gedatou/cadenza-ui. Two project extensions survive the move:
 //  - FieldError reserves vertical space (stays mounted, min-h-5, invisible when empty) so the
-//    form layout does not jump as validation messages appear/disappear.
+//    form layout does not jump as validation messages appear/disappear. cadenza's own FieldError
+//    returns null when empty, which would make every message toggle reflow the form.
 //  - FieldGroup defaults to gap-0: with FieldError always reserving its own vertical space, the
-//    base gap-7 would double the spacing between fields. Callers can still pass a `gap-*`.
-// All other field parts are re-exported unchanged.
+//    library's gap would double the spacing between fields. Callers can still pass a `gap-*`.
+//    These two are one decision, not two — change either and the other must follow.
+// The required asterisk is no longer local: cadenza's FieldLabel/FieldLegend/FieldTitle carry a
+// `required` prop of their own (aria-hidden mark, same semantics), so the wrapper is gone and
+// call sites pass `required` instead of the old `require` alias.
 export {
   Field,
   FieldContent,
   FieldDescription,
+  FieldLabel,
   FieldLegend,
   FieldSeparator,
   FieldSet,
   FieldTitle,
-} from '@/components/ui/field'
+} from '@gedatou/cadenza-ui'
 
-function FieldGroup({ className, ...props }: ComponentProps<typeof UIFieldGroup>) {
+function FieldGroup({ className, ...props }: FieldGroupProps) {
   return (
-    <UIFieldGroup
+    <CadenzaFieldGroup
       className={cn('gap-0', className)}
       {...props}
     />
-  )
-}
-
-function RequiredMark() {
-  return (
-    <span
-      aria-hidden='true'
-      className='ml-0.5 text-destructive'
-    >
-      *
-    </span>
-  )
-}
-
-type FieldLabelProps = ComponentProps<typeof UIFieldLabel> & {
-  require?: boolean
-  required?: boolean
-}
-
-function FieldLabel({ children, require: requireMark, required, ...props }: FieldLabelProps) {
-  const showRequiredMark = requireMark ?? required
-
-  return (
-    <UIFieldLabel {...props}>
-      {children}
-      {showRequiredMark ? <RequiredMark /> : null}
-    </UIFieldLabel>
   )
 }
 
@@ -98,4 +75,4 @@ function FieldError({
   )
 }
 
-export { FieldError, FieldGroup, FieldLabel }
+export { FieldError, FieldGroup }

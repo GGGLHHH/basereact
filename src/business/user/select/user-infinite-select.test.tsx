@@ -5,13 +5,27 @@ import type { AdminUserView, ListUsersQuery, Page_AdminUserView } from '#/genera
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const listUsersMock = vi.fn<(options: { query?: ListUsersQuery }) => Promise<Page_AdminUserView>>()
 
 vi.mock('#/generated/client', () => ({
   listUsers: listUsersMock,
 }))
+
+// 动态 import 是必须的:vi.mock 会被提升到文件顶部,静态 import 会在 listUsersMock
+// 完成初始化之前就拉起整条依赖链(TDZ 报错)。但只加载**一次** —— 迁到 cadenza 之后
+// 组件背后是 144 kB 的库包,原先每条测试 vi.resetModules() 都要把它重新解析一遍,
+// 在并行跑全量时能把单条测试拖到 8 秒以上并随机超时。
+let UserInfiniteSelect: Awaited<typeof componentPromise>['UserInfiniteSelect']
+const componentPromise = import('./user-infinite-select')
+
+// 加载放进 beforeAll 并单独给 30s:迁到 cadenza 之后这条依赖链是整个组件库,
+// 并行跑全量时首条测试在自己的 5s 预算内付不完这笔加载,会随机超时 ——
+// 而超时的测试不会走 cleanup,残留 DOM 又会把下一条一起带挂。
+beforeAll(async () => {
+  ({ UserInfiniteSelect } = await componentPromise)
+}, 30_000)
 
 class MockResizeObserver {
   observe() {}
@@ -110,19 +124,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function loadComponent() {
-  vi.resetModules()
-  return import('./user-infinite-select')
-}
-
 describe('userInfiniteSelect', () => {
   it('renders the trigger children without fetching', async () => {
     listUsersMock.mockResolvedValue(buildPage(1, 20))
-    const { UserInfiniteSelect } = await loadComponent()
     const { Wrapper } = createWrapper()
 
     render(
-      <UserInfiniteSelect onChange={vi.fn()}>
+      <UserInfiniteSelect onValueChange={vi.fn()}>
         <button type='button'>Open user picker</button>
       </UserInfiniteSelect>,
       { wrapper: Wrapper },
@@ -135,11 +143,10 @@ describe('userInfiniteSelect', () => {
 
   it('fetches users with an empty cursor seed after the popover opens', async () => {
     listUsersMock.mockResolvedValue(buildPage(1, 20))
-    const { UserInfiniteSelect } = await loadComponent()
     const { Wrapper } = createWrapper()
 
     render(
-      <UserInfiniteSelect onChange={vi.fn()}>
+      <UserInfiniteSelect onValueChange={vi.fn()}>
         <button type='button'>Open</button>
       </UserInfiniteSelect>,
       { wrapper: Wrapper },
@@ -159,13 +166,12 @@ describe('userInfiniteSelect', () => {
       items: [makeUser(0, null)],
       page_info: { mode: 'cursor', limit: 20, next_cursor: null, has_more: false },
     })
-    const { UserInfiniteSelect } = await loadComponent()
     const { Wrapper } = createWrapper()
 
     render(
       <UserInfiniteSelect
         defaultOpen
-        onChange={vi.fn()}
+        onValueChange={vi.fn()}
       >
         <button type='button'>Open</button>
       </UserInfiniteSelect>,
@@ -182,7 +188,6 @@ describe('userInfiniteSelect', () => {
       items: [user],
       page_info: { mode: 'cursor', limit: 20, next_cursor: null, has_more: false },
     })
-    const { UserInfiniteSelect } = await loadComponent()
     const { Wrapper } = createWrapper()
     const onChange = vi.fn()
     const onOpenChange = vi.fn<(open: boolean) => void>()
@@ -190,7 +195,7 @@ describe('userInfiniteSelect', () => {
     render(
       <UserInfiniteSelect
         defaultOpen
-        onChange={onChange}
+        onValueChange={onChange}
         onOpenChange={onOpenChange}
       >
         <button type='button'>Open</button>
@@ -201,20 +206,21 @@ describe('userInfiniteSelect', () => {
     await flushQueries()
     fireEvent.click(await screen.findByText('User 0'))
 
-    expect(onChange).toHaveBeenCalledWith(user)
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    // cadenza 的 onValueChange 多带一个 eventDetails(cancel 协议),只校验选中项本身。
+    expect(onChange.mock.calls[0]?.[0]).toEqual(user)
+    // onOpenChange 第二参是 cadenza 的 eventDetails,只校验开合本身。
+    expect(onOpenChange.mock.calls.at(-1)?.[0]).toBe(false)
   })
 
   it('maps the search box to the username filter', async () => {
     vi.useFakeTimers()
     listUsersMock.mockResolvedValue(buildPage(1, 20))
-    const { UserInfiniteSelect } = await loadComponent()
     const { Wrapper } = createWrapper()
 
     render(
       <UserInfiniteSelect
         defaultOpen
-        onChange={vi.fn()}
+        onValueChange={vi.fn()}
       >
         <button type='button'>Open</button>
       </UserInfiniteSelect>,

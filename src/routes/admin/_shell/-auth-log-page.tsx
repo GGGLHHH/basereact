@@ -1,17 +1,10 @@
 import type { AuthOutcome } from './-auth-log/types'
+import { SearchField, Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AuthEventTable } from '@/business/auth-log/table'
-import { SearchInput } from '@/components/search-input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 import { ActivityChart } from './-auth-log/activity-chart'
 import { Breakdowns } from './-auth-log/breakdowns'
@@ -61,7 +54,7 @@ export function AuthLogPage() {
 
   // 事件表:**服务端**过滤(`q` 联合模糊搜 actor/identifier/ip + `outcome` 状态)+ offset 分页 + total
   // ——全历史检索,取代对近期流的内存过滤。page/size 进 URL search(同 users 路由);q/outcome 本地态
-  // (不进 URL),`q` 由 SearchInput 去抖后回填。表纯展示,数据由这层注入。
+  // (不进 URL),`q` 由 SearchField 去抖后回填。表纯展示,数据由这层注入。
   const { page, size } = routeApi.useSearch()
   const navigate = routeApi.useNavigate()
   const [outcome, setOutcome] = useState<'all' | AuthOutcome>('all')
@@ -128,8 +121,8 @@ export function AuthLogPage() {
             {t('authLog.table.title')}
           </h2>
           <div className='flex items-center gap-2'>
-            <SearchInput
-              onSearch={(v) => {
+            <SearchField
+              onQueryValueChange={(v) => {
                 setQ(v ?? '')
                 goPage(1)
               }}
@@ -139,7 +132,11 @@ export function AuthLogPage() {
             <Select
               value={outcome}
               onValueChange={(v) => {
-                setOutcome(v as typeof outcome)
+                // cadenza 的 onValueChange 第二参是 eventDetails(cancel 协议),这里用不到。
+                // 单选清空时它给的是 null 而非空串 —— 本 Select 没有清除键,不会走到。
+                if (v === null)
+                  return
+                setOutcome(v)
                 goPage(1)
               }}
             >
@@ -149,11 +146,11 @@ export function AuthLogPage() {
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectPopup>
                 <SelectItem value='all'>{t('authLog.table.allOutcomes')}</SelectItem>
                 <SelectItem value='success'>{t('authLog.chart.success')}</SelectItem>
                 <SelectItem value='failure'>{t('authLog.chart.failure')}</SelectItem>
-              </SelectContent>
+              </SelectPopup>
             </Select>
           </div>
         </div>

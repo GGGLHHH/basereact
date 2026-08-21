@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react'
 import type { ProfileResponse } from '#/generated/api-types'
+import { Button, Spinner } from '@gedatou/cadenza-ui'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -7,10 +8,8 @@ import { toast } from 'sonner'
 
 import { useUpdateUserProfile, useUploadUserAvatar, useUserProfile } from '@/api/profile'
 import { Field, FieldGroup } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
 import { getErrorMessage } from '@/lib/api-client'
 import { nameInitials } from '@/lib/display-name'
 
@@ -181,7 +180,7 @@ function ProfileForm({ userId, profile }: { userId: string, profile: ProfileResp
         />
       </div>
 
-      <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+      <form {...formProps(form)}>
         <FieldGroup>
           <form.AppField name='display_name'>
             {field => (

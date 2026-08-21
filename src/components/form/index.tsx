@@ -1,22 +1,30 @@
-import type { AnyFieldApi, UpdateMetaOptions } from '@tanstack/react-form'
-import type { ReactNode, SubmitEvent } from 'react'
-import {
-
-  createFormHook,
-  createFormHookContexts,
-
-} from '@tanstack/react-form'
-import { useSelector as useFormStore } from '@tanstack/react-store'
+import type { AnyFieldApi } from '@gedatou/cadenza-form'
+import type { ReactNode } from 'react'
+import { createFormHook, fieldErrorId, fieldHasError } from '@gedatou/cadenza-form'
 import { useId } from 'react'
 
 // 字段组件住 ./fields:它们和这里导出的 hook/纯函数放同一个文件时,整组非组件导出
 // 都会拦住 Fast Refresh(react-refresh/only-export-components)。
 // 两边确实互相 import,但只在函数体内取值(顶层不读对方的导出),循环是安全的。
-import { PasswordField, SelectField, SubmitButton, TextareaField, TextField } from './fields'
+import { PasswordField, SelectField, SubmitButton, TextField } from './fields'
 
-export interface FormFieldError { message?: string }
-
-export { useFormStore }
+// 校验门禁、错误归一化、id 生成、提交管线全部来自 @gedatou/cadenza-form ——
+// 本地原实现与它逐个函数体等价(门禁同为 (isDirty && isBlurred) || submissionAttempts > 0,
+// fieldErrorId 同为 replaceAll(/[^\w-]/g,'-')+'-error')。库版是超集:
+// fieldControlProps 多一条从 schema 空值探针推导出的 aria-required,
+// formProps 还带 noValidate + revealFieldErrors + 迟到字段补校验。
+export type { AppFieldControlProps, FormFieldError } from '@gedatou/cadenza-form'
+export {
+  fieldControlProps,
+  fieldErrorId,
+  fieldErrors,
+  fieldInvalidState,
+  fieldShouldShowError,
+  formProps,
+  normalizeFieldErrors,
+  useFieldContext,
+  useFormContext,
+} from '@gedatou/cadenza-form'
 
 export interface FormSelectFieldOption {
   disabled?: boolean
@@ -24,115 +32,20 @@ export interface FormSelectFieldOption {
   value: string
 }
 
-interface FormSubmitHandlerOptions {
-  focusFirstError?: boolean
-}
-
-export interface AppFieldControlProps {
-  'aria-describedby': string
-  'aria-invalid': boolean
-  'id': string
-  'name': string
-}
-
-const INVALID_FORM_CONTROL_SELECTOR
-  = '[aria-invalid="true"]:not(:disabled):not([aria-disabled="true"])'
-
-export const { fieldContext, formContext, useFieldContext, useFormContext } = createFormHookContexts()
-
-export const { useAppForm, withForm } = createFormHook({
+export const { useAppForm } = createFormHook({
   fieldComponents: {
     PasswordField,
     SelectField,
-    TextareaField,
     TextField,
   },
   formComponents: {
     SubmitButton,
   },
-  fieldContext,
-  formContext,
 })
-
-export const silentFieldUpdateOptions: UpdateMetaOptions = {
-  dontRunListeners: true,
-  dontUpdateMeta: true,
-  dontValidate: true,
-}
-
-export const validatingFieldUpdateOptions: UpdateMetaOptions = {
-  dontRunListeners: true,
-}
-
-export function formSubmitHandler(
-  handleSubmit: () => Promise<void> | void,
-  { focusFirstError = true }: FormSubmitHandlerOptions = {},
-) {
-  return (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-    const form = event.currentTarget
-
-    void Promise.resolve(handleSubmit())
-      .catch((error: unknown) => {
-        // form-core re-throws onSubmit rejections; without this catch they
-        // surface as unhandled promise rejections with no user-facing path.
-        console.error(error)
-      })
-      .finally(() => {
-        if (focusFirstError) {
-          focusFirstInvalidControl(form)
-        }
-      })
-  }
-}
-
-function focusFirstInvalidControl(form: HTMLFormElement) {
-  // 直接取 window.requestAnimationFrame 会让方法与 window 分离(this 丢失)。
-  // 包一层调用点即可;rAF 缺席时退 setTimeout —— 它需要显式延时参数。
-  const schedule = (callback: () => void): void => {
-    if (typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(callback)
-      return
-    }
-    window.setTimeout(callback, 0)
-  }
-
-  schedule(() => {
-    if (!form.isConnected) {
-      return
-    }
-
-    const invalidControl = form.querySelector<HTMLElement>(INVALID_FORM_CONTROL_SELECTOR)
-    invalidControl?.focus()
-  })
-}
-
-export function fieldErrors(field: AnyFieldApi): FormFieldError[] {
-  if (!fieldShouldShowError(field)) {
-    return []
-  }
-
-  return normalizeFieldErrors(field.state.meta.errors)
-}
-
-export function fieldHasError(field: AnyFieldApi): boolean {
-  return fieldErrors(field).length > 0
-}
-
-export function fieldErrorMessage(field: AnyFieldApi): string | undefined {
-  return fieldErrors(field)[0]?.message
-}
-
-export function fieldShouldShowError(field: AnyFieldApi): boolean {
-  // 纯 tab 穿过(blur 但没输入过)不算:isDirty 是 sticky 的,输过又清空仍会报。
-  const { isBlurred, isDirty } = field.state.meta
-  return (isDirty && isBlurred) || field.form.state.submissionAttempts > 0
-}
 
 /**
  * `AnyFieldApi` 的泛型被擦成 any,`name` 也跟着失去类型 —— 但它在运行时始终是
- * 字段路径字符串。收口在这里,五个调用点就不必各自断言。
+ * 字段路径字符串。收口在这里,调用点就不必各自断言。
  */
 export function fieldNameOf(field: AnyFieldApi): string {
   return String(field.name)
@@ -146,37 +59,13 @@ export function hasNode(node: ReactNode): boolean {
   return node !== undefined && node !== null && node !== false && node !== '' && node !== 0
 }
 
-export function fieldErrorId(fieldName: string): string {
-  return `${fieldName.replaceAll(/[^\w-]/g, '-')}-error`
-}
-
-export function fieldInvalidState(field: AnyFieldApi): {
-  errorId: string
-  invalid: boolean
-} {
-  return {
-    errorId: fieldErrorId(fieldNameOf(field)),
-    invalid: fieldHasError(field),
-  }
-}
-
-export function fieldControlProps(field: AnyFieldApi): AppFieldControlProps {
-  const { errorId, invalid } = fieldInvalidState(field)
-
-  const name = fieldNameOf(field)
-
-  return {
-    'id': name,
-    'name': name,
-    'aria-describedby': errorId,
-    'aria-invalid': invalid,
-  }
-}
-
 /**
  * Instance-scoped ids via useId so two forms sharing a field name on one page
- * never collide on id/htmlFor/aria-describedby. The exported name-based helpers
- * (fieldControlProps/fieldInvalidState) stay for non-component callers.
+ * never collide on id/htmlFor/aria-describedby.
+ *
+ * 这是 cadenza-form 没有的一件事:它的 fieldControlProps 直接拿裸 field.name 当
+ * DOM id。所以不是替换关系而是叠加 —— 需要 aria-required 推导时写成
+ * `{...fieldControlProps(field), id: controlId, 'aria-describedby': errorId}`。
  */
 export function useFieldIds(field: AnyFieldApi): {
   controlId: string
@@ -192,31 +81,4 @@ export function useFieldIds(field: AnyFieldApi): {
     errorId: `${reactId}${fieldErrorId(name)}`,
     invalid: fieldHasError(field),
   }
-}
-
-export function normalizeFieldErrors(errors: unknown[]): FormFieldError[] {
-  return errors.flatMap((error) => {
-    if (Array.isArray(error)) {
-      return normalizeFieldErrors(error)
-    }
-
-    if (typeof error === 'string') {
-      return [{ message: error }]
-    }
-
-    if (isErrorWithMessage(error)) {
-      return [{ message: error.message }]
-    }
-
-    return []
-  })
-}
-
-function isErrorWithMessage(error: unknown): error is FormFieldError {
-  return (
-    typeof error === 'object'
-    && error !== null
-    && 'message' in error
-    && typeof (error as FormFieldError).message === 'string'
-  )
 }

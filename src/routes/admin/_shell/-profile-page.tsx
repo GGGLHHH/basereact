@@ -1,4 +1,5 @@
 import type { ChangeEvent } from 'react'
+import { Button, Spinner } from '@gedatou/cadenza-ui'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -6,11 +7,9 @@ import { toast } from 'sonner'
 
 import { useMyProfile, useUpdateProfile, useUploadAvatar } from '@/api/profile'
 import { Field, FieldGroup } from '@/components/field'
-import { formSubmitHandler, useAppForm } from '@/components/form'
+import { formProps, useAppForm } from '@/components/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Spinner } from '@/components/ui/spinner'
 import { getErrorMessage } from '@/lib/api-client'
 import { nameInitials } from '@/lib/display-name'
 
@@ -143,7 +142,7 @@ export function ProfilePage() {
           />
         </div>
 
-        <form onSubmit={formSubmitHandler(() => form.handleSubmit())}>
+        <form {...formProps(form)}>
           <FieldGroup>
             <form.AppField name='display_name'>
               {field => (

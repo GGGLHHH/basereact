@@ -1,34 +1,33 @@
-import type { ReactNode } from 'react'
+import type {
+  ControllableSelectionProps,
+  InfiniteComboboxStateOptions,
+  InfiniteSelectOption,
+} from '@gedatou/cadenza-ui'
+import type { ReactElement, ReactNode } from 'react'
 import type { AdminUserView } from '#/generated/api-types'
-
-import type { InfiniteComboboxChildren } from '@/components/select/infinite-combobox'
-
-import type { ControllableSelectionProps, InfiniteSelectOption } from '@/components/select/infinite-select'
+import {
+  InfiniteCombobox,
+  InfiniteSelectEmpty,
+  InfiniteSelectError,
+  InfiniteSelectLoadingMore,
+  InfiniteSelectLoadingOverlay,
+  InfiniteSelectRetry,
+  useInfiniteComboboxState,
+} from '@gedatou/cadenza-ui'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInfiniteUserOptions } from '@/api/users'
-import { InfiniteCombobox } from '@/components/select/infinite-combobox'
-import {
-  getInfiniteComboboxSelectionProps,
-  useInfiniteComboboxState,
-} from '@/components/select/infinite-combobox-state'
-import {
-
-  InfiniteSelectEmpty,
-  InfiniteSelectError,
-  InfiniteSelectLoading,
-  InfiniteSelectLoadingMore,
-
-  InfiniteSelectRetry,
-} from '@/components/select/infinite-select'
+import { getInfiniteComboboxSelectionProps } from '@/components/select/selection-props'
 
 interface UserInfiniteSelectCommonProps {
-  children: InfiniteComboboxChildren<AdminUserView>
+  /** 触发器。位置化 children:第一个 child 是 trigger,状态插槽由本组件在其后补齐。 */
+  children: ReactElement
   disabled?: boolean
 
   open?: boolean
   defaultOpen?: boolean
-  onOpenChange?: (open: boolean) => void
+  /** 第二参是 cadenza 的 eventDetails,`cancel()` 可否决这次开合。 */
+  onOpenChange?: InfiniteComboboxStateOptions['onOpenChange']
 
   contentClassName?: string
   align?: 'start' | 'center' | 'end'
@@ -36,7 +35,7 @@ interface UserInfiniteSelectCommonProps {
   pageSize?: number
 
   /**
-   * Defers multi-select `onChange` until the popover closes.
+   * Defers multi-select `onValueChange` until the popover closes.
    *
    * Useful for table filters where each external change updates the URL and
    * refetches the table.
@@ -53,9 +52,9 @@ export type UserInfiniteSelectProps = UserInfiniteSelectCommonProps
   & ControllableSelectionProps<AdminUserView>
 
 /**
- * User-specific select wrapper combining user queries and `InfiniteCombobox`.
+ * User-specific select wrapper combining user queries and cadenza's `InfiniteCombobox`.
  *
- * 状态文案(空/加载/错误)i18n 在**本业务层**注入(底座 infinite-select 零 i18n),可用 `slots` 覆盖。
+ * 状态文案(空/加载/错误)i18n 在**本业务层**注入(cadenza 零 i18n),可用 `slots` 追加。
  */
 export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
   const { t } = useTranslation('common')
@@ -92,38 +91,27 @@ export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
 
   const selectionProps = getInfiniteComboboxSelectionProps<AdminUserView>(props)
 
-  // 内置 i18n 状态插槽(始终渲染,按状态自显示);调用方 `slots` 追加在其后。
-  const stateSlots = (
-    <>
+  return (
+    <InfiniteCombobox<AdminUserView>
+      commitOnClose={props.selectionMode === 'multiple' ? commitOnClose : false}
+      contentClassName={contentClassName}
+      disabled={disabled}
+      getOption={getOption}
+      list={list}
+      popoverProps={{ align }}
+      searchPlaceholder={searchPlaceholder}
+      state={combobox}
+      {...selectionProps}
+    >
+      {children}
       <InfiniteSelectEmpty>{t('loading.empty')}</InfiniteSelectEmpty>
-      <InfiniteSelectLoading>{t('loading.loading')}</InfiniteSelectLoading>
+      <InfiniteSelectLoadingOverlay>{t('loading.loading')}</InfiniteSelectLoadingOverlay>
       <InfiniteSelectLoadingMore>{t('loading.loadingMore')}</InfiniteSelectLoadingMore>
       <InfiniteSelectError>
         {t('loading.failed')}
         <InfiniteSelectRetry>{t('action.retry')}</InfiniteSelectRetry>
       </InfiniteSelectError>
-    </>
-  )
-
-  return (
-    <InfiniteCombobox<AdminUserView>
-      align={align}
-      commitOnClose={props.multiple ? commitOnClose : false}
-      contentClassName={contentClassName}
-      disabled={disabled}
-      getOption={getOption}
-      list={list}
-      searchPlaceholder={searchPlaceholder}
-      slots={(
-        <>
-          {stateSlots}
-          {slots}
-        </>
-      )}
-      state={combobox}
-      {...selectionProps}
-    >
-      {children}
+      {slots}
     </InfiniteCombobox>
   )
 }

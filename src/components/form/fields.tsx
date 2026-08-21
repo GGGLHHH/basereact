@@ -1,23 +1,24 @@
 import type { ComponentProps, ReactNode } from 'react'
 import type { FormSelectFieldOption } from './index'
 
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-
-import { Field, FieldError, FieldLabel } from '@/components/field'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { fieldErrors, useFieldContext, useFormContext } from '@gedatou/cadenza-form'
 import {
+  Button,
+  Input,
   Select,
-  SelectContent,
   SelectItem,
+  SelectPopup,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+} from '@gedatou/cadenza-ui'
+
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Field, FieldError, FieldLabel } from '@/components/field'
+
 import { cn } from '@/lib/utils'
 
-import { fieldErrors, hasNode, useFieldContext, useFieldIds, useFormContext } from './index'
+import { hasNode, useFieldIds } from './index'
 
 interface BaseAppFieldProps {
   controlClassName?: string
@@ -44,12 +45,6 @@ interface TextFieldProps
 interface PasswordFieldProps extends Omit<TextFieldProps, 'endAdornment' | 'type'> {
   toggleLabel?: string
 }
-
-type TextareaFieldProps = BaseAppFieldProps
-  & Omit<
-    ComponentProps<typeof Textarea>,
-    'aria-describedby' | 'aria-invalid' | 'id' | 'name' | 'onBlur' | 'onChange' | 'value'
-  >
 
 interface SelectFieldProps
   extends
@@ -112,7 +107,7 @@ export function TextField({
                 ? (
                     <FieldLabel
                       htmlFor={controlId}
-                      require={required}
+                      required={required}
                       className={labelClassName}
                     >
                       {label}
@@ -171,55 +166,6 @@ export function PasswordField({ className, controlClassName, toggleLabel, ...pro
   )
 }
 
-export function TextareaField({
-  className,
-  errorClassName,
-  fieldClassName,
-  label,
-  labelClassName,
-  required,
-  ...props
-}: TextareaFieldProps) {
-  const field = useFieldContext<string>()
-  const { controlId, errorId, invalid } = useFieldIds(field)
-
-  return (
-    <Field
-      data-invalid={invalid}
-      className={fieldClassName}
-    >
-      {hasNode(label)
-        ? (
-            <FieldLabel
-              htmlFor={controlId}
-              require={required}
-              className={labelClassName}
-            >
-              {label}
-            </FieldLabel>
-          )
-        : null}
-      <Textarea
-        {...props}
-        id={controlId}
-        name={field.name}
-        className={className}
-        value={field.state.value ?? ''}
-        onBlur={field.handleBlur}
-        onChange={event => field.handleChange(event.target.value)}
-        aria-describedby={errorId}
-        aria-invalid={invalid}
-        aria-required={required || undefined}
-      />
-      <FieldError
-        id={errorId}
-        className={errorClassName}
-        errors={fieldErrors(field)}
-      />
-    </Field>
-  )
-}
-
 export function SelectField({
   className,
   disabled,
@@ -244,7 +190,7 @@ export function SelectField({
         ? (
             <FieldLabel
               htmlFor={controlId}
-              require={required}
+              required={required}
               className={labelClassName}
             >
               {label}
@@ -255,6 +201,8 @@ export function SelectField({
         disabled={disabled}
         items={options}
         value={field.state.value ?? ''}
+        // cadenza 单选清空给的是 null(不是空串),第二参是 eventDetails。
+        // 字段值仍统一用空串表示「未选」,所以在这里归一化。
         onValueChange={value => field.handleChange(value ?? '')}
         onOpenChange={(open) => {
           // Closing the popup is the select's "blur": marks isBlurred so
@@ -275,7 +223,7 @@ export function SelectField({
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectPopup>
           {options.map(option => (
             <SelectItem
               key={option.value}
@@ -285,7 +233,7 @@ export function SelectField({
               {option.label}
             </SelectItem>
           ))}
-        </SelectContent>
+        </SelectPopup>
       </Select>
       <FieldError
         id={errorId}

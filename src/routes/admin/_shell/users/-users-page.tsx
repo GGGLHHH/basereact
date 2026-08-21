@@ -1,4 +1,5 @@
 import type { AdminUserView } from '#/generated/api-types'
+import { Button, InfiniteSelectClear, InfiniteSelectClose, InfiniteSelectFooter, SearchField } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,14 +8,7 @@ import { useUsers } from '@/api/users'
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { DeleteUserDialog } from '@/business/user/delete-user-dialog'
 import { UserTable } from '@/business/user/table'
-import { SearchInput } from '@/components/search-input'
-import {
-  InfiniteSelectClearButton,
-  InfiniteSelectConfirmButton,
-  InfiniteSelectFooter,
-} from '@/components/select/infinite-select'
 import { toDataPagination } from '@/components/table/pagination'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
@@ -43,21 +37,21 @@ export function UsersPage() {
     <>
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
-          <SearchInput
+          <SearchField
             className='max-w-xs'
             placeholder={t('users.searchPlaceholder')}
             defaultValue={q}
-            // q 变即回第 1 页;SearchInput 已归一化(空串 → undefined)。
-            onSearch={(next) => {
+            // q 变即回第 1 页;SearchField 已归一化(trim 后空串 → undefined)。
+            onQueryValueChange={(next) => {
               void navigate({ search: prev => ({ ...prev, page: 1, q: next }) })
             }}
           />
           <RoleInfiniteSelect
             commitOnClose
-            multiple
+            selectionMode='multiple'
             value={role?.map(r => r.id) ?? []}
             // items 自带 id+name(角色是全量加载的封闭集,items 恒完整)→ 直接存对象,无目录映射。
-            onChange={(items) => {
+            onValueChange={(items) => {
               const picked = items.map(r => ({ id: r.id, name: r.name }))
               void navigate({
                 search: prev => ({
@@ -69,9 +63,9 @@ export function UsersPage() {
             }}
             slots={(
               <InfiniteSelectFooter>
-                <InfiniteSelectClearButton>{t('action.clear')}</InfiniteSelectClearButton>
+                <InfiniteSelectClear>{t('action.clear')}</InfiniteSelectClear>
                 <Separator orientation='vertical' />
-                <InfiniteSelectConfirmButton>{t('action.confirm')}</InfiniteSelectConfirmButton>
+                <InfiniteSelectClose>{t('action.confirm')}</InfiniteSelectClose>
               </InfiniteSelectFooter>
             )}
           >
