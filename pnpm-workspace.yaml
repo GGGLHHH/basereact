@@ -1,3 +1,18 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
+# Three lockfile entries lost provenance relative to earlier releases of the same
+# package. None is a direct dependency and none can be moved without dropping the
+# feature that pulls it in, so each is excluded by exact version — the field takes
+# no wildcards, so a version bump means coming back here.
+trustPolicyExclude:
+  # via @reduxjs/toolkit <- recharts, which the chart components need.
+  - reselect@5.1.1
+  # via @babel/core <- @babel/preset-typescript <- shadcn.
+  - semver@6.3.1
+  # via @types/node <- happy-dom / vitest.
+  - undici-types@6.21.0
+
 onlyBuiltDependencies:
   - esbuild
   - lightningcss

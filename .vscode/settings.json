@@ -1,4 +1,5 @@
 {
+  // TanStack Router rewrites this on every route change — never hand-edit it.
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
   },
@@ -8,31 +9,44 @@
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
+
+  // Disable the default formatter, use eslint instead
+  "prettier.enable": false,
   "editor.formatOnSave": false,
-  "editor.formatOnSaveMode": "file",
+
+  // Auto fix
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always",
-    "source.format.oxc": "always"
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
   },
-  "oxc.fixKind": "dangerous_fix_or_suggestion",
-  "[javascript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
+
+  // Silent the stylistic rules in you IDE, but still auto fix them
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off" },
+    { "rule": "*-indent", "severity": "off" },
+    { "rule": "*-spacing", "severity": "off" },
+    { "rule": "*-spaces", "severity": "off" },
+    { "rule": "*-order", "severity": "off" },
+    { "rule": "*-dangle", "severity": "off" },
+    { "rule": "*-newline", "severity": "off" },
+    { "rule": "*quotes", "severity": "off" },
+    { "rule": "*semi", "severity": "off" }
+  ],
+
+  // Enable eslint for all supported languages
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml"
+  ],
+
   "gopls": {
     "formatting.gofumpt": true,
     "ui.semanticTokens": true
