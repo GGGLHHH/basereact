@@ -1,5 +1,6 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
+import type { KeyboardEvent } from 'react'
 
 import type { AdminUserView } from '#/generated/api-types'
 import { Button } from '@gedatou/cadenza-ui'
@@ -18,8 +19,20 @@ export interface UserRowActions {
   onDelete?: (user: AdminUserView) => void
 }
 
-// 每个操作按钮都要 stopPropagation:整行点击已绑详情跳转(见 user-table.tsx 的
-// onRowAction),不拦截的话点删除会连带触发导航。
+// 整行点击已绑详情跳转(见 user-table.tsx 的 onRowAction),操作按钮必须把事件截住,
+// 否则点删除会连带触发导航。**鼠标和键盘要分别挡**:
+//
+// cadenza 给带 onRowAction 的 <tr> 挂了 tabIndex=0 与一个对 Enter/Space 无条件
+// preventDefault() + activate() 的 onKeyDown,而且不看 event.target。所以键盘按下
+// 操作按钮时,keydown 冒泡到行上会**同时**取消按钮自身的原生激活(Enter 的默认动作
+// 就是 click)并触发行导航 —— 结果是删除对话框键盘不可达,而且跳去了详情页。
+// onClick 上的 stopPropagation 只覆盖鼠标路径,拦不住这个。
+function stopRowActivation(event: KeyboardEvent<HTMLElement>): void {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.stopPropagation()
+  }
+}
+
 //
 // pinned: 'end' 取代了原先在 DataTable 上传的 pinnedColumns={{right:['actions']}} ——
 // cadenza 把「钉哪一列」放回列自己身上。钉列必须有数字 width,偏移量由它算出来。
@@ -37,6 +50,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
           ? (
               <Button
                 aria-label={t('action.view')}
+                onKeyDown={stopRowActivation}
                 onClick={(event) => {
                   event.stopPropagation()
                   actions.onView?.(user)
@@ -52,6 +66,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
           ? (
               <Button
                 aria-label={t('action.edit')}
+                onKeyDown={stopRowActivation}
                 onClick={(event) => {
                   event.stopPropagation()
                   actions.onEdit?.(user)
@@ -68,6 +83,7 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
               <Button
                 aria-label={t('action.delete')}
                 className='text-destructive hover:text-destructive'
+                onKeyDown={stopRowActivation}
                 onClick={(event) => {
                   event.stopPropagation()
                   actions.onDelete?.(user)

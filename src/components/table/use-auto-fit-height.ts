@@ -11,19 +11,33 @@ import { useEffect, useState } from 'react'
  * 从 src/components/table/data-table.tsx 原样搬出,逻辑未改。
  */
 
-/** 单行/表头高度。cadenza DataTable 的 rowHeight 默认值与这里保持一致。 */
+/**
+ * 行高与表头高度的**估算值**,沿用迁移前 DataTable 的取值,只用来推下面两个兜底高度。
+ *
+ * 刻意不叫「实际行高」:AutoFitDataTable 采纳 cadenza 的默认(不虚拟化),行是自然高度,
+ * 所以 AUTO_FIT_MIN_HEIGHT / FALLBACK_MAX_HEIGHT 是「大约几行」的量级,不是精确行数。
+ * 它们只在两个时刻起作用 —— 首帧测量尚未落地、以及容器小于最小高度。
+ */
 export const TABLE_ROW_HEIGHT = 53
 export const TABLE_HEADER_HEIGHT = 40
 const AUTO_FIT_MIN_HEIGHT = TABLE_HEADER_HEIGHT + TABLE_ROW_HEIGHT * 3
 const AUTO_FIT_SAFETY_BUFFER = 4
 
+// 「高度受限」的祖先容器。cadenza 与本仓库冻结区各自发出一套 data-slot,两套都要列:
+// scroll-area-viewport / popover-content 两边同名;sidebar-inset 只有冻结区的 sidebar.tsx
+// 发(admin 布局用的就是它,自适应高度实际量的祖先);而 cadenza 的对话框把
+// shadcn 时代的 dialog-content 改叫了 dialog-popup / alert-dialog-popup / dialog-viewport ——
+// 漏掉它们的话,放进对话框的表格会一路找到 documentElement、按整个视口高度撑开。
 const STABLE_ANCESTOR_SLOTS = new Set([
   'scroll-area-viewport',
   'sidebar-inset',
-  'dialog-content',
-  'sheet-content',
-  'drawer-content',
   'popover-content',
+  'dialog-popup',
+  'dialog-viewport',
+  'alert-dialog-popup',
+  // 冻结区里仍有消费者的旧名
+  'sheet-content',
+  'dialog-content',
 ])
 
 function findLimitedHeightAncestor(start: HTMLElement): HTMLElement {
@@ -92,16 +106,16 @@ function computeAutoFitHeight(container: HTMLElement, safetyBuffer: number): num
   return ancestorBottom - containerRect.top - reserved - safetyBuffer
 }
 
-interface UseAutoFitHeightOptions {
-  enabled: boolean
-  minHeight: number
-  safetyBuffer: number
-}
-
-function useAutoFitHeightImpl(
+/**
+ * 量出容器可用高度。`enabled=false` 时不挂任何观察器,返回 undefined;
+ * 首帧尚未测量时同样返回 undefined —— 调用方自行决定兜底值。
+ */
+export function useAutoFitHeight(
   containerRef: RefObject<HTMLElement | null>,
-  { enabled, minHeight, safetyBuffer }: UseAutoFitHeightOptions,
+  enabled = true,
 ): number | undefined {
+  const minHeight = AUTO_FIT_MIN_HEIGHT
+  const safetyBuffer = AUTO_FIT_SAFETY_BUFFER
   // The measurement only means anything while auto-fit is on, so the disabled
   // case is derived during render instead of reset from inside the effect
   // (which would cost an extra render on every toggle).
@@ -170,19 +184,4 @@ function useAutoFitHeightImpl(
   }, [enabled, minHeight, safetyBuffer, containerRef])
 
   return enabled ? measured : undefined
-}
-
-/**
- * 量出容器可用高度。`enabled=false` 时不挂任何观察器,返回 undefined。
- * 首帧尚未测量时也返回 undefined —— 调用方自行决定兜底值。
- */
-export function useAutoFitHeight(
-  containerRef: RefObject<HTMLElement | null>,
-  enabled = true,
-): number | undefined {
-  return useAutoFitHeightImpl(containerRef, {
-    enabled,
-    minHeight: AUTO_FIT_MIN_HEIGHT,
-    safetyBuffer: AUTO_FIT_SAFETY_BUFFER,
-  })
 }

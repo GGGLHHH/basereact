@@ -6,11 +6,13 @@
 @import '@gedatou/cadenza-ui/styles.css';
 @import '@fontsource-variable/inter';
 
-/* Local style partials (order: tokens -> theme bridge -> base layer -> utilities). */
+/* Local style partials (order: tokens -> theme bridge -> base layer)。
+   原来还有一个 utilities.css,里面的 scroll-fade-inset 与 scrollbar-hidden 已经
+   全部被 cadenza-ui 的 @utility 版本取代 —— 而且本地那份是无层级的裸类选择器,
+   会压过库版所在的 utilities layer,把 cadenza DataTable 自己用的那份变成死代码。 */
 @import './styles/tokens.css';
 @import './styles/theme.css';
 @import './styles/base.css';
-@import './styles/utilities.css';
 
 @custom-variant dark (&:is(.dark *));
 

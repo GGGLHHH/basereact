@@ -1,8 +1,9 @@
 import type { AuthEvent } from '#/routes/admin/_shell/-auth-log/types'
-import { DataPagination, DataTable, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
+import { DataTable, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { useMemo } from 'react'
-
 import { useTranslation } from 'react-i18next'
+
+import { AppDataPagination } from '@/components/table/app-data-pagination'
 
 import { createAuthEventColumns } from './auth-event-table-columns'
 
@@ -43,25 +44,22 @@ export function AuthEventTable({
         items={data}
         isLoading={isLoading ?? false}
         maxHeight={40 + ROW_H * limit}
+        // virtualized 必须显式开:cadenza 的 rowHeight 只在虚拟化下写进行高
+        // (style blockSize),关着的话行是自然高度,上面这条按 ROW_H 推出来的
+        // maxHeight 就对不上「满页刚好铺满不内滚」了。迁移前的 DataTable 无条件虚拟化。
         rowHeight={ROW_H}
+        virtualized
       >
         <DataTableEmpty>{t('authLog.table.empty')}</DataTableEmpty>
         <DataTableLoadingOverlay>{t('loading.loading')}</DataTableLoadingOverlay>
       </DataTable>
-      <DataPagination
+      <AppDataPagination
         limit={limit}
         page={page}
         total={total}
         onLimitChange={onLimitChange}
         onPageChange={onPageChange}
-        rowsPerPageLabel={t('pagination.rowsPerPage')}
-        firstPageLabel={t('pagination.firstPage')}
-        previousPageLabel={t('pagination.previousPage')}
-        nextPageLabel={t('pagination.nextPage')}
-        lastPageLabel={t('pagination.lastPage')}
-        pageIndicator={({ page: current, totalPages }) =>
-          t('pagination.pageOf', { page: current, totalPages })}
-        summary={({ total: rowTotal }) => t('pagination.summary', { count: data.length, total: rowTotal })}
+        count={data.length}
       />
     </>
   )

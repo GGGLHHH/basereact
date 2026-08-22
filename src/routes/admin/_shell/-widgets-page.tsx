@@ -1,12 +1,13 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { WidgetView } from '#/generated/api-types'
-import { DataPagination, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
+import { DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useMemo } from 'react'
-
 import { useTranslation } from 'react-i18next'
 
 import { useWidgets } from '@/api/widgets'
+
+import { AppDataPagination } from '@/components/table/app-data-pagination'
 import { AutoFitDataTable } from '@/components/table/auto-fit-data-table'
 import { toDataPagination } from '@/components/table/pagination'
 import { formatDateTime } from '@/lib/datetime'
@@ -62,25 +63,19 @@ export function WidgetsPage() {
         <DataTableEmpty>{t('widgets.empty')}</DataTableEmpty>
         <DataTableLoadingOverlay>{t('loading.loading')}</DataTableLoadingOverlay>
       </AutoFitDataTable>
-      <DataPagination
+      <AppDataPagination
         limit={size}
         page={page}
         total={total}
         onLimitChange={(limit) => {
-          void navigate({ search: { page: 1, size: limit } })
+          // 必须 spread prev:整体替换 search 会把搜索词与筛选条件一起抹掉
+          // (下面的 onPageChange 一直是对的,这条一直不是)。
+          void navigate({ search: prev => ({ ...prev, page: 1, size: limit }) })
         }}
         onPageChange={(nextPage) => {
           void navigate({ search: prev => ({ ...prev, page: nextPage }) })
         }}
-        rowsPerPageLabel={t('pagination.rowsPerPage')}
-        firstPageLabel={t('pagination.firstPage')}
-        previousPageLabel={t('pagination.previousPage')}
-        nextPageLabel={t('pagination.nextPage')}
-        lastPageLabel={t('pagination.lastPage')}
-        pageIndicator={({ page: current, totalPages }) =>
-          t('pagination.pageOf', { page: current, totalPages })}
-        summary={({ total: rowTotal }) =>
-          t('pagination.summary', { count: data?.items.length ?? 0, total: rowTotal })}
+        count={data?.items.length ?? 0}
       />
     </>
   )

@@ -79,9 +79,12 @@ export default antfu(
     'better-tailwindcss/no-conflicting-classes': 'error',
     'better-tailwindcss/no-deprecated-classes': 'error',
     'better-tailwindcss/no-unknown-classes': ['error', {
-      // ^i- are UnoCSS presetIcons classes (uno.config.ts); the other two are
-      // local utilities defined in src/styles/utilities.css.
-      ignore: ['^i-', '^scroll-fade-inset$', '^scrollbar-hidden$'],
+      // ^i- are UnoCSS presetIcons classes (uno.config.ts) — nothing in the CSS
+      // entry point defines them, so the rule cannot know them.
+      // scroll-fade-inset used to be a local utility; it now comes from
+      // @gedatou/cadenza-ui/styles.css as a real `@utility`, so the rule resolves
+      // it on its own and the entry is gone. scrollbar-hidden went with it.
+      ignore: ['^i-'],
     }],
 
     // House rule with no cadenza counterpart: colour comes from the token layer

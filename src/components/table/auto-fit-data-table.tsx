@@ -13,6 +13,11 @@ const FALLBACK_MAX_HEIGHT = TABLE_HEADER_HEIGHT + TABLE_ROW_HEIGHT * 10
  * 库版只接受固定 `maxHeight`(默认 480),而本仓库的表格要撑满祖先的剩余空间 ——
  * 这是迁移里唯一需要自己补的能力。显式传了 `maxHeight` 就完全不测量(观察器都不挂),
  * 行为与直接用库版一致。
+ *
+ * **虚拟化按库的默认(关)**,这是一处刻意的行为变更:迁移前的 DataTable 无条件虚拟化,
+ * 但这里的表 limit 最大 100 行,cadenza 的判断(几百行以内不需要)成立,而且关着才能让
+ * 浏览器的页面内查找与全选够到所有行。需要固定行高的场景(如 auth-event-table 那种按
+ * `行高 × limit` 反推 maxHeight 的)自己显式传 `virtualized` + `rowHeight`。
  */
 export function AutoFitDataTable<T>({ maxHeight, ...props }: DataTableProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null)

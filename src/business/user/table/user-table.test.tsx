@@ -89,3 +89,19 @@ describe('userTable actions column', () => {
     expect(onRowClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }))
   })
 })
+
+describe('userTable 键盘可达性', () => {
+  it('activates the row action, not row navigation, when Enter is pressed on an action button', () => {
+    const onDelete = vi.fn()
+    const onRowClick = vi.fn()
+    renderTable({ onDelete, onRowClick, onView: noop, onEdit: noop })
+
+    const deleteButton = screen.getByLabelText('Delete')
+    deleteButton.focus()
+    fireEvent.keyDown(deleteButton, { key: 'Enter', bubbles: true })
+    fireEvent.click(deleteButton)
+
+    expect(onDelete).toHaveBeenCalledTimes(1)
+    expect(onRowClick).not.toHaveBeenCalled()
+  })
+})

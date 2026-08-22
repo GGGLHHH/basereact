@@ -1,10 +1,11 @@
 import type { AdminUserView } from '#/generated/api-types'
 import type { UserRowActions } from './user-table-columns'
+import { DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 
-import { DataPagination, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { useMemo } from 'react'
-
 import { useTranslation } from 'react-i18next'
+
+import { AppDataPagination } from '@/components/table/app-data-pagination'
 
 import { AutoFitDataTable } from '@/components/table/auto-fit-data-table'
 import { createUserColumns } from './user-table-columns'
@@ -56,22 +57,13 @@ export function UserTable({
         <DataTableLoadingOverlay>{t('loading.loading')}</DataTableLoadingOverlay>
       </AutoFitDataTable>
       {/* 分页条不再由表格内嵌渲染,变成它的兄弟节点(cadenza 的 DataTable 不管分页)。 */}
-      <DataPagination
+      <AppDataPagination
         limit={limit}
         page={page}
         total={total}
         onLimitChange={onLimitChange}
         onPageChange={onPageChange}
-        rowsPerPageLabel={t('pagination.rowsPerPage')}
-        firstPageLabel={t('pagination.firstPage')}
-        previousPageLabel={t('pagination.previousPage')}
-        nextPageLabel={t('pagination.nextPage')}
-        lastPageLabel={t('pagination.lastPage')}
-        pageIndicator={({ page: current, totalPages }) =>
-          t('pagination.pageOf', { page: current, totalPages })}
-        // summary 的入参丢了 count(库版只给 page/limit/total/totalPages),
-        // 当前页行数从这里的闭包取。
-        summary={({ total: rowTotal }) => t('pagination.summary', { count: data.length, total: rowTotal })}
+        count={data.length}
       />
     </>
   )

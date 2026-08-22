@@ -103,7 +103,9 @@ export function UsersPage() {
           void navigate({ params: { userId: user.id }, to: '/admin/users/$userId/edit' })
         }}
         onLimitChange={(limit) => {
-          void navigate({ search: { page: 1, size: limit } })
+          // 必须 spread prev:整体替换 search 会把搜索词与筛选条件一起抹掉
+          // (下面的 onPageChange 一直是对的,这条一直不是)。
+          void navigate({ search: prev => ({ ...prev, page: 1, size: limit }) })
         }}
         onPageChange={(nextPage) => {
           void navigate({ search: prev => ({ ...prev, page: nextPage }) })
