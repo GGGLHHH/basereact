@@ -14,9 +14,8 @@ body {
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
+  /* `* { border-color: var(--border); outline-color: … }` 不在这里了 ——
+     @gedatou/cadenza-ui/styles.css 的 base layer 已经给了逐字相同的一条。 */
   body {
     @apply bg-background text-foreground;
   }
