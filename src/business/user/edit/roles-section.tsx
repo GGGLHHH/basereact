@@ -1,5 +1,5 @@
 import type { AdminUserView, RoleView } from '#/generated/api-types'
-import { Button, Spinner } from '@gedatou/cadenza-ui'
+import { Badge, Button, Spinner } from '@gedatou/cadenza-ui'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { useRoles } from '@/api/roles'
 import { useSetUserRoles } from '@/api/users'
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
-import { Badge } from '@/components/ui/badge'
 import { getErrorMessage } from '@/lib/api-client'
 
 import { EditSectionCard } from './section-card'
