@@ -1,3 +1,5 @@
+minimumReleaseAgeExcludePrune: true
+
 # pnpm 11 默认让新发布的版本静置 24h 才可解析 —— 这是给「发布账号被盗」留的缓冲。
 # 只有 cadenza 需要豁免(本机同步发版、当天就要用;静置期会把 `pnpm add` 悄悄装成
 # 上一个版本),所以用 Exclude 而不是把整棵依赖树的静置期一起关掉。
@@ -5,8 +7,6 @@ minimumReleaseAgeExclude:
   - '@gedatou/cadenza-ui'
   - '@gedatou/cadenza-form'
   - '@gedatou/cadenza-utils'
-
-shellEmulator: true
 
 trustPolicy: no-downgrade
 # Three lockfile entries lost provenance relative to earlier releases of the same
@@ -20,6 +20,8 @@ trustPolicyExclude:
   - semver@6.3.1
   # via @types/node <- happy-dom / vitest.
   - undici-types@6.21.0
+
+shellEmulator: true
 
 onlyBuiltDependencies:
   - esbuild
