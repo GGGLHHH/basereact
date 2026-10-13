@@ -19,6 +19,9 @@ import { cn } from '@/lib/utils'
 //   </MovingHighlight>
 // 每个可 hover 项 spread movingHighlightItemProps;激活项传 active=true。项自身的 hover/
 // active 背景通常要抹掉(交给 pill)。
+//
+// 项在滚动区里时,容器要放在滚动区**里面**(包住滚动内容),pill 才随原生滚动走、被
+// overflow 裁掉;放在滚动区外,pill 的定位只能靠 JS 追 scroll 事件,永远慢一帧。
 
 const HOVER_DURATION = 0.35
 const EASE = 'power3.out'
@@ -50,6 +53,9 @@ export function MovingHighlight({
   const pillRef = React.useRef<HTMLDivElement>(null)
   const hoveringRef = React.useRef(false)
   const firstRef = React.useRef(true)
+  // 激活项变了 → 置 true:布局还在变(折叠展开把它推出视口)时持续把它滚进视野;
+  // 用户一动手(滚轮 / 触摸 / 点按 / 键盘)就交还滚动权,不跟用户抢。
+  const revealRef = React.useRef(false)
 
   const moveTo = React.useCallback((el: HTMLElement | null, animate: boolean) => {
     const pill = pillRef.current
@@ -80,8 +86,17 @@ export function MovingHighlight({
     [],
   )
 
-  // 初次挂载 / 激活项(activeKey)变化 / enable 切换:对齐激活项(首帧瞬切,之后滑动)。
-  // 正在 hover 时不抢 pill,交给 hover/leave 处理。
+  // 对齐激活项;还在 reveal 期就先把它滚进视野(nearest = 已可见则不动)。
+  const alignActive = React.useCallback((animate: boolean) => {
+    const el = activeEl()
+    if (revealRef.current) {
+      el?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+    moveTo(el, animate)
+  }, [activeEl, moveTo])
+
+  // 初次挂载 / 激活项(activeKey)变化 / enable 切换:激活项滚进视野并对齐(首帧瞬切,
+  // 之后滑动)。正在 hover 时不抢 pill,交给 hover/leave 处理。
   React.useLayoutEffect(() => {
     if (!enabled) {
       if (pillRef.current) {
@@ -90,12 +105,13 @@ export function MovingHighlight({
       firstRef.current = true
       return
     }
+    revealRef.current = true
     if (hoveringRef.current) {
       return
     }
-    moveTo(activeEl(), !firstRef.current)
+    alignActive(!firstRef.current)
     firstRef.current = false
-  }, [activeKey, enabled, activeEl, moveTo])
+  }, [activeKey, enabled, alignActive])
 
   // 布局变化(折叠展开 / resize)→ 重新对齐(非 hover 时)。
   React.useEffect(() => {
@@ -105,12 +121,24 @@ export function MovingHighlight({
     }
     const observer = new ResizeObserver(() => {
       if (!hoveringRef.current) {
-        moveTo(activeEl(), true)
+        alignActive(true)
       }
     })
     observer.observe(container)
-    return () => observer.disconnect()
-  }, [enabled, activeEl, moveTo])
+    const stopReveal = () => {
+      revealRef.current = false
+    }
+    const userEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+    for (const type of userEvents) {
+      container.addEventListener(type, stopReveal, { capture: true, passive: true })
+    }
+    return () => {
+      observer.disconnect()
+      for (const type of userEvents) {
+        container.removeEventListener(type, stopReveal, { capture: true })
+      }
+    }
+  }, [enabled, alignActive])
 
   function handlePointerOver(event: React.PointerEvent<HTMLDivElement>) {
     if (!enabled) {

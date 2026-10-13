@@ -395,22 +395,31 @@ export function AppSidebar({
       collapsible='icon'
       {...props}
     >
-      {/* 高亮容器上提到包住 头/内容/底,一枚 pill 滑过整条侧栏;撑满类顶替 sidebar-inner 的
-          flex 列不塌布局。Rail 留在外(定位元素,非高亮目标)。 */}
-      <SidebarNavHighlight
-        activeKey={pathname}
-        className='flex size-full flex-col'
-        enabled={enabled}
-      >
-        <SidebarHeader>
+      {/* 头 / 内容 / 底 各一枚 pill。内容区那枚必须在滚动区(SidebarContent)里面,才随原生
+          滚动走、被 overflow 裁掉;一枚 pill 贯穿全栏就只能挂在滚动区外,靠 JS 追滚动,永远慢
+          一帧。代价:pill 不再跨区连续滑动。内容区容器沿用 SidebarContent 的 flex 列 + gap。 */}
+      <SidebarHeader>
+        <SidebarNavHighlight activeKey={pathname} enabled={enabled}>
           <div {...chromeItem}>
             <TeamSwitcher teams={data.teams} />
           </div>
-        </SidebarHeader>
-        <SidebarContent>
+        </SidebarNavHighlight>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarNavHighlight
+          activeKey={pathname}
+          className='flex flex-col gap-2'
+          enabled={enabled}
+        >
           <NavAdminRoutes />
-        </SidebarContent>
-        <SidebarFooter>
+        </SidebarNavHighlight>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarNavHighlight
+          activeKey={pathname}
+          className='flex flex-col gap-2'
+          enabled={enabled}
+        >
           <div {...chromeItem}>
             <ThemeToggle />
           </div>
@@ -420,8 +429,8 @@ export function AppSidebar({
           <div {...chromeItem}>
             <NavUser user={user} />
           </div>
-        </SidebarFooter>
-      </SidebarNavHighlight>
+        </SidebarNavHighlight>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )
