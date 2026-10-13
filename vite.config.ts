@@ -23,7 +23,9 @@ const config = defineConfig(({ command, mode }) => {
   return {
     resolve: { tsconfigPaths: true },
     plugins: [
-      devtools(),
+      // 关 consolePiping(服务端 console → 浏览器):Vite 8 的 server.forwardConsole 在 agent
+      // 启动时默认开(浏览器 console → 终端),两者互喂 → 一条 console.error 就无限回环。
+      devtools({ consolePiping: { enabled: false } }),
       openapiCodegen({
         input: `${backend}/api-docs/openapi.json`,
         output: 'src/generated',
