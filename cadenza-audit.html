@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>basereact 接回 cadenza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+
+<style>
+/* ─────────────────────────────────────────────────────────────
+   调色板直接取自两个仓库自己的 token 层:oklch(L 0 0) —— 纯无彩。
+   两边 32 个共有 token 取值完全相同,所以这份文档也只在「判定」
+   这一个维度上用色,底色一律 chroma 0。
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --ground:      #ffffff;   /* oklch(1 0 0)      —— 两仓 --background */
+  --surface:     #fafafa;   /* oklch(0.985 0 0)  —— 两仓 --sidebar    */
+  --surface-2:   #f2f2f2;
+  --ink:         #1a1a1a;   /* oklch(0.145 0 0)  —— 两仓 --foreground */
+  --ink-soft:    #3d3d3d;
+  --muted:       #757575;   /* oklch(0.556 0 0)  —— 两仓 --muted-fg   */
+  --rule:        #e5e5e5;   /* oklch(0.922 0 0)  —— 两仓 --border     */
+  --rule-strong: #cfcfcf;
+
+  --go:      #2f6f4f;  --go-bg:      #eaf3ee;  --go-edge:      #b9d6c6;
+  --caution: #8a5a10;  --caution-bg: #f8f0e2;  --caution-edge: #e2cda3;
+  --inert:   #6a6a6a;  --inert-bg:   #f0f0f0;  --inert-edge:   #d8d8d8;
+  --alarm:   #b3392b;  --alarm-bg:   #fbecea;  --alarm-edge:   #eec4bd;
+  --frozen:  #4a4a4a;
+
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #1a1a1a;
+    --surface:     #212121;
+    --surface-2:   #2a2a2a;
+    --ink:         #fafafa;
+    --ink-soft:    #d4d4d4;
+    --muted:       #9a9a9a;
+    --rule:        #333333;
+    --rule-strong: #474747;
+
+    --go:      #8fcfaa;  --go-bg:      #1c2a22;  --go-edge:      #33543f;
+    --caution: #e0b268;  --caution-bg: #2b2318;  --caution-edge: #574327;
+    --inert:   #9a9a9a;  --inert-bg:   #262626;  --inert-edge:   #3d3d3d;
+    --alarm:   #f0a196;  --alarm-bg:   #2d1c1a;  --alarm-edge:   #5c3129;
+    --frozen:  #a8a8a8;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:      #1a1a1a;
+  --surface:     #212121;
+  --surface-2:   #2a2a2a;
+  --ink:         #fafafa;
+  --ink-soft:    #d4d4d4;
+  --muted:       #9a9a9a;
+  --rule:        #333333;
+  --rule-strong: #474747;
+
+  --go:      #8fcfaa;  --go-bg:      #1c2a22;  --go-edge:      #33543f;
+  --caution: #e0b268;  --caution-bg: #2b2318;  --caution-edge: #574327;
+  --inert:   #9a9a9a;  --inert-bg:   #262626;  --inert-edge:   #3d3d3d;
+  --alarm:   #f0a196;  --alarm-bg:   #2d1c1a;  --alarm-edge:   #5c3129;
+  --frozen:  #a8a8a8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1.1rem, 4vw, 2.5rem) 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3.25rem;
+}
+
+/* ── 排版 ─────────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: Newsreader, ui-serif, Georgia, "Songti SC", serif;
+  font-weight: 500;
+  text-wrap: balance;
+  margin: 0;
+  line-height: 1.2;
+}
+h1 { font-size: clamp(2.1rem, 5.5vw, 3.1rem); letter-spacing: -0.015em; }
+h2 { font-size: clamp(1.5rem, 3.4vw, 1.95rem); letter-spacing: -0.01em; }
+h3 { font-size: 1.12rem; font-weight: 600; font-family: "IBM Plex Sans", sans-serif; letter-spacing: -0.005em; }
+
+p { margin: 0; max-width: var(--measure); }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+code, .mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86em;
+}
+code {
+  background: var(--surface-2);
+  border-radius: 3px;
+  padding: 0.1em 0.34em;
+  word-break: break-word;
+}
+
+a { color: inherit; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+
+/* ── 头部 ─────────────────────────────────────────────── */
+.masthead { display: flex; flex-direction: column; gap: 1.1rem; }
+.lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 62ch; }
+
+.lineage {
+  display: flex; flex-wrap: wrap; gap: 0 1.6rem;
+  padding-top: 1.1rem; border-top: 1px solid var(--rule);
+  font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--muted);
+}
+.lineage b { color: var(--ink); font-weight: 500; }
+
+/* ── 闸门区块 ──────────────────────────────────────────── */
+.gate {
+  border: 1px solid var(--alarm-edge);
+  background: var(--alarm-bg);
+  border-radius: 6px;
+  padding: clamp(1.3rem, 3.5vw, 2rem);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.gate .eyebrow { color: var(--alarm); }
+.gate h2 { color: var(--ink); }
+.gate p { max-width: 64ch; }
+
+/* ── 表格 ─────────────────────────────────────────────── */
+.scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--ground); }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; min-width: 620px; }
+th, td { text-align: left; padding: 0.62rem 0.9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  background: var(--surface); border-bottom: 1px solid var(--rule-strong); white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td.num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.sym { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; }
+caption { caption-side: bottom; padding-top: 0.7rem; font-size: 0.8rem; color: var(--muted); text-align: left; }
+
+/* ── 判定标签 ──────────────────────────────────────────── */
+.pill {
+  display: inline-block; white-space: nowrap;
+  font-family: "IBM Plex Mono", monospace; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.05em; padding: 0.16em 0.5em; border-radius: 3px; border: 1px solid;
+}
+.pill.go      { color: var(--go);      background: var(--go-bg);      border-color: var(--go-edge); }
+.pill.caution { color: var(--caution); background: var(--caution-bg); border-color: var(--caution-edge); }
+.pill.inert   { color: var(--inert);   background: var(--inert-bg);   border-color: var(--inert-edge); }
+.pill.alarm   { color: var(--alarm);   background: var(--alarm-bg);   border-color: var(--alarm-edge); }
+
+/* ── 分层 ─────────────────────────────────────────────── */
+section { display: flex; flex-direction: column; gap: 1.4rem; }
+.sec-head { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.tier-no {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); letter-spacing: 0.08em;
+}
+
+.items { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
+.item {
+  border-bottom: 1px solid var(--rule);
+  padding: 1.15rem 0;
+  display: flex; flex-direction: column; gap: 0.55rem;
+}
+.item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.7rem; }
+.item-head .path {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.86rem; font-weight: 500;
+  color: var(--ink); word-break: break-all;
+}
+.item-head .saved {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--muted);
+  font-variant-numeric: tabular-nums; margin-left: auto;
+}
+.item p { font-size: 0.925rem; color: var(--ink-soft); max-width: var(--measure); }
+.swap {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.78rem;
+  color: var(--muted); display: block; max-width: 100%; word-break: break-word;
+}
+.swap b { color: var(--ink-soft); font-weight: 500; }
+
+details.gap {
+  border: 1px solid var(--rule); border-radius: 5px;
+  background: var(--surface); font-size: 0.9rem;
+}
+details.gap > summary {
+  cursor: pointer; padding: 0.5rem 0.85rem; list-style: none;
+  font-family: "IBM Plex Mono", monospace; font-size: 0.75rem;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+}
+details.gap > summary::-webkit-details-marker { display: none; }
+details.gap > summary::before { content: "▸ "; color: var(--rule-strong); }
+details.gap[open] > summary::before { content: "▾ "; }
+details.gap > div { padding: 0 0.85rem 0.8rem; color: var(--ink-soft); }
+details.gap ol, details.gap ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
+details.gap li { max-width: 62ch; }
+
+/* ── 代码块 ────────────────────────────────────────────── */
+pre {
+  margin: 0; overflow-x: auto; background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 5px; padding: 0.85rem 1rem; font-size: 0.82rem; line-height: 1.6;
+  font-family: "IBM Plex Mono", monospace;
+}
+pre .del { color: var(--alarm); }
+pre .add { color: var(--go); }
+pre .cmt { color: var(--muted); }
+
+/* ── 冻结区 ────────────────────────────────────────────── */
+.frozen-note {
+  border: 1px dashed var(--rule-strong); border-radius: 6px;
+  padding: 1.1rem 1.25rem; background: var(--surface);
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.frozen-note .eyebrow { color: var(--frozen); }
+
+footer {
+  border-top: 1px solid var(--rule); padding-top: 1.4rem;
+  font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--muted);
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <span class="eyebrow">迁移审计与结果 · 2026-08-21</span>
+    <h1>basereact 接回 cadenza</h1>
+    <p class="lede">
+      装上 <code>@gedatou/cadenza-{ui,form,utils}@0.6.2</code>,把能交还给库的代码交还。
+      <b>已完成:净减 3,097 行,删除 17 个文件,67 个文件改动</b>,并修掉一处让 zod 校验文案永远不出场的
+      线上缺陷。梯队 03 的视觉基线也已按指示切到 base-nova。<code>src/components/ui/</code> 的 60 个 vendored 文件一个字节未动,sha256 快照测试通过。
+    </p>
+    <div class="scroll" style="margin-top:0.4rem">
+      <table>
+        <thead><tr><th>验收</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>tsc --noEmit</td><td class="num">干净</td></tr>
+          <tr><td>eslint(零 disable 注释)</td><td class="num">干净</td></tr>
+          <tr><td>vitest</td><td class="num">23 文件 / 111 测试全过</td></tr><tr><td>ui-lock sha256 快照</td><td class="num">通过 —— 冻结区零改动</td></tr>
+          <tr><td>vite build</td><td class="num">三阶段全部成功</td></tr>
+          <tr><td>CSS class 集合对比</td><td class="num">零丢失,新增 332 个</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lineage">
+      <span><b>data-table</b> basereact 07-05 → cadenza 07-31</span>
+      <span><b>infinite-select</b> basereact 07-07 → cadenza 07-31</span>
+    </div>
+    <p style="font-size:0.925rem;color:var(--ink-soft)">
+      这几个组件是在 basereact 里长出来的,三周后才被提炼进库。所以这不是引入外来实现,
+      是把上游接回它自己喂大的下游 —— cadenza 侧一律是<strong>晚一代的超集</strong>,
+      两边的注释措辞、<code>limit=0/NaN</code> 除法守卫、<code>total&gt;0 才钳位</code>
+      这类论述至今逐字对得上。
+    </p>
+  </header>
+
+  <!-- ══════════ 闸门 ══════════ -->
+  <div class="gate">
+    <span class="eyebrow">前置决策 · 已裁定:切</span>
+    <h2>两边 vendored 的是 shadcn 的不同代:base-vega vs base-nova</h2>
+    <p>
+      60 个 vendored primitive 双方文件清单完全一致,<strong>没有任何一方被本地手改过</strong> ——
+      漂移 100% 来自 registry 版本代差,方向单一:cadenza 更晚、更紧凑。
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>度量</th><th>basereact(base-vega)</th><th>cadenza(base-nova)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>圆角基线</td><td class="num">rounded-md</td><td class="num">rounded-lg</td></tr>
+          <tr><td>Button 默认高</td><td class="num">h-9</td><td class="num">h-8</td></tr>
+          <tr><td>Button sm</td><td class="num">h-8</td><td class="num">h-7 + text-[0.8rem]</td></tr>
+          <tr><td>Button icon / icon-lg</td><td class="num">size-9 / size-10</td><td class="num">size-8 / size-9</td></tr>
+          <tr><td>Input 高</td><td class="num">h-9</td><td class="num">h-8</td></tr>
+          <tr><td>控件投影</td><td class="num">shadow-xs</td><td class="num">(系统性删除)</td></tr>
+          <tr><td>FieldGroup / FieldSet 间距</td><td class="num">gap-7 / gap-6</td><td class="num">gap-5 / gap-4</td></tr>
+        </tbody>
+        <caption>抽查 14 个双方同名文件的 diff;差异全部落在这几类度量上,API 面零差异。</caption>
+      </table>
+    </div>
+    <p>
+      <strong>后果:</strong>只要引入任意一个 cadenza-ui 组件,它就带着 <code>h-8</code> /
+      <code>rounded-lg</code> 进来,和本地留着的 <code>h-9</code> / <code>rounded-md</code> 并排渲染 ——
+      同一张表单里 cadenza 的 Input 比隔壁本地 Select 矮 4px、圆角还不一样。
+      <strong>逐个蚕食会持续处在视觉不一致状态,只有全量切基线才有干净终点。</strong>
+    </p>
+    <p>
+      <strong>已裁定:切。</strong>全站控件改由 cadenza 供给,视觉基线随之从 base-vega
+        换到 base-nova。<code>src/components/ui/</code> 的 60 个 vendored 文件按指示留在原地、
+        一个字节未动(<code>ui-lock.test.ts</code> 的 sha256 快照通过) —— 它们只是不再被
+        应用代码引用,cadenza 未提升的那 7 个(card / sidebar / avatar / badge / chart /
+        separator / breadcrumb)仍在正常使用。
+      </p>
+      <p>
+        因此上表那些度量差不再是「风险」,而是<strong>已经生效的新基线</strong>。
+        逐个蚕食造成的不一致窗口没有出现:11 个已提升组件是在同一轮里一次性切完的。
+      </p>
+  </div>
+
+  <!-- ══════════ 梯队一 ══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="tier-no">梯队 01</span>
+      <h2>与基线决策无关 · <span style="color:var(--go)">已完成</span></h2>
+      <p>纯逻辑层与死代码,零视觉影响。约 <strong>595 行</strong>。</p>
+    </div>
+
+    <div class="items">
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill go">已完成</span><span class="pill alarm">修真实缺陷</span>
+          <span class="path">6 处 &lt;form onSubmit=…&gt;</span>
+          <span class="saved">净减字符</span>
+        </div>
+        <p>
+          全仓 <code>noValidate</code> <strong>零命中</strong>,而
+          <code>user-create-page.tsx:95</code> 与 <code>account-section.tsx:70</code> 都渲染了
+          <code>type='email'</code>。浏览器原生约束校验在 submit 事件派发<em>之前</em>拦下提交并弹原生气泡,
+          整条门面提交管线不跑 —— <strong>zod 文案永远没机会出场</strong>。已核验属实。
+        </p>
+        <pre><span class="del">- &lt;form onSubmit={formSubmitHandler(() =&gt; form.handleSubmit())}&gt;</span>
+<span class="add">+ &lt;form {...formProps(form)}&gt;</span></pre>
+        <details class="gap">
+          <summary>这一行同时补齐的四件事</summary>
+          <div><ol>
+            <li><code>noValidate</code> —— schema 成为唯一校验真源,原生气泡不再抢跑。</li>
+            <li><code>revealFieldErrors</code> —— 提交后给「有错但没 blur」的字段补写 <code>isBlurred</code>;否则那些字段不订阅 <code>submissionAttempts</code>、不重渲染,错误看不见。</li>
+            <li>失败提交后补跑 <code>form.validate('submit')</code> —— form-core 在字段级失败时会整体跳过表单级校验。</li>
+            <li><code>ensureLateFieldValidation</code> —— 提交后新注册的字段(数组加行)补跑一次 change 校验。</li>
+          </ol></div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill go">drop-in</span>
+          <span class="path">src/components/form/index.tsx · 校验 helper 全家</span>
+          <span class="saved">−146 行</span>
+        </div>
+        <p>
+          <code>fieldErrors</code> / <code>fieldShouldShowError</code> / <code>fieldErrorId</code> /
+          <code>normalizeFieldErrors</code> / <code>formSubmitHandler</code> / <code>createFormHook</code>
+          逐个函数体等价 —— 门禁同为 <code>(isDirty &amp;&amp; isBlurred) || submissionAttempts &gt; 0</code>,
+          <code>fieldErrorId</code> 同为 <code>replaceAll(/[^\w-]/g,'-')+'-error'</code>。
+        </p>
+        <span class="swap"><b>白捡:</b> cadenza 的 <code>fieldControlProps</code> 多一条 <code>aria-required</code> 自动推导 —— 对 <code>defaultValues</code> 跑一次 Standard Schema 探针,出错路径即必填集,按 form 实例 WeakMap 缓存。已核对 login / user-create / account / password 四张表的 zod,推出的必填集与现在手写的 <code>required</code> 完全一致。</span>
+        <details class="gap">
+          <summary>一处要叠加而不是替换</summary>
+          <div>
+            <p style="font-size:0.9rem"><code>useFieldIds</code> 别删。cadenza 的 <code>fieldControlProps</code> 把裸 <code>field.name</code> 当 DOM id,同页两个表单出现同名字段就撞 id(label 指错表单、读屏读错错误)。正确做法是叠上去:</p>
+            <pre style="margin-top:0.6rem">{...fieldControlProps(field), id: controlId, 'aria-describedby': errorId}</pre>
+            <p style="font-size:0.9rem;margin-top:0.6rem">代码量持平,既保住实例作用域 id、又白捡 aria-required 推导。</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill go">drop-in</span>
+          <span class="path">src/hooks/use-controllable-state.ts · src/lib/utils.ts</span>
+          <span class="saved">−106 行</span>
+        </div>
+        <p>
+          <code>useControllableState</code> 重载签名、options 字段、返回元组与 cadenza-utils 完全一致,
+          连测试一起删。<code>cn</code> 换成 cadenza-ui 的同名导出。
+        </p>
+        <span class="swap"><b>约束:</b> <code>src/lib/utils.ts</code> 只能改成 re-export、不能删文件 —— 60 个 vendored primitive 的 <code>import { cn } from '@/lib/utils'</code> 被 sha256 钉死,一个字都不能动。</span>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill caution">adapt</span>
+          <span class="path">src/components/table/data-pagination.tsx</span>
+          <span class="saved">−213 行</span>
+        </div>
+        <p>
+          <strong>确凿同源</strong>:除法守卫、<code>Math.max(1, Math.ceil(total/limit))</code>、
+          「total=0 视为未加载完,不踩 page」的越界钳位 effect —— 逐行相同,注释是同一段话的中英两版。
+          cadenza 侧另有可单用的 <code>useDataPaginationState</code>、支持 updater 的 setPage、cancel 协议,
+          导航键从 <code>aria-disabled + pointer-events-none</code> 换成真 <code>Button disabled</code>。
+        </p>
+        <details class="gap">
+          <summary>三处形状差</summary>
+          <div><ol>
+            <li>组件内 <code>useTranslation('common')</code> 要外提:六条文案变成 <code>rowsPerPageLabel</code> / <code>pageIndicator</code> / 四个导航 label 的 props。</li>
+            <li><code>showLimitChanger={false}</code> → <code>limitOptions={[]}</code>(用缺席代替开关)。</li>
+            <li><code>summary</code> 入参<strong>少了 <code>count</code></strong>,而 3 个调用点的 <code>t('pagination.summary', {count, total})</code> 正靠它 —— 需调用方自己从 <code>data.length</code> 取。<code>summaryClassName</code> / <code>containerClassName</code> 也没了。</li>
+          </ol></div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill inert">直接删</span>
+          <span class="path">form 层死代码</span>
+          <span class="saved">−130 行</span>
+        </div>
+        <p>
+          已逐个 grep 核验零生产调用点:<code>FormFieldControl</code> 整文件(74)、
+          <code>TextareaField</code>(48)、<code>silentFieldUpdateOptions</code> /
+          <code>validatingFieldUpdateOptions</code> / <code>useFormStore</code> / <code>withForm</code> /
+          <code>fieldHasError</code> / <code>fieldErrorMessage</code>。
+          <code>SelectField</code> 只有 <code>form.test.tsx</code> 四处在用,没有生产调用点。
+        </p>
+        <span class="swap"><b>顺带:</b> 删掉 <code>useFormStore</code> 可以让 <code>@tanstack/react-store</code> 这条直接依赖一起消失。</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ 梯队二 ══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="tier-no">梯队 02</span>
+      <h2>主线 · 四个大件 · <span style="color:var(--go)">已完成</span></h2>
+      <p>
+        basereact 自己手写的四个「提升层」组件,约 <strong>1,535 行</strong>,
+        是本次审计的全部价值所在。它们不含 primitive 层度量,理论上不受基线决策阻塞 ——
+        但 <code>SearchField</code> 与 <code>ScrollArea</code> 会把 base-nova 外观带进来。
+      </p>
+    </div>
+
+    <div class="items">
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill caution">adapt</span>
+          <span class="path">src/components/select/infinite-select.tsx</span>
+          <span class="saved">−560 行 · 6 调用点</span>
+        </div>
+        <p>
+          basereact 的行是裸 <code>&lt;button aria-pressed&gt;</code>,<strong>没有键盘模型</strong>,
+          只能 Tab 逐个走;cadenza 建在 Base UI Combobox 上,方向键 virtual focus、输入框不失焦。
+          另外白送:TanStack Virtual 虚拟化、<code>name</code> 隐藏 input 表单序列化、
+          <code>InfiniteSelectNoMore</code> 到底插槽、<code>loadMoreScrollOffset</code> 预取距离。
+        </p>
+        <details class="gap">
+          <summary>受控协议换代 · 6 处</summary>
+          <div><ol>
+            <li><code>multiple: true</code> 判别键 → <code>selectionMode: 'multiple'|'single'</code></li>
+            <li><code>onChange</code> → <code>onValueChange</code>,多出第三参 <code>eventDetails</code>(cancel 协议);单选空值 <code>undefined</code> → <code>null</code></li>
+            <li><code>searchInputValue</code> / <code>onSearchInputValueChange</code> → <code>inputValue</code> / <code>onInputValueChange</code></li>
+            <li><strong><code>InfiniteSelectLoading</code> 插槽在 cadenza 不存在</strong> —— 首屏 loading 语义从「替换列表」变成 <code>LoadingOverlay</code>「盖在列表上」;<code>user-infinite-select.tsx:99</code> 与 <code>role-infinite-select.tsx:112</code> 注入的 i18n 文案要改挂载点</li>
+            <li><code>InfiniteSelectClearButton</code> / <code>ConfirmButton</code> → <code>Clear</code> / <code>Close</code></li>
+            <li>搜索框与列表从 root 内置变成可组合的 <code>InfiniteSelectInputGroup</code> / <code>InfiniteSelectList</code>(不写 children 时仍是默认组合)</li>
+          </ol></div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill caution">adapt</span>
+          <span class="path">src/components/select/infinite-combobox.tsx + -state.ts</span>
+          <span class="saved">−453 行 · 2 调用点</span>
+        </div>
+        <p>
+          同一设计的后代:<code>commitOnClose</code> 草稿提交、<code>state</code> / <code>list</code> /
+          <code>getOption</code> / <code>renderItem</code> / <code>closeOnSelect</code> /
+          <code>maxListHeight</code> 一一对上,<code>useInfiniteComboboxState</code> 连「关闭后下次打开重置搜索」都在。
+          cadenza 额外有 <code>triggerId</code>(给 FieldLabel htmlFor)、<code>name</code> 表单序列化、
+          <code>popoverProps</code> 定位出口、<code>modal</code>、<code>InfiniteSelectCancel</code>。
+        </p>
+        <details class="gap">
+          <summary>children 契约变位置化</summary>
+          <div><ul>
+            <li>cadenza:第一个 child 是 trigger,其后所有 child 是弹层组合通道。basereact 是 <code>children</code>(trigger)+ 独立 <code>slots</code> prop —— 两个业务包装器的 <code>slots</code> 要并进 children。</li>
+            <li><code>getInfiniteComboboxSelectionProps</code>(把判别联合原样转发)cadenza 无对应导出,判别键换成 <code>selectionMode</code> 后要重写或直接展开。</li>
+          </ul></div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill caution">adapt</span>
+          <span class="path">src/components/table/data-table.tsx</span>
+          <span class="saved">−600 行(净 ~455) · 4 调用点</span>
+        </div>
+        <p>
+          <strong>不是同源演化,是同一个人的同一批设计意图换了底座</strong> ——
+          <code>--scroll-fade-head/pin-l/pin-r</code> 三个变量名一模一样、<code>PINNED_BODY_CELL_CLASSNAME</code>
+          同名、虚拟化 padStart/padEnd 填充行同构,但 basereact 是 TanStack Table 驱动,
+          cadenza 是自己的列数组 + 原生 <code>&lt;table&gt;</code>。
+        </p>
+        <span class="swap"><b>净赚:</b> 排序(<code>aria-sort</code> + 真 <code>&lt;button&gt;</code>)、跨页归档的行选择、<code>&lt;th scope="row"&gt;</code> 行头、IntersectionObserver 预取取代 scroll 监听、<code>DataTableColumnsSelect</code> 列显隐 —— basereact 一个都没有。</span>
+        <details class="gap">
+          <summary>四处硬缺口 · 本次工作量最大的一条</summary>
+          <div><ol>
+            <li><strong>列模型不同源</strong> —— <code>ColumnDef</code> + <code>flexRender</code> + <code>useReactTable</code> → 纯数组 <code>DataTableColumn&lt;T&gt;{id, header, cell(item,index), width, pinned, sortable, rowHeader, hideable}</code>。两个列工厂(<code>user-table-columns.tsx</code>、<code>auth-event-table-columns.tsx</code>,共 ~230 行,全是 <code>cell: ({row}) =&gt; …row.original.x</code>)必须逐列改写成 <code>cell: item =&gt; …item.x</code>。</li>
+            <li><strong>自适应高度没有</strong> —— <code>useAutoFitHeight</code>(~145 行:向上找稳定祖先、量后续兄弟占位、ResizeObserver + scroll + resize)在 cadenza 无对应物,只有固定 <code>maxHeight</code> 默认 480。UserTable 不传 maxHeight 就是靠它撑满视口。这段要么自己包一层保留,要么放弃。</li>
+            <li><strong>分页不内建</strong> —— cadenza 的 DataTable 完全不管分页,3 个调用点要把 <code>pagination={{…}}</code> 拆成同级的 <code>&lt;DataPagination&gt;</code>。</li>
+            <li>文案通道全改:<code>emptyMessage</code> 字符串 → <code>&lt;DataTableEmpty&gt;</code> 插槽;<code>onRowClick</code> → <code>onRowAction</code>;<code>pinnedColumns={{right:['actions']}}</code> → 每列 <code>pinned:'end'</code>。</li>
+          </ol>
+          <p style="font-size:0.9rem;margin-top:0.7rem"><code>meta</code> 与 <code>infiniteScroll</code> 两个 prop 全仓零调用点,迁移时直接扔。<code>src/components/table.tsx</code>(55 行)与它绑死,迁完一起变死代码。</p></div>
+        </details>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <span class="pill caution">adapt</span>
+          <span class="path">src/components/search-input.tsx</span>
+          <span class="saved">−67 行 · 3 调用点</span>
+        </div>
+        <p>
+          核心逻辑同构:去抖 + trim + 空串归一化成 undefined、raw/settled 双通道,连 debounceMs 默认 300 都一样,
+          注释里「和 infinite-combobox 的 searchValue/queryValue 同一范式」这句两边都有。
+          cadenza 多出 Escape 清空、Enter 提交、清空时跳过去抖(basereact 无清空路径)。
+        </p>
+        <span class="swap"><b>外观会变:</b> 从「绝对定位 <code>i-lucide-search</code> 叠在 <code>pl-8</code> 的 Input 上」换成 <code>InputGroup</code> 行内组合,图标源从 unocss class 换成 <code>@tabler/icons-react</code>,并多一个 clear 按钮(<code>clearable</code> 默认 true)。</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════ 梯队三 ══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="tier-no">梯队 03</span>
+      <h2>视觉基线迁移 · <span style="color:var(--go)">已完成</span></h2>
+      <p>
+        用户裁定:<strong>全面替换,只有 <code>src/components/ui/</code> 的 shadcn 源码不动。</strong>
+        所以这一梯队按「换调用点、不删 vendored 文件」执行完毕 —— 收益不在行数上
+        (那些文件留在原地、继续被 sha256 钉着),而在于全站控件从此由库统一供给。
+      </p>
+      <p>
+        <strong>随之而来的视觉变化,全站生效:</strong>按钮默认高 <code>h-9 → h-8</code>、
+        <code>size='icon-sm'</code> 从 <code>size-8 → size-7</code>、圆角 <code>rounded-md → rounded-lg</code>、
+        outline 变体去掉 <code>shadow-xs</code>、输入框矮 4px、Field 家族间距整体收紧一档。
+      </p>
+      <p>
+        <strong>三处行为默认值反转,已逐一处理:</strong>删除确认框显式补
+        <code>disablePointerDismissal</code>(cadenza 的 AlertDialog 默认点外面就关);
+        6 个下拉菜单接受 cadenza 的 <code>modal={false}</code> 默认(打开时不再锁页面滚动,
+        外部元素保持可交互);Collapsible 换成库自带的 200ms 高度过渡,
+        <code>base.css</code> 里那 19 行手写的 300ms + 透明度动画随之删除
+        (<code>data-slot</code> 已变成 <code>collapsible-panel</code>,旧选择器再也匹配不到)。
+      </p>
+      <p>
+        <code>Field</code> 只保留了两项本地扩展,它们是同一个决定的两半:
+        <code>FieldError</code> 常驻占位(库版空内容 <code>return null</code>,换过去表单会跳版)
+        与 <code>FieldGroup gap-0</code>。必填红星的本地实现已删除 —— cadenza 的
+        <code>FieldLabel/FieldLegend/FieldTitle</code> 自带 <code>required</code>。
+      </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>basereact</th><th>cadenza 导出</th><th>判定</th><th>冻结后收益</th><th>要注意</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="sym">components/ui/dropdown-menu</td>
+            <td class="sym">DropdownMenu*</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td><code>Content→Popup</code> / <code>Label→GroupLabel</code> / <code>Sub*→Submenu*</code>,涉 6 文件。<strong><code>modal</code> 默认从 true 翻成 false</strong> —— 侧栏菜单将不再锁滚动。零新增能力,排最后。</td>
+          </tr>
+          <tr>
+            <td class="sym">business/user/delete-user-dialog</td>
+            <td class="sym">AlertDialog*</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td><strong>默认行为反了</strong> —— cadenza 建在 Base UI Dialog 上,<em>默认点外面就关</em>。这是删除确认框,必须显式加 <code>disablePointerDismissal</code>,否则是行为回归。</td>
+          </tr>
+          <tr>
+            <td class="sym">components/field.tsx</td>
+            <td class="sym">Field / FieldLabel …</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td>8 个部件可直接换,但 <code>FieldError</code> 占位版 + <code>FieldGroup gap-0</code> 这对<strong>必须留</strong>(见下方不可替换清单)。<code>require</code> 别名改名 <code>required</code>。</td>
+          </tr>
+          <tr>
+            <td class="sym">components/scroll-area.tsx</td>
+            <td class="sym">ScrollArea</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">已删</td>
+            <td><strong>已随主线消失</strong>:它只被 data-table 与 infinite-select 消费,两者迁走后成了孤儿,整文件已删。(审计判它 drop-in 有误 —— cadenza 的 <code>scrollbars</code> 默认是 <code>&#39;hover&#39;</code> 而非常显,真要直接换必须显式补 <code>scrollbars="always"</code>。)</td>
+          </tr>
+          <tr>
+            <td class="sym">components/nav-main.tsx</td>
+            <td class="sym">Collapsible*</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td>只改名 <code>Content→Panel</code>。本地版零样式、展开一帧到位;cadenza 带 Base UI 官方高度过渡 + <code>motion-reduce</code> 豁免。改动最小、拿到的东西实在。</td>
+          </tr>
+          <tr>
+            <td class="sym">components/ui/input · textarea</td>
+            <td class="sym">Input / Textarea</td>
+            <td><span class="pill go">drop-in</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td>同一个 <code>@base-ui/react</code> primitive。cadenza 把类型从 <code>ComponentProps&lt;'input'&gt;</code> 修回 <code>InputPrimitive.Props</code>,恢复函数式 <code>className</code> 与 <code>onValueChange</code>。视觉位移:矮 4px、圆角变大、去阴影。</td>
+          </tr>
+          <tr>
+            <td class="sym">components/ui/spinner</td>
+            <td class="sym">Spinner</td>
+            <td><span class="pill go">drop-in</span></td>
+            <td class="num">已做</td>
+            <td>diff 只差 <code>cn</code> 的 import 路径。6 个调用点只改 import 行。基线无关,可提到梯队一。</td>
+          </tr>
+          <tr>
+            <td class="sym">business/user/table/user-table-columns</td>
+            <td class="sym">Button / LinkButton</td>
+            <td><span class="pill caution">adapt</span></td>
+            <td class="num">0<sup>*</sup></td>
+            <td>API 几乎无缝,<strong>坑全在尺寸</strong> —— 该文件用的 <code>size='icon-sm'</code> 从 <code>size-8</code> 缩到 <code>size-7</code>。12 调用点,必须随基线整体切。</td>
+          </tr>
+        </tbody>
+        <caption><sup>*</sup> 冻结前的估算分别是 266 / 187 / 55 / 19 / 38 / 58 行,全部来自删除 <code>src/components/ui/</code> 下的 vendored 文件。</caption>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════ 不可替换 ══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="tier-no">梯队 04</span>
+      <h2>不可替换 · 留着</h2>
+    </div>
+
+    <div class="items">
+      <div class="item">
+        <div class="item-head"><span class="pill inert">布局契约</span><span class="path">FieldError 占位版 + FieldGroup gap-0</span></div>
+        <p>
+          basereact 的 <code>FieldError</code> 刻意常驻(<code>min-h-5 + invisible + -mt-2</code>),
+          <code>FieldGroup</code> 被压成 <code>gap-0</code> —— 整张表单的字段间距靠每个 FieldError 撑出来,
+          <code>user-create-page.tsx:137</code> 甚至写了一个空的 <code>&lt;FieldError /&gt;</code> 专门占高度。
+          cadenza 版空内容 <code>return null</code>。<strong>这两条绑死:一起留,或一起重做。</strong>
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head"><span class="pill inert">导出边界挡死</span><span class="path">use-mobile · Table 外壳 · find-part / popup / pointer-origin</span></div>
+        <p>
+          cadenza 把它们全留在内部,不在导出名单里,外部 import 不到。
+          <code>Table</code> 系列会随 DataTable 迁移一起变死代码,不是「被替换」。
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head"><span class="pill inert">业务专有</span><span class="path">api-client · access-control · route-guard · route-menu · query-keys · use-infinite-list · table/pagination.ts</span></div>
+        <p>
+          cadenza 全库零 i18n、零路由依赖、不碰 react-query —— 这是刻意分层。
+          好消息:<code>useInfiniteCursorList</code> 产出的对象形状与 cadenza 的
+          <code>InfiniteSelectAdapterProps</code> 七个字段<strong>一字不差</strong>,
+          迁移时可以 <code>&lt;InfiniteSelect {...list} /&gt;</code> 直接摊平。
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head"><span class="pill inert">本地更完整</span><span class="path">PasswordField · ErrorState · SubmitButton 的 pendingLabel</span></div>
+        <p>
+          眼睛按钮 + <code>aria-pressed</code> + i18n、TanStack Router 的 <code>Link</code> 强类型 <code>homeTo</code>、
+          「保存中…」文案替换 —— cadenza 的 <code>pending</code> 是转圈遮罩,没有文案通道。
+          保文案就得在调用点自己写三元,那 19 行基本白省。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 样式接线 ══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="tier-no">附录</span>
+      <h2>样式接线:一行,且零 token 冲突</h2>
+    </div>
+    <pre><span class="cmt">// src/styles.css</span>
+<span class="del">- @import 'shadcn/tailwind.css';</span>
+<span class="add">+ @import '@gedatou/cadenza-ui/styles.css';</span></pre>
+    <p style="font-size:0.925rem;color:var(--ink-soft)">
+      cadenza 的 <code>styles.css</code> = shadcn 那 629 行(<strong>628 行逐字相同</strong>)+ 自有 463 行,严格超集。
+      增量里有一行是<strong>必需</strong>的:<code>@source "./dist"</code> —— 没有它 Tailwind 扫不到库里的 class,
+      cadenza 组件会全裸渲染。逐 token 比对:亮色 32 个共有 token <strong>取值差异 0 个</strong>,
+      暗色 31 个共有 <strong>差异 0 个</strong>;basereact 只多 5 个自有 token
+      (<code>--auth-*</code>、<code>--font-size-base</code>)。换过去不改变任何一个颜色。
+    </p>
+  </section>
+
+  <!-- ══════════ 冻结区 ══════════ -->
+  <div class="frozen-note">
+    <span class="eyebrow">冻结区 · 本次不动</span>
+    <p style="font-size:0.925rem;color:var(--ink-soft)">
+      <code>src/components/ui/**</code>(60 个 vendored primitive)连同 <code>ui-lock.test.ts</code>
+      与快照一律不动。其中只有 20 个在 ui/ 目录外有真实调用点,与 cadenza 提升组件重合的是
+      button(12)、dropdown-menu(6)、spinner(6)、select(3)、input(2)、scroll-area(2)、
+      field(2)、collapsible(2)、textarea(1)、alert-dialog(1);
+      card(14)/sidebar(8)/avatar(6)/chart(4) 这些 cadenza 根本没提升。
+    </p>
+  </div>
+
+  <footer>
+    <span>审计方法:4 路并行只读 agent · 547k tokens · 149 次工具调用 · 全部结论带文件路径与行号</span>
+    <span>执行中推翻的审计结论 3 条:<code>cn</code>(冻结文件编译不过,已放弃)、<code>scroll-area</code> 与 <code>search-input</code>(drop-in → adapt,默认值翻转与 prop 改名)</span>
+    <span>审计漏掉、执行时补上的 2 处:cadenza 提交管线无 <code>.catch()</code>(两处 <code>await navigate</code> 已收口)、迁移后测试文件依赖图变重导致首条测试超时(加载移入 <code>beforeAll</code>)</span>
+    <span>分支 refactor/adopt-cadenza · 净减 3,097 行 · 67 文件改动 · 删除 17 文件 · 未提交、未推送</span>
+  </footer>
+
+</div>
+</body>
+</html>
