@@ -1,5 +1,5 @@
 import type { LinkProps } from '@tanstack/react-router'
-import { Button } from '@gedatou/cadenza-ui'
+import { Button, LinkButton } from '@gedatou/cadenza-ui'
 import { Link, useRouter } from '@tanstack/react-router'
 
 import { useTranslation } from 'react-i18next'
@@ -30,7 +30,7 @@ export function ErrorState({ className, code, description, homeTo = '/', title }
         >
           {t('action.goBack')}
         </Button>
-        <Button nativeButton={false} render={<Link role={undefined} to={homeTo} />}>{t('action.home')}</Button>
+        <LinkButton render={<Link to={homeTo} />}>{t('action.home')}</LinkButton>
       </div>
     </div>
   )
