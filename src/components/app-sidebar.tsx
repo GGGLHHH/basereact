@@ -405,7 +405,7 @@ export function AppSidebar({
           </div>
         </SidebarNavHighlight>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className='scroll-fade-y'>
         <SidebarNavHighlight
           activeKey={pathname}
           className='flex flex-col gap-2'
