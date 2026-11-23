@@ -94,8 +94,6 @@
     "loadingMore": "Loading more..."
   },
   "pagination": {
-    "firstPage": "First page",
-    "lastPage": "Last page",
     "nextPage": "Next page",
     "pageOf": "Page {{page}} of {{totalPages}}",
     "previousPage": "Previous page",
