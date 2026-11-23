@@ -29,7 +29,10 @@ function hashUiDir(): Record<string, string> {
   const hashes: Record<string, string> = {}
   for (const file of collectFiles(UI_DIR).sort()) {
     const rel = relative(UI_DIR, file).split('\\').join('/')
-    hashes[rel] = createHash('sha256').update(readFileSync(file)).digest('hex')
+    // 按仓库里的 LF 形态取哈希:Windows 上 core.autocrlf=true 会把工作区检出成 CRLF,
+    // 不归一的话内容没变哈希也全变。
+    const content = readFileSync(file, 'utf8').replaceAll('\r\n', '\n')
+    hashes[rel] = createHash('sha256').update(content).digest('hex')
   }
   return hashes
 }
