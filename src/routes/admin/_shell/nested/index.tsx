@@ -1,9 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import { NestedIndex } from './-nested-index'
-
-// 一级父路由的落地内容:命中 /admin/nested 时渲染进 route.tsx 的 Outlet。
-// 无 titleKey——面包屑/菜单用父 route.tsx 的,避免同路径重复。
+// /admin/nested 是纯分组(route.tsx 的 isGroup),没有自己的页面:重定向到菜单里的
+// 第一个子页。改了子页顺序要同步这里,route-menu.test 会校验。
 export const Route = createFileRoute('/admin/_shell/nested/')({
-  component: NestedIndex,
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/nested/overview' })
+  },
 })

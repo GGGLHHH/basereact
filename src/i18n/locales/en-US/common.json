@@ -282,14 +282,12 @@
     "logout": "Logout"
   },
   "nested": {
-    "landing": "Nested landing (index). Pick Overview or Reports from the sidebar.",
     "level1Prefix": "Level 1 · ",
     "overviewDescription": "Level 2 · leaf under Nested.",
     "parentLayoutDescription": "Parent layout — renders <Outlet /> below.",
     "reports": {
       "dailyDescription": "Level 3 · leaf under Reports.",
       "description": "Child of Nested, parent of Level 3 — renders <Outlet />.",
-      "landing": "Reports landing (index). Pick Daily or Regions from the sidebar.",
       "level2Prefix": "Level 2 · ",
       "regions": {
         "description": "Parent layout — renders <Outlet /> below.",

@@ -282,14 +282,12 @@
     "logout": "退出登录"
   },
   "nested": {
-    "landing": "多级演示落地页(index)。从侧边栏选择「概览」或「报表」。",
     "level1Prefix": "第 1 级 · ",
     "overviewDescription": "第 2 级 · Nested 下的叶子。",
     "parentLayoutDescription": "父级布局 —— 下方渲染 <Outlet />。",
     "reports": {
       "dailyDescription": "第 3 级 · Reports 下的叶子。",
       "description": "Nested 的子级、第 3 级的父级 —— 渲染 <Outlet />。",
-      "landing": "报表落地页(index)。从侧边栏选择「每日」或「地区」。",
       "level2Prefix": "第 2 级 · ",
       "regions": {
         "description": "父级布局 —— 下方渲染 <Outlet />。",

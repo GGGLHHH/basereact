@@ -167,3 +167,26 @@ export function pickActiveMenuUrl<TPath extends string>(
   }
   return best
 }
+
+// 按 url 找菜单树里的那一项(含它的子树);不在菜单里(或被权限裁掉)返回 undefined。
+export function findMenuEntry<TPath extends string>(
+  groups: AdminMenuGroup<TPath>[],
+  url: string,
+): AdminMenuEntry<TPath> | undefined {
+  const visit = (entries: AdminMenuEntry<TPath>[]): AdminMenuEntry<TPath> | undefined => {
+    for (const entry of entries) {
+      const found = entry.url === url ? entry : visit(entry.children)
+      if (found) {
+        return found
+      }
+    }
+    return undefined
+  }
+  for (const group of groups) {
+    const found = visit(group.entries)
+    if (found) {
+      return found
+    }
+  }
+  return undefined
+}

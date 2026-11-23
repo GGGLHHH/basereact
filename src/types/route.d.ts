@@ -35,5 +35,11 @@ declare module '@tanstack/react-router' {
     groupKey?: RouteGroupKey
     order?: number
     hideInMenu?: boolean
+    /**
+     * 纯分组:自己没有页面,只把子页归在一起(菜单里有子项的节点都是)。路径本身由
+     * 同目录 index.tsx 重定向到第一个子页;面包屑这一级显示为纯文字、不可点。
+     * route-menu.test 校验它与菜单结构、重定向目标三者一致。
+     */
+    isGroup?: boolean
   }
 }

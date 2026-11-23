@@ -3,11 +3,11 @@ import type { AdminMenuEntry, MenuSourceRoute } from './route-menu'
 import { BlocksIcon, HouseIcon } from '@gedatou/cadenza-icons'
 import { QueryClient } from '@tanstack/react-query'
 
-import { createMemoryHistory, createRouter } from '@tanstack/react-router'
+import { createMemoryHistory, createRouter, isRedirect } from '@tanstack/react-router'
 import { describe, expect, it } from 'vitest'
 
 import { routeTree } from '../routeTree.gen'
-import { buildAdminMenu, pickActiveMenuUrl } from './route-menu'
+import { buildAdminMenu, findMenuEntry, pickActiveMenuUrl } from './route-menu'
 
 // 假体是纯对象字面量,直接满足 Record<string, MenuSourceRoute>,零 cast;
 // staticData 参数强类型,fixture 里写错 key 编译期报。
@@ -106,6 +106,43 @@ describe('buildAdminMenu with the real route tree', () => {
       labelKey: 'titles.adminHome',
       url: '/admin/home',
     })
+  })
+  // 纯分组 = 菜单里有子项的节点:路由声明 isGroup,index 重定向到菜单里的第一个子页,
+  // 面包屑这一级显示为纯文字。三处各写各的,这条把它们对齐:漏标、多标、改了子页
+  // 顺序忘了改重定向目标,都在这里报。
+  it('declares menu nodes with children as groups that redirect to their first child', () => {
+    const flatten = (entries: AdminMenuEntry[]): AdminMenuEntry[] =>
+      entries.flatMap(entry => [entry, ...flatten(entry.children)])
+    const parents = flatten(groups.flatMap(group => group.entries)).filter(entry => entry.children.length > 0)
+    // 结构化最小类型(同 route-menu.ts 的 MenuSourceRoute):直接 Object.values(routesById)
+    // 会塌成 any。beforeLoad 收 never:只调它看抛不抛 redirect,不关心参数。
+    const byId: Record<string, {
+      fullPath: string
+      options: { beforeLoad?: (context: never) => unknown, staticData?: StaticDataRouteOption }
+    }> = { ...router.routesById }
+    const routes = Object.values(byId)
+    const declared = routes.filter(route => route.options.staticData?.isGroup === true).map(route => route.fullPath)
+    expect([...declared].sort()).toEqual(parents.map(entry => entry.url).sort())
+
+    for (const parent of parents) {
+      const index = routes.find(route => route.fullPath === `${parent.url}/`)
+      let thrown: unknown
+      try {
+        index?.options.beforeLoad?.({} as never)
+      }
+      catch (error) {
+        thrown = error
+      }
+      expect(isRedirect(thrown) ? thrown.options.to : undefined).toBe(parent.children[0]?.url)
+    }
+  })
+
+  it('finds a menu entry with its subtree by url', () => {
+    expect(findMenuEntry(groups, '/admin/nested/reports')?.children.map(child => child.url)).toEqual([
+      '/admin/nested/reports/daily',
+      '/admin/nested/reports/regions',
+    ])
+    expect(findMenuEntry(groups, '/admin/login')).toBeUndefined()
   })
 })
 
