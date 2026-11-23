@@ -7,6 +7,7 @@ minimumReleaseAgeExclude:
   - '@gedatou/cadenza-ui'
   - '@gedatou/cadenza-form'
   - '@gedatou/cadenza-utils'
+  - '@gedatou/cadenza-icons'
 
 trustPolicy: no-downgrade
 # Three lockfile entries lost provenance relative to earlier releases of the same
