@@ -50,7 +50,6 @@ exports[`vendored ui/ lock > every file under components/ui matches its pinned s
   "select.tsx": "e2ba5d4916d56e79307f71094b0c3ace2d59e01b804e646f59292233b232b3c7",
   "separator.tsx": "082aff76b823256112a622d92dcef79dd008fe8c252611e184c002db770763f3",
   "sheet.tsx": "e8a5bf41241815eb138e61dc074d0ca657503b02341ddd58df3c1fc4d43ce212",
-  "sidebar.tsx": "74134fa40484c83cbd886ea2f3acde481fe43a8c4dc71e85a39d3aa3bfd2843b",
   "skeleton.tsx": "8110bba70d0cb9fe968c0b7bd092ad12258caef40b028b4a87f402bdab907faf",
   "slider.tsx": "96f4e8d1aeba962530a08c15f4ea64526d4c8a016bf59f9a0cb40b6928d35ce1",
   "sonner.tsx": "2ea196a62146a3fb71c1b977a67d215e428be88ebe6628edc4eeb4c7e04719ff",

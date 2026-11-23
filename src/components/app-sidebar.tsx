@@ -3,7 +3,7 @@
 import type { TFunction } from 'i18next'
 import type { AdminMenuEntry } from '@/lib/route-menu'
 
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuSubmenu, DropdownMenuSubmenuPopup, DropdownMenuSubmenuTrigger, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuSubmenu, DropdownMenuSubmenuPopup, DropdownMenuSubmenuTrigger, DropdownMenuTrigger, Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarRail, useSidebar } from '@gedatou/cadenza-ui'
 import { IconChevronRight, IconCommand, IconLayoutRows, IconWaveSine } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 
@@ -12,27 +12,9 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { myPermissionsQueryOptions } from '@/api/auth'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { movingHighlightItemProps } from '@/components/moving-highlight-item-props'
 import { NavUser } from '@/components/nav-user'
-import { SidebarNavHighlight } from '@/components/sidebar-nav-highlight'
 import { TeamSwitcher } from '@/components/team-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarRail,
-  useSidebar,
-} from '@/components/ui/sidebar'
 
 import { buildAdminMenu, pickActiveMenuUrl } from '@/lib/route-menu'
 import { cn } from '@/lib/utils'
@@ -153,16 +135,14 @@ function MenuNodeItem({
   const isActive = pathname === node.url || pathname.startsWith(`${node.url}/`)
   const hasChildren = node.children.length > 0
   const { state, isMobile } = useSidebar()
-  // 展开态才走滑动高亮:标记可 hover 项 + 激活项,并抹掉按钮自身 hover/active 背景
-  // (背景交给滑动 pill,见 SidebarNavHighlight)。收起态用飞出,不需要。
-  const highlight = state === 'expanded'
-  // pill 目标 = 覆盖当前页的最深菜单项(恰好一个)。不能用 isActive(startsWith):它把
-  // 整条父链都标上 data-mh-active,querySelector 取到最上层父项。当前页不入菜单时
-  // (详情/建号)activeUrl 回落到父路由,故 pill 停在父项而非消失。
+  // 滑动高亮由 cadenza Sidebar 自带(整块面板共用一块底色,静止时停在 isActive 的按钮上),
+  // 所以 isActive 只给「覆盖当前页的最深菜单项」(恰好一个)。不能用 startsWith 的 isActive:
+  // 整条父链都会登记成激活,底色落到最上层父项。当前页不入菜单时(详情/建号)activeUrl
+  // 回落到父路由,底色停在父项而非消失。父链上的祖先项只加粗,提示当前页在它下面。
   const isCurrent = node.url === activeUrl
   const highlightProps = {
-    ...movingHighlightItemProps(isCurrent, highlight),
-    className: cn(highlight && 'hover:bg-transparent! data-active:bg-transparent!'),
+    isActive: isCurrent,
+    className: cn(isActive && !isCurrent && 'font-medium'),
   }
 
   // 折叠态受控:初始展开 = 命中当前路由;导航进入该分支时自动展开(只开不关,用户
@@ -207,7 +187,6 @@ function MenuNodeItem({
       return (
         <SidebarMenuItem>
           <SidebarMenuButton
-            isActive={isActive}
             tooltip={label}
             render={<Link to={node.url} />}
             {...highlightProps}
@@ -273,7 +252,6 @@ function MenuNodeItem({
         <CollapsibleTrigger
           render={(
             <SidebarMenuButton
-              isActive={isActive}
               tooltip={label}
               {...highlightProps}
             />
@@ -292,7 +270,6 @@ function MenuNodeItem({
     return (
       <SidebarMenuSubItem>
         <SidebarMenuSubButton
-          isActive={isActive}
           render={<Link to={node.url} />}
           {...highlightProps}
         >
@@ -314,7 +291,6 @@ function MenuNodeItem({
       <CollapsibleTrigger
         render={(
           <SidebarMenuSubButton
-            isActive={isActive}
             render={<button type='button' />}
             {...highlightProps}
           />
@@ -350,7 +326,6 @@ function NavAdminRoutes() {
   // 高亮目标 url:当前页入菜单则本身,否则回落到最近的入菜单祖先(见 pickActiveMenuUrl)。
   const activeUrl = pickActiveMenuUrl(groups, pathname)
 
-  // 高亮容器上提到 AppSidebar(包含头/内容/底),这里只出菜单分组。
   return (
     <>
       {groups.map(group => (
@@ -380,56 +355,23 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & {
   user: { avatar: string, email: string, name: string }
 }) {
-  const { state } = useSidebar()
-  const pathname = useRouterState({ select: s => s.location.pathname })
-  const enabled = state === 'expanded'
-  // 头/底 chrome 项也纳入滑动高亮:包一层 data-mh-item 盒作 pill 目标(chrome 组件不透传
-  // props 到内层按钮,故在此外包);并抹掉内层 SidebarMenuButton 自身的 hover 底色——它与
-  // pill 同色会"瞬间填充"而非滑入,交给 pill。仅展开态生效,收起态保留原生 hover。
-  const chromeItem = {
-    ...movingHighlightItemProps(false, enabled),
-    className: enabled ? '[&_button]:hover:bg-transparent!' : undefined,
-  }
+  // 头/内容/底里的菜单按钮(含 TeamSwitcher / ThemeToggle 等 chrome 项)都是 cadenza 的
+  // SidebarMenuButton,自动加入 Sidebar 自带的滑动高亮,不用再包高亮容器。
   return (
     <Sidebar
       collapsible='icon'
       {...props}
     >
-      {/* 头 / 内容 / 底 各一枚 pill。内容区那枚必须在滚动区(SidebarContent)里面,才随原生
-          滚动走、被 overflow 裁掉;一枚 pill 贯穿全栏就只能挂在滚动区外,靠 JS 追滚动,永远慢
-          一帧。代价:pill 不再跨区连续滑动。内容区容器沿用 SidebarContent 的 flex 列 + gap。 */}
       <SidebarHeader>
-        <SidebarNavHighlight activeKey={pathname} enabled={enabled}>
-          <div {...chromeItem}>
-            <TeamSwitcher teams={data.teams} />
-          </div>
-        </SidebarNavHighlight>
+        <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent className='scroll-fade-y'>
-        <SidebarNavHighlight
-          activeKey={pathname}
-          className='flex flex-col gap-2'
-          enabled={enabled}
-        >
-          <NavAdminRoutes />
-        </SidebarNavHighlight>
+        <NavAdminRoutes />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarNavHighlight
-          activeKey={pathname}
-          className='flex flex-col gap-2'
-          enabled={enabled}
-        >
-          <div {...chromeItem}>
-            <ThemeToggle />
-          </div>
-          <div {...chromeItem}>
-            <LanguageSwitcher />
-          </div>
-          <div {...chromeItem}>
-            <NavUser user={user} />
-          </div>
-        </SidebarNavHighlight>
+        <ThemeToggle />
+        <LanguageSwitcher />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

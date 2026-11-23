@@ -1,7 +1,8 @@
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@gedatou/cadenza-ui'
 import { getRouteApi, Link, Outlet, useMatches } from '@tanstack/react-router'
 import { Fragment } from 'react'
-import { useTranslation } from 'react-i18next'
 
+import { useTranslation } from 'react-i18next'
 import { AppSidebar } from '@/components/app-sidebar'
 import {
   Breadcrumb,
@@ -12,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 // 组件与路由定义分文件:路由文件只导出 Route(单一导出才吃得到代码分割 / fast refresh),
 // 组件这边按 id 取路由 API,免回头 import Route 造成循环依赖。
@@ -73,7 +73,7 @@ function CurrentPageBreadcrumb() {
 
 // 侧栏展开/收起持久化:SidebarProvider 切换时写 sidebar_state cookie,这里初始化读回。
 // admin 子树 ssr:false,恒在客户端渲染,document 可用。
-// ponytail: cookie 名对齐 ui/sidebar.tsx 的 SIDEBAR_COOKIE_NAME(未导出)。
+// ponytail: cookie 名对齐 cadenza SidebarProvider 写的 sidebar_state(它只写不读,读回是应用的事)。
 function readSidebarOpen(): boolean {
   if (typeof document === 'undefined') {
     return true
@@ -92,7 +92,7 @@ export function AdminShell() {
         user={{ avatar: '', email: me.email ?? '', name: me.username }}
       />
       {/* min-w-0:让 inset(sidebar 的 flex peer)能缩到 flex 轨道以下,宽表(如 users 8 列)
-          转表格内部横滚,而非撑出页面级横滚。修复放调用方,ui/* 保持 vendored 不改。 */}
+          转表格内部横滚,而非撑出页面级横滚。cadenza 的 SidebarInset 没带 min-w-0,在调用方补。 */}
       <SidebarInset className='min-w-0'>
         <header className='flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
           <div className='flex items-center gap-2 px-4'>

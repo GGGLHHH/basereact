@@ -1,18 +1,9 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 
 import { IconArrowForward, IconDots, IconFolder, IconTrash } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
 
 export function NavProjects({
   projects,

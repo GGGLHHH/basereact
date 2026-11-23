@@ -1,6 +1,6 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 
 import {
   IconCheck,
@@ -13,12 +13,6 @@ import {
 import { useTheme } from 'next-themes'
 
 import { useTranslation } from 'react-i18next'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
 import { toggleThemeWithTransition } from '@/lib/theme-transition'
 
 // 主题切换:侧栏底部图标按钮,dropdown 选 浅色/深色/跟随系统(当前项打勾)。

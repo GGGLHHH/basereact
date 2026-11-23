@@ -1,16 +1,6 @@
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@gedatou/cadenza-ui'
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@gedatou/cadenza-ui'
 import { IconChevronRight } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from '@/components/ui/sidebar'
 
 export function NavMain({
   items,

@@ -1,4 +1,4 @@
-import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 import { IconLogout, IconSelector, IconUserCircle } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -6,12 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { useLogout } from '@/api/auth'
 import { useMyProfile } from '@/api/profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
 import { nameInitials } from '@/lib/display-name'
 
 export function NavUser({

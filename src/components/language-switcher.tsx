@@ -1,16 +1,10 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 
 import { IconCheck, IconLanguage } from '@tabler/icons-react'
 
 import { useTranslation } from 'react-i18next'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
 import {
   LOCALE_NATIVE_NAMES,
   normalizeLocale,

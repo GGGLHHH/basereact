@@ -1,17 +1,11 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 
 import { IconPlus, IconSelector } from '@tabler/icons-react'
 import * as React from 'react'
 
 import { useTranslation } from 'react-i18next'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
 
 export function TeamSwitcher({
   teams,
