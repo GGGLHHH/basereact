@@ -3,14 +3,15 @@
 import type { TFunction } from 'i18next'
 import type { AdminMenuEntry } from '@/lib/route-menu'
 
+import { AudioLinesIcon, ChevronRightIcon, GalleryVerticalEndIcon, TerminalIcon } from '@gedatou/cadenza-icons'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuSubmenu, DropdownMenuSubmenuPopup, DropdownMenuSubmenuTrigger, DropdownMenuTrigger, Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarRail, useSidebar } from '@gedatou/cadenza-ui'
-import { IconChevronRight, IconCommand, IconLayoutRows, IconWaveSine } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { myPermissionsQueryOptions } from '@/api/auth'
+import { PlayOnHover } from '@/components/icon-motion'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NavUser } from '@/components/nav-user'
 import { TeamSwitcher } from '@/components/team-switcher'
@@ -24,34 +25,26 @@ const data = {
   teams: [
     {
       name: 'Acme Inc',
-      logo: <IconLayoutRows />,
+      logo: <GalleryVerticalEndIcon />,
       plan: 'Enterprise',
     },
     {
       name: 'Acme Corp.',
-      logo: <IconWaveSine />,
+      logo: <AudioLinesIcon />,
       plan: 'Startup',
     },
     {
       name: 'Evil Corp.',
-      logo: <IconCommand />,
+      logo: <TerminalIcon />,
       plan: 'Free',
     },
   ],
 }
 
-// sidebar 的 [&_svg]:size-4/shrink-0 只保护 svg;unocss span 图标要自带尺寸和
-// shrink-0,否则收起(icon 模式)时被压变形。
-function MenuIcon({ icon }: { icon?: string }) {
-  if (icon === undefined || icon === '') {
-    return null
-  }
-  return (
-    <span
-      aria-hidden='true'
-      className={cn(icon, 'size-4 shrink-0')}
-    />
-  )
+// 路由 staticData.icon 给的动画图标。不单独挂触发:外层整行的 PlayOnHover 悬停时
+// 一起播放(折叠箭头同理)。显式 size-4 shrink-0,收起(icon 模式)时不被压变形。
+function MenuIcon({ icon: Icon }: { icon?: AdminMenuEntry['icon'] }) {
+  return Icon ? <Icon className='size-4 shrink-0' /> : null
 }
 
 // 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
@@ -85,13 +78,15 @@ function FlyoutMenuNode({
   const isActive = pathname === node.url || pathname.startsWith(`${node.url}/`)
   if (node.children.length === 0) {
     return (
-      <DropdownMenuItem
-        render={<Link to={node.url} />}
-        className={cn(FLYOUT_ITEM_CLASS, isActive && FLYOUT_ACTIVE_PILL)}
-      >
-        <MenuIcon icon={node.icon} />
-        <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-      </DropdownMenuItem>
+      <PlayOnHover>
+        <DropdownMenuItem
+          render={<Link to={node.url} />}
+          className={cn(FLYOUT_ITEM_CLASS, isActive && FLYOUT_ACTIVE_PILL)}
+        >
+          <MenuIcon icon={node.icon} />
+          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+        </DropdownMenuItem>
+      </PlayOnHover>
     )
   }
   return (
@@ -179,21 +174,23 @@ function MenuNodeItem({
     : null
 
   const chevron = (
-    <IconChevronRight className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
+    <ChevronRightIcon className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
   )
 
   if (depth === 0) {
     if (!hasChildren) {
       return (
         <SidebarMenuItem>
-          <SidebarMenuButton
-            tooltip={label}
-            render={<Link to={node.url} />}
-            {...highlightProps}
-          >
-            <MenuIcon icon={node.icon} />
-            <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-          </SidebarMenuButton>
+          <PlayOnHover>
+            <SidebarMenuButton
+              tooltip={label}
+              render={<Link to={node.url} />}
+              {...highlightProps}
+            >
+              <MenuIcon icon={node.icon} />
+              <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+            </SidebarMenuButton>
+          </PlayOnHover>
         </SidebarMenuItem>
       )
     }
@@ -204,30 +201,34 @@ function MenuNodeItem({
           <DropdownMenu>
             {/* 收起态图标悬停即弹飞出层(openOnHover 是 Menu.Trigger 的 prop,点击仍可开);
                 子层 SubmenuTrigger 默认 openOnHover,故多级也悬停展开。 */}
-            <DropdownMenuTrigger
-              openOnHover
-              render={(
-                <SidebarMenuButton
-                  isActive={isActive}
-                  tooltip={label}
-                />
-              )}
-            >
-              <MenuIcon icon={node.icon} />
-              <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-            </DropdownMenuTrigger>
+            <PlayOnHover>
+              <DropdownMenuTrigger
+                openOnHover
+                render={(
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={label}
+                  />
+                )}
+              >
+                <MenuIcon icon={node.icon} />
+                <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+              </DropdownMenuTrigger>
+            </PlayOnHover>
             <DropdownMenuPopup
               side='right'
               align='start'
               className='min-w-48'
             >
-              <DropdownMenuItem
-                render={<Link to={node.url} />}
-                className={cn(FLYOUT_ITEM_CLASS, pathname === node.url && FLYOUT_ACTIVE_PILL)}
-              >
-                <MenuIcon icon={node.icon} />
-                <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-              </DropdownMenuItem>
+              <PlayOnHover>
+                <DropdownMenuItem
+                  render={<Link to={node.url} />}
+                  className={cn(FLYOUT_ITEM_CLASS, pathname === node.url && FLYOUT_ACTIVE_PILL)}
+                >
+                  <MenuIcon icon={node.icon} />
+                  <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+                </DropdownMenuItem>
+              </PlayOnHover>
               <DropdownMenuSeparator />
               {node.children.map(child => (
                 <FlyoutMenuNode
@@ -249,18 +250,20 @@ function MenuNodeItem({
         open={open}
         render={<SidebarMenuItem />}
       >
-        <CollapsibleTrigger
-          render={(
-            <SidebarMenuButton
-              tooltip={label}
-              {...highlightProps}
-            />
-          )}
-        >
-          <MenuIcon icon={node.icon} />
-          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-          {chevron}
-        </CollapsibleTrigger>
+        <PlayOnHover>
+          <CollapsibleTrigger
+            render={(
+              <SidebarMenuButton
+                tooltip={label}
+                {...highlightProps}
+              />
+            )}
+          >
+            <MenuIcon icon={node.icon} />
+            <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+            {chevron}
+          </CollapsibleTrigger>
+        </PlayOnHover>
         {childrenSub}
       </Collapsible>
     )
@@ -269,13 +272,15 @@ function MenuNodeItem({
   if (!hasChildren) {
     return (
       <SidebarMenuSubItem>
-        <SidebarMenuSubButton
-          render={<Link to={node.url} />}
-          {...highlightProps}
-        >
-          <MenuIcon icon={node.icon} />
-          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-        </SidebarMenuSubButton>
+        <PlayOnHover>
+          <SidebarMenuSubButton
+            render={<Link to={node.url} />}
+            {...highlightProps}
+          >
+            <MenuIcon icon={node.icon} />
+            <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+          </SidebarMenuSubButton>
+        </PlayOnHover>
       </SidebarMenuSubItem>
     )
   }
@@ -288,25 +293,27 @@ function MenuNodeItem({
     >
       {/* SidebarMenuSubButton 默认渲染 <a>;作折叠触发器时强制成 <button>,
           否则 Base UI 报 "button 期望原生 <button>"(叶子仍用 Link 保持 <a>)。 */}
-      <CollapsibleTrigger
-        render={(
-          <SidebarMenuSubButton
-            render={<button type='button' />}
-            {...highlightProps}
-          />
-        )}
-      >
-        <MenuIcon icon={node.icon} />
-        <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
-        {chevron}
-      </CollapsibleTrigger>
+      <PlayOnHover>
+        <CollapsibleTrigger
+          render={(
+            <SidebarMenuSubButton
+              render={<button type='button' />}
+              {...highlightProps}
+            />
+          )}
+        >
+          <MenuIcon icon={node.icon} />
+          <span className='group-data-[collapsible=icon]:sr-only'>{label}</span>
+          {chevron}
+        </CollapsibleTrigger>
+      </PlayOnHover>
       {childrenSub}
     </Collapsible>
   )
 }
 
 // 菜单数据来自路由树的 staticData(见 types/route.d.ts):
-// menuTitleKey/menuTitle 决定入菜单,group 分组,order 排序,icon 是 unocss 类,
+// menuTitleKey/menuTitle 决定入菜单,group 分组,order 排序,icon 是动画图标组件,
 // fullPath 前缀决定嵌套层级。
 function NavAdminRoutes() {
   const router = useRouter()

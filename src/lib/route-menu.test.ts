@@ -1,5 +1,6 @@
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 import type { AdminMenuEntry, MenuSourceRoute } from './route-menu'
+import { BlocksIcon, HouseIcon } from '@gedatou/cadenza-icons'
 import { QueryClient } from '@tanstack/react-query'
 
 import { createMemoryHistory, createRouter } from '@tanstack/react-router'
@@ -29,7 +30,7 @@ const routesById = {
   '/admin/_shell': route('/admin'),
   '/admin/_shell/widgets': route('/admin/widgets', {
     groupKey: 'menuGroups.admin',
-    icon: 'i-tabler-box',
+    icon: BlocksIcon,
     menuTitleKey: 'titles.adminWidgets',
     order: 2,
     titleKey: 'titles.adminWidgets',
@@ -101,7 +102,7 @@ describe('buildAdminMenu with the real route tree', () => {
   it('groups top-level pages, Admin (home first) before Demo', () => {
     expect(groups.map(group => group.labelKey)).toEqual(['menuGroups.admin', 'menuGroups.demo'])
     expect(groups[0].entries[0]).toMatchObject({
-      icon: 'i-tabler-home',
+      icon: HouseIcon,
       labelKey: 'titles.adminHome',
       url: '/admin/home',
     })
@@ -128,7 +129,7 @@ describe('buildAdminMenu', () => {
 
   it('keeps icon and translation key on entries', () => {
     const widgets = groups[0].entries.find(entry => entry.url === '/admin/widgets')
-    expect(widgets?.icon).toBe('i-tabler-box')
+    expect(widgets?.icon).toBe(BlocksIcon)
     expect(widgets?.labelKey).toBe('titles.adminWidgets')
   })
 })

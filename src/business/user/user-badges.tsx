@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
+import { BadgeCheckIcon, CircleAlertIcon, ShieldCheckIcon } from '@gedatou/cadenza-icons'
 import { Badge } from '@gedatou/cadenza-ui'
 import { useTranslation } from 'react-i18next'
+import { PlayOnHover } from '@/components/icon-motion'
 
 import { cn } from '@/lib/utils'
 
@@ -32,17 +34,15 @@ export function RoleBadges({
   return (
     <span className={cn('flex flex-wrap items-center gap-1', className)}>
       {shown.map(role => (
-        <Badge
-          key={role}
-          className='gap-1'
-          variant='secondary'
-        >
-          <span
-            aria-hidden
-            className='i-lucide-shield size-3 opacity-60'
-          />
-          {role}
-        </Badge>
+        <PlayOnHover key={role}>
+          <Badge
+            className='gap-1'
+            variant='secondary'
+          >
+            <ShieldCheckIcon className='size-3 opacity-60' />
+            {role}
+          </Badge>
+        </PlayOnHover>
       ))}
       {extra > 0
         ? (
@@ -61,28 +61,26 @@ export function VerifiedBadge({ verified }: { verified: boolean }) {
   const { t } = useTranslation('common')
   return verified
     ? (
-        <Badge
-          className='gap-1 text-primary'
-          variant='secondary'
-        >
-          <span
-            aria-hidden
-            className='i-lucide-badge-check size-3'
-          />
-          {t('users.verified')}
-        </Badge>
+        <PlayOnHover>
+          <Badge
+            className='gap-1 text-primary'
+            variant='secondary'
+          >
+            <BadgeCheckIcon className='size-3' />
+            {t('users.verified')}
+          </Badge>
+        </PlayOnHover>
       )
     : (
-        <Badge
-          className='gap-1 text-muted-foreground'
-          variant='outline'
-        >
-          <span
-            aria-hidden
-            className='i-lucide-shield-alert size-3'
-          />
-          {t('users.unverified')}
-        </Badge>
+        <PlayOnHover>
+          <Badge
+            className='gap-1 text-muted-foreground'
+            variant='outline'
+          >
+            <CircleAlertIcon className='size-3' />
+            {t('users.unverified')}
+          </Badge>
+        </PlayOnHover>
       )
 }
 

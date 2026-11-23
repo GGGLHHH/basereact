@@ -1,3 +1,4 @@
+import { CalendarDaysIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { ReportsDaily } from './-daily-page'
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/admin/_shell/nested/reports/daily')({
   staticData: {
     titleKey: 'titles.nestedDaily',
     menuTitleKey: 'titles.nestedDaily',
+    icon: CalendarDaysIcon,
     order: 0,
   },
 })

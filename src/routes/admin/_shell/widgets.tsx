@@ -1,3 +1,4 @@
+import { BlocksIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
@@ -15,7 +16,7 @@ export const Route = createFileRoute('/admin/_shell/widgets')({
   staticData: {
     titleKey: 'titles.adminWidgets',
     menuTitleKey: 'titles.adminWidgets',
-    icon: 'i-tabler-box',
+    icon: BlocksIcon,
     groupKey: 'menuGroups.admin',
     // 页面主数据就是这个操作,准入随它:缺 users:admin 时菜单不出现、直连进壳内 403。
     accessPolicyKeys: ['adminListWidgets'],

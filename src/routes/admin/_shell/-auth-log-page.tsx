@@ -1,4 +1,5 @@
 import type { AuthOutcome } from './-auth-log/types'
+import { ClockIcon } from '@gedatou/cadenza-icons'
 import { SearchField, Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
@@ -76,9 +77,10 @@ export function AuthLogPage() {
           <p className='text-sm text-muted-foreground'>{t('authLog.subtitle')}</p>
         </div>
         <span className='inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground'>
-          <span
-            className='i-tabler-clock size-3.5'
-            aria-hidden
+          {/* 说明性徽标:进入视口时播一遍。 */}
+          <ClockIcon
+            animateOnView
+            className='size-3.5'
           />
           {t('authLog.window')}
         </span>

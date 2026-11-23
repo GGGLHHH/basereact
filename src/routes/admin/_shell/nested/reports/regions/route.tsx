@@ -1,3 +1,4 @@
+import { MapPinIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { RegionsLayout } from './-regions-layout'
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/admin/_shell/nested/reports/regions')({
   staticData: {
     titleKey: 'titles.nestedRegions',
     menuTitleKey: 'titles.nestedRegions',
+    icon: MapPinIcon,
     order: 1,
   },
 })

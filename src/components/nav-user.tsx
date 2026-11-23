@@ -1,10 +1,11 @@
+import { ChevronUpDownIcon, CircleUserRoundIcon, LogOutIcon } from '@gedatou/cadenza-icons'
 import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
-import { IconLogout, IconSelector, IconUserCircle } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { useTranslation } from 'react-i18next'
 import { useLogout } from '@/api/auth'
 import { useMyProfile } from '@/api/profile'
+import { PlayOnHover } from '@/components/icon-motion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { nameInitials } from '@/lib/display-name'
 
@@ -41,27 +42,29 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(
-              <SidebarMenuButton
-                size='lg'
-                className='aria-expanded:bg-muted'
-              />
-            )}
-          >
-            <Avatar>
-              <AvatarImage
-                src={avatarSrc || undefined}
-                alt={user.name}
-              />
-              <AvatarFallback>{fallback}</AvatarFallback>
-            </Avatar>
-            <div className='grid flex-1 text-left text-sm/tight'>
-              <span className='truncate font-medium'>{user.name}</span>
-              <span className='truncate text-xs'>{user.email}</span>
-            </div>
-            <IconSelector className='ml-auto size-4' />
-          </DropdownMenuTrigger>
+          <PlayOnHover>
+            <DropdownMenuTrigger
+              render={(
+                <SidebarMenuButton
+                  size='lg'
+                  className='aria-expanded:bg-muted'
+                />
+              )}
+            >
+              <Avatar>
+                <AvatarImage
+                  src={avatarSrc || undefined}
+                  alt={user.name}
+                />
+                <AvatarFallback>{fallback}</AvatarFallback>
+              </Avatar>
+              <div className='grid flex-1 text-left text-sm/tight'>
+                <span className='truncate font-medium'>{user.name}</span>
+                <span className='truncate text-xs'>{user.email}</span>
+              </div>
+              <ChevronUpDownIcon className='ml-auto size-4' />
+            </DropdownMenuTrigger>
+          </PlayOnHover>
           <DropdownMenuPopup
             className='w-fit'
             side={isMobile ? 'bottom' : 'right'}
@@ -86,15 +89,19 @@ export function NavUser({
               </DropdownMenuGroupLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => void navigate({ to: '/admin/profile' })}>
-              <IconUserCircle />
-              {t('nav.user.profile')}
-            </DropdownMenuItem>
+            <PlayOnHover>
+              <DropdownMenuItem onClick={() => void navigate({ to: '/admin/profile' })}>
+                <CircleUserRoundIcon />
+                {t('nav.user.profile')}
+              </DropdownMenuItem>
+            </PlayOnHover>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <IconLogout />
-              {t('nav.user.logout')}
-            </DropdownMenuItem>
+            <PlayOnHover>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOutIcon />
+                {t('nav.user.logout')}
+              </DropdownMenuItem>
+            </PlayOnHover>
           </DropdownMenuPopup>
         </DropdownMenu>
       </SidebarMenuItem>

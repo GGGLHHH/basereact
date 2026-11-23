@@ -4,6 +4,7 @@ import { Fragment } from 'react'
 
 import { useTranslation } from 'react-i18next'
 import { AppSidebar } from '@/components/app-sidebar'
+import { PlayOnHover } from '@/components/icon-motion'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,6 +22,10 @@ const routeApi = getRouteApi('/admin/_shell')
 // 面包屑走完整匹配链:每个带 titleKey 的路由一级。中间级链到自身 fullPath
 // (父路由都有 index 落地,含 /admin→重定向 home),末级是当前页不可点。
 // flatMap 条件收集,titleKey 在生成对象里收窄为非空,免非空断言。
+// 图标与侧栏同一个(staticData.icon):可点的中间级悬停时播放,末级当前页进入时播一遍。
+const CRUMB_CLASS = 'inline-flex items-center gap-1.5'
+const CRUMB_ICON_CLASS = 'size-3.5 shrink-0'
+
 function CurrentPageBreadcrumb() {
   const matches = useMatches()
   const { t } = useTranslation('route')
@@ -36,7 +41,7 @@ function CurrentPageBreadcrumb() {
 
   const crumbs = matches.flatMap(match =>
     match.staticData.titleKey
-      ? [{ fullPath: match.fullPath, titleKey: match.staticData.titleKey }]
+      ? [{ fullPath: match.fullPath, icon: match.staticData.icon, titleKey: match.staticData.titleKey }]
       : [],
   )
 
@@ -45,22 +50,36 @@ function CurrentPageBreadcrumb() {
       <BreadcrumbList>
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1
+          const Icon = crumb.icon
+          const page = (
+            <BreadcrumbPage className={CRUMB_CLASS}>
+              {Icon
+                ? (
+                    <Icon
+                      animateOnView={isLast}
+                      className={CRUMB_ICON_CLASS}
+                    />
+                  )
+                : null}
+              {t(crumb.titleKey)}
+            </BreadcrumbPage>
+          )
           return (
             <Fragment key={crumb.fullPath}>
               <BreadcrumbItem>
-                {isLast
+                {!isLast && isNavigablePath(crumb.fullPath)
                   ? (
-                      <BreadcrumbPage>{t(crumb.titleKey)}</BreadcrumbPage>
-                    )
-                  : isNavigablePath(crumb.fullPath)
-                    ? (
-                        <BreadcrumbLink render={<Link to={crumb.fullPath} />}>
+                      <PlayOnHover>
+                        <BreadcrumbLink
+                          className={CRUMB_CLASS}
+                          render={<Link to={crumb.fullPath} />}
+                        >
+                          {Icon ? <Icon className={CRUMB_ICON_CLASS} /> : null}
                           {t(crumb.titleKey)}
                         </BreadcrumbLink>
-                      )
-                    : (
-                        <BreadcrumbPage>{t(crumb.titleKey)}</BreadcrumbPage>
-                      )}
+                      </PlayOnHover>
+                    )
+                  : page}
               </BreadcrumbItem>
               {isLast ? null : <BreadcrumbSeparator />}
             </Fragment>

@@ -1,3 +1,4 @@
+import { LayoutDashboardIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { NestedOverview } from './-overview-page'
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/admin/_shell/nested/overview')({
   staticData: {
     titleKey: 'titles.nestedOverview',
     menuTitleKey: 'titles.nestedOverview',
+    icon: LayoutDashboardIcon,
     order: 0,
   },
 })

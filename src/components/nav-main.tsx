@@ -1,6 +1,7 @@
+import { ChevronRightIcon } from '@gedatou/cadenza-icons'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@gedatou/cadenza-ui'
-import { IconChevronRight } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
+import { PlayOnHover } from '@/components/icon-motion'
 
 export function NavMain({
   items,
@@ -28,11 +29,13 @@ export function NavMain({
             className='group/collapsible'
             render={<SidebarMenuItem />}
           >
-            <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-              {item.icon}
-              <span>{item.title}</span>
-              <IconChevronRight className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
-            </CollapsibleTrigger>
+            <PlayOnHover>
+              <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+                {item.icon}
+                <span>{item.title}</span>
+                <ChevronRightIcon className='ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90' />
+              </CollapsibleTrigger>
+            </PlayOnHover>
             <CollapsiblePanel>
               <SidebarMenuSub>
                 {item.items?.map(subItem => (

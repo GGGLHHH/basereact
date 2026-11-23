@@ -1,13 +1,15 @@
 import type { AdminUserView } from '#/generated/api-types'
+import { ChevronDownIcon, PlusIcon } from '@gedatou/cadenza-icons'
 import { Button, InfiniteSelectClear, InfiniteSelectClose, InfiniteSelectFooter, SearchField } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
 import { useUsers } from '@/api/users'
+
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { DeleteUserDialog } from '@/business/user/delete-user-dialog'
 import { UserTable } from '@/business/user/table'
+import { HostHoverIcon, PlayOnHover } from '@/components/icon-motion'
 import { toDataPagination } from '@/components/table/pagination'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -79,18 +81,23 @@ export function UsersPage() {
                   ? t('users.filterRoles')
                   : `${t('users.filterRoles')} (${roleCount})`}
               </span>
-              <span className='i-lucide-chevron-down size-4 shrink-0 opacity-50' />
+              <HostHoverIcon
+                className='size-4 shrink-0 opacity-50'
+                icon={ChevronDownIcon}
+              />
             </Button>
           </RoleInfiniteSelect>
         </div>
-        <Button
-          onClick={() => {
-            void navigate({ to: '/admin/users/new' })
-          }}
-        >
-          <span className='i-lucide-plus size-4' />
-          {t('users.new')}
-        </Button>
+        <PlayOnHover>
+          <Button
+            onClick={() => {
+              void navigate({ to: '/admin/users/new' })
+            }}
+          >
+            <PlusIcon className='size-4' />
+            {t('users.new')}
+          </Button>
+        </PlayOnHover>
       </div>
       <UserTable
         data={data?.items ?? []}

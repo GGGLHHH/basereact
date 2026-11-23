@@ -1,3 +1,4 @@
+import { ChartColumnIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { ReportsLayout } from './-reports-layout'
@@ -9,7 +10,7 @@ export const Route = createFileRoute('/admin/_shell/nested/reports')({
   staticData: {
     titleKey: 'titles.nestedReports',
     menuTitleKey: 'titles.nestedReports',
-    icon: 'i-tabler-chart-bar',
+    icon: ChartColumnIcon,
     order: 1,
   },
 })

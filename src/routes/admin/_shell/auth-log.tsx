@@ -1,3 +1,4 @@
+import { FingerprintIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { z } from 'zod'
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/admin/_shell/auth-log')({
   staticData: {
     titleKey: 'titles.adminAuthLog',
     menuTitleKey: 'titles.adminAuthLog',
-    icon: 'i-tabler-shield-lock',
+    icon: FingerprintIcon,
     groupKey: 'menuGroups.admin',
     order: 3,
     // 安全审计页,准入随 users:admin(与后端 auth-events 端点一致);无元数据会 fail-closed。

@@ -1,10 +1,12 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
 import type { KeyboardEvent } from 'react'
-
 import type { AdminUserView } from '#/generated/api-types'
+import { EyeIcon, PencilIcon, Trash2Icon } from '@gedatou/cadenza-icons'
+
 import { Button } from '@gedatou/cadenza-ui'
 import { dash } from '@/business/common'
+import { PlayOnHover } from '@/components/icon-motion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
@@ -48,51 +50,57 @@ function actionsColumn(t: TFunction<'common'>, actions: UserRowActions): UserCol
       <div className='flex items-center gap-0.5'>
         {actions.onView
           ? (
-              <Button
-                aria-label={t('action.view')}
-                onKeyDown={stopRowActivation}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  actions.onView?.(user)
-                }}
-                size='icon-sm'
-                variant='ghost'
-              >
-                <span className='i-lucide-eye size-4' />
-              </Button>
+              <PlayOnHover>
+                <Button
+                  aria-label={t('action.view')}
+                  onKeyDown={stopRowActivation}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    actions.onView?.(user)
+                  }}
+                  size='icon-sm'
+                  variant='ghost'
+                >
+                  <EyeIcon className='size-4' />
+                </Button>
+              </PlayOnHover>
             )
           : null}
         {actions.onEdit
           ? (
-              <Button
-                aria-label={t('action.edit')}
-                onKeyDown={stopRowActivation}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  actions.onEdit?.(user)
-                }}
-                size='icon-sm'
-                variant='ghost'
-              >
-                <span className='i-lucide-pencil size-4' />
-              </Button>
+              <PlayOnHover>
+                <Button
+                  aria-label={t('action.edit')}
+                  onKeyDown={stopRowActivation}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    actions.onEdit?.(user)
+                  }}
+                  size='icon-sm'
+                  variant='ghost'
+                >
+                  <PencilIcon className='size-4' />
+                </Button>
+              </PlayOnHover>
             )
           : null}
         {actions.onDelete
           ? (
-              <Button
-                aria-label={t('action.delete')}
-                className='text-destructive hover:text-destructive'
-                onKeyDown={stopRowActivation}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  actions.onDelete?.(user)
-                }}
-                size='icon-sm'
-                variant='ghost'
-              >
-                <span className='i-lucide-trash-2 size-4' />
-              </Button>
+              <PlayOnHover>
+                <Button
+                  aria-label={t('action.delete')}
+                  className='text-destructive hover:text-destructive'
+                  onKeyDown={stopRowActivation}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    actions.onDelete?.(user)
+                  }}
+                  size='icon-sm'
+                  variant='ghost'
+                >
+                  <Trash2Icon className='size-4' />
+                </Button>
+              </PlayOnHover>
             )
           : null}
       </div>

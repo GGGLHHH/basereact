@@ -1,16 +1,18 @@
 import type { RoleView } from '#/generated/api-types'
+import { ChevronDownIcon } from '@gedatou/cadenza-icons'
 import { Badge, Button } from '@gedatou/cadenza-ui'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-
 import { z } from 'zod'
 
 import { useCreateUser } from '@/api/users'
+
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/field'
 import { formProps, useAppForm } from '@/components/form'
+import { HostHoverIcon } from '@/components/icon-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/api-client'
 
@@ -132,7 +134,10 @@ export function UserCreatePage() {
                           ))
                         )}
                   </span>
-                  <span className='i-lucide-chevron-down size-4 shrink-0 opacity-50' />
+                  <HostHoverIcon
+                    className='size-4 shrink-0 opacity-50'
+                    icon={ChevronDownIcon}
+                  />
                 </Button>
               </RoleInfiniteSelect>
               {/* 角色无校验,这里只为和其它字段一样占住错误行的高度 —— FieldGroup 是 gap-0,

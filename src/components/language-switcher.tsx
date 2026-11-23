@@ -1,10 +1,11 @@
 'use client'
 
+import { CheckIcon, GlobeIcon } from '@gedatou/cadenza-icons'
+
 import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 
-import { IconCheck, IconLanguage } from '@tabler/icons-react'
-
 import { useTranslation } from 'react-i18next'
+import { PlayOnHover } from '@/components/icon-motion'
 import {
   LOCALE_NATIVE_NAMES,
   normalizeLocale,
@@ -25,19 +26,21 @@ export function LanguageSwitcher() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(
-              <SidebarMenuButton
-                aria-label={t('language')}
-                tooltip={LOCALE_NATIVE_NAMES[current]}
-              />
-            )}
-          >
-            <IconLanguage />
-            <span className='group-data-[collapsible=icon]:sr-only'>
-              {LOCALE_NATIVE_NAMES[current]}
-            </span>
-          </DropdownMenuTrigger>
+          <PlayOnHover>
+            <DropdownMenuTrigger
+              render={(
+                <SidebarMenuButton
+                  aria-label={t('language')}
+                  tooltip={LOCALE_NATIVE_NAMES[current]}
+                />
+              )}
+            >
+              <GlobeIcon />
+              <span className='group-data-[collapsible=icon]:sr-only'>
+                {LOCALE_NATIVE_NAMES[current]}
+              </span>
+            </DropdownMenuTrigger>
+          </PlayOnHover>
           <DropdownMenuPopup
             side={isMobile ? 'bottom' : 'right'}
             align='end'
@@ -52,7 +55,15 @@ export function LanguageSwitcher() {
                 }}
               >
                 <span className='flex-1'>{LOCALE_NATIVE_NAMES[locale]}</span>
-                {locale === current ? <IconCheck className='size-4' /> : null}
+                {/* 当前项的勾:菜单打开时画一遍。 */}
+                {locale === current
+                  ? (
+                      <CheckIcon
+                        animate
+                        className='size-4'
+                      />
+                    )
+                  : null}
               </DropdownMenuItem>
             ))}
           </DropdownMenuPopup>

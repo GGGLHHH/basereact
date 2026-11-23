@@ -1,7 +1,8 @@
 import type { ComponentProps, ReactNode } from 'react'
 import type { FormSelectFieldOption } from './index'
-
 import { fieldErrors, useFieldContext, useFormContext } from '@gedatou/cadenza-form'
+import { EyeIcon, EyeOffIcon } from '@gedatou/cadenza-icons'
+
 import {
   Button,
   Input,
@@ -11,10 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@gedatou/cadenza-ui'
-
 import { useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { Field, FieldError, FieldLabel } from '@/components/field'
+import { PlayOnHover } from '@/components/icon-motion'
 
 import { cn } from '@/lib/utils'
 
@@ -148,18 +150,17 @@ export function PasswordField({ className, controlClassName, toggleLabel, ...pro
       className={cn('pr-10', className)}
       controlClassName={cn('relative', controlClassName)}
       endAdornment={(
-        <button
-          type='button'
-          aria-label={toggleLabel ?? t('form.togglePassword')}
-          aria-pressed={isVisible}
-          className='absolute top-1/2 right-1 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[min(var(--radius-md),10px)] text-muted-foreground transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50'
-          onClick={() => setIsVisible(value => !value)}
-        >
-          <span
-            aria-hidden='true'
-            className={cn(isVisible ? 'i-lucide-eye-off' : 'i-lucide-eye', 'size-4')}
-          />
-        </button>
+        <PlayOnHover>
+          <button
+            type='button'
+            aria-label={toggleLabel ?? t('form.togglePassword')}
+            aria-pressed={isVisible}
+            className='absolute top-1/2 right-1 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[min(var(--radius-md),10px)] text-muted-foreground transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50'
+            onClick={() => setIsVisible(value => !value)}
+          >
+            {isVisible ? <EyeOffIcon className='size-4' /> : <EyeIcon className='size-4' />}
+          </button>
+        </PlayOnHover>
       )}
       type={isVisible ? 'text' : 'password'}
     />

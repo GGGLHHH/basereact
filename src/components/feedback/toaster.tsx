@@ -1,12 +1,6 @@
 import type { ToasterProps } from 'sonner'
 
-import {
-  IconAlertOctagon,
-  IconAlertTriangle,
-  IconCircleCheck,
-  IconInfoCircle,
-  IconLoader,
-} from '@tabler/icons-react'
+import { CircleCheckIcon, InfoIcon, LoaderIcon, OctagonAlertIcon, TriangleAlertIcon } from '@gedatou/cadenza-icons'
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner } from 'sonner'
 
@@ -19,12 +13,13 @@ export function Toaster(props: ToasterProps) {
       position='top-center'
       visibleToasts={5}
       duration={3000}
+      // 状态图标随 toast 出现播一遍;加载中一直循环(Loader 自己就是转圈动画)。
       icons={{
-        success: <IconCircleCheck className='size-5' />,
-        info: <IconInfoCircle className='size-5' />,
-        warning: <IconAlertTriangle className='size-5' />,
-        error: <IconAlertOctagon className='size-5' />,
-        loading: <IconLoader className='size-5 animate-spin' />,
+        success: <CircleCheckIcon animate className='size-5' />,
+        info: <InfoIcon animate className='size-5' />,
+        warning: <TriangleAlertIcon animate className='size-5' />,
+        error: <OctagonAlertIcon animate className='size-5' />,
+        loading: <LoaderIcon animate loop className='size-5' />,
       }}
       style={
         {

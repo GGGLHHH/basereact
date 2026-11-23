@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import type { AccessPolicyKey } from '#/generated/access-policies'
 
 import type route from '#/i18n/locales/en-US/route.json'
@@ -29,7 +30,8 @@ declare module '@tanstack/react-router' {
     title?: string
     subtitle?: string
     menuTitle?: string
-    icon?: string
+    /** 菜单图标:@gedatou/cadenza-icons 的动画图标组件,整行悬停时播放。 */
+    icon?: ComponentType<{ animateOnView?: boolean, className?: string }>
     groupKey?: RouteGroupKey
     order?: number
     hideInMenu?: boolean

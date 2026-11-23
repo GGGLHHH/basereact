@@ -1,9 +1,10 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
+import { EllipsisIcon, FolderIcon, ForwardIcon, Trash2Icon } from '@gedatou/cadenza-icons'
 
-import { IconArrowForward, IconDots, IconFolder, IconTrash } from '@tabler/icons-react'
+import { DropdownMenu, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuTrigger, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 import { useTranslation } from 'react-i18next'
+import { PlayOnHover } from '@/components/icon-motion'
 
 export function NavProjects({
   projects,
@@ -22,49 +23,61 @@ export function NavProjects({
       <SidebarMenu>
         {projects.map(item => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton render={<a href={item.url} />}>
-              {item.icon}
-              <span>{item.name}</span>
-            </SidebarMenuButton>
+            <PlayOnHover>
+              <SidebarMenuButton render={<a href={item.url} />}>
+                {item.icon}
+                <span>{item.name}</span>
+              </SidebarMenuButton>
+            </PlayOnHover>
             <DropdownMenu>
-              <DropdownMenuTrigger
-                render={(
-                  <SidebarMenuAction
-                    showOnHover
-                    className='aria-expanded:bg-muted'
-                  />
-                )}
-              >
-                <IconDots />
-                <span className='sr-only'>{t('nav.projects.moreActions')}</span>
-              </DropdownMenuTrigger>
+              <PlayOnHover>
+                <DropdownMenuTrigger
+                  render={(
+                    <SidebarMenuAction
+                      showOnHover
+                      className='aria-expanded:bg-muted'
+                    />
+                  )}
+                >
+                  <EllipsisIcon />
+                  <span className='sr-only'>{t('nav.projects.moreActions')}</span>
+                </DropdownMenuTrigger>
+              </PlayOnHover>
               <DropdownMenuPopup
                 className='w-fit'
                 side={isMobile ? 'bottom' : 'right'}
                 align={isMobile ? 'end' : 'start'}
               >
-                <DropdownMenuItem>
-                  <IconFolder />
-                  <span>{t('nav.projects.view')}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <IconArrowForward />
-                  <span>{t('nav.projects.share')}</span>
-                </DropdownMenuItem>
+                <PlayOnHover>
+                  <DropdownMenuItem>
+                    <FolderIcon />
+                    <span>{t('nav.projects.view')}</span>
+                  </DropdownMenuItem>
+                </PlayOnHover>
+                <PlayOnHover>
+                  <DropdownMenuItem>
+                    <ForwardIcon />
+                    <span>{t('nav.projects.share')}</span>
+                  </DropdownMenuItem>
+                </PlayOnHover>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant='destructive'>
-                  <IconTrash />
-                  <span>{t('nav.projects.delete')}</span>
-                </DropdownMenuItem>
+                <PlayOnHover>
+                  <DropdownMenuItem variant='destructive'>
+                    <Trash2Icon />
+                    <span>{t('nav.projects.delete')}</span>
+                  </DropdownMenuItem>
+                </PlayOnHover>
               </DropdownMenuPopup>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
         <SidebarMenuItem>
-          <SidebarMenuButton className='text-sidebar-foreground/70'>
-            <IconDots className='text-sidebar-foreground/70' />
-            <span>{t('nav.projects.more')}</span>
-          </SidebarMenuButton>
+          <PlayOnHover>
+            <SidebarMenuButton className='text-sidebar-foreground/70'>
+              <EllipsisIcon className='text-sidebar-foreground/70' />
+              <span>{t('nav.projects.more')}</span>
+            </SidebarMenuButton>
+          </PlayOnHover>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>

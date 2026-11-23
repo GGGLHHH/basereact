@@ -1,11 +1,12 @@
 'use client'
 
-import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
+import { ChevronUpDownIcon, PlusIcon } from '@gedatou/cadenza-icons'
 
-import { IconPlus, IconSelector } from '@tabler/icons-react'
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPopup, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@gedatou/cadenza-ui'
 import * as React from 'react'
 
 import { useTranslation } from 'react-i18next'
+import { PlayOnHover } from '@/components/icon-motion'
 
 export function TeamSwitcher({
   teams,
@@ -27,23 +28,25 @@ export function TeamSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(
-              <SidebarMenuButton
-                size='lg'
-                className='data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground'
-              />
-            )}
-          >
-            <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
-              {activeTeam.logo}
-            </div>
-            <div className='grid flex-1 text-left text-sm/tight'>
-              <span className='truncate font-medium'>{activeTeam.name}</span>
-              <span className='truncate text-xs'>{activeTeam.plan}</span>
-            </div>
-            <IconSelector className='ml-auto' />
-          </DropdownMenuTrigger>
+          <PlayOnHover>
+            <DropdownMenuTrigger
+              render={(
+                <SidebarMenuButton
+                  size='lg'
+                  className='data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground'
+                />
+              )}
+            >
+              <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+                {activeTeam.logo}
+              </div>
+              <div className='grid flex-1 text-left text-sm/tight'>
+                <span className='truncate font-medium'>{activeTeam.name}</span>
+                <span className='truncate text-xs'>{activeTeam.plan}</span>
+              </div>
+              <ChevronUpDownIcon className='ml-auto' />
+            </DropdownMenuTrigger>
+          </PlayOnHover>
           <DropdownMenuPopup
             className='w-fit'
             align='start'
@@ -55,30 +58,33 @@ export function TeamSwitcher({
                 {t('teamSwitcher.teams')}
               </DropdownMenuGroupLabel>
               {teams.map((team, index) => (
-                <DropdownMenuItem
-                  key={team.name}
-                  onClick={() => setActiveTeam(team)}
-                  className='gap-2 p-2'
-                >
-                  <div className='flex size-6 items-center justify-center rounded-md border'>
-                    {team.logo}
-                  </div>
-                  {team.name}
-                  <DropdownMenuShortcut>
-                    ⌘
-                    {index + 1}
-                  </DropdownMenuShortcut>
-                </DropdownMenuItem>
+                <PlayOnHover key={team.name}>
+                  <DropdownMenuItem
+                    onClick={() => setActiveTeam(team)}
+                    className='gap-2 p-2'
+                  >
+                    <div className='flex size-6 items-center justify-center rounded-md border'>
+                      {team.logo}
+                    </div>
+                    {team.name}
+                    <DropdownMenuShortcut>
+                      ⌘
+                      {index + 1}
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </PlayOnHover>
               ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className='gap-2 p-2'>
-                <div className='flex size-6 items-center justify-center rounded-md border bg-transparent'>
-                  <IconPlus className='size-4' />
-                </div>
-                <div className='font-medium text-muted-foreground'>{t('teamSwitcher.addTeam')}</div>
-              </DropdownMenuItem>
+              <PlayOnHover>
+                <DropdownMenuItem className='gap-2 p-2'>
+                  <div className='flex size-6 items-center justify-center rounded-md border bg-transparent'>
+                    <PlusIcon className='size-4' />
+                  </div>
+                  <div className='font-medium text-muted-foreground'>{t('teamSwitcher.addTeam')}</div>
+                </DropdownMenuItem>
+              </PlayOnHover>
             </DropdownMenuGroup>
           </DropdownMenuPopup>
         </DropdownMenu>

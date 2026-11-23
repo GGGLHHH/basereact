@@ -8,7 +8,7 @@ type GroupKey = NonNullable<StaticDataRouteOption['groupKey']>
 export interface AdminMenuEntry<TPath extends string = string> {
   /** 嵌套子项(按 fullPath 前缀构建);叶子为 []。 */
   children: AdminMenuEntry<TPath>[]
-  icon?: string
+  icon?: StaticDataRouteOption['icon']
   /** 硬编码 fallback(menuTitle ?? title),labelKey 缺席时用。 */
   label?: string
   labelKey?: StaticDataRouteOption['menuTitleKey']
@@ -38,7 +38,7 @@ interface WorkNode<TPath extends string> {
   children: WorkNode<TPath>[]
   fullPath: TPath
   group: GroupKey
-  icon?: string
+  icon?: StaticDataRouteOption['icon']
   label?: string
   labelKey?: StaticDataRouteOption['menuTitleKey']
   order: number

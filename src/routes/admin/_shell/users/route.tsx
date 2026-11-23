@@ -1,3 +1,4 @@
+import { UsersIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
 // 用户区一级父路由:/admin/users。route.tsx = 纯布局(无 component → 默认渲染
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/admin/_shell/users')({
   staticData: {
     titleKey: 'titles.adminUsers',
     menuTitleKey: 'titles.adminUsers',
-    icon: 'i-tabler-users',
+    icon: UsersIcon,
     groupKey: 'menuGroups.admin',
     accessPolicyKeys: ['listUsers'],
   },
