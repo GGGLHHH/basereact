@@ -6,7 +6,10 @@ dist-ssr
 
 # vcs / editor / os
 .git
-.gitignore
+# .gitignore 要留在构建上下文里:Tailwind v4 的自动 source 探测靠它跳过 .output/ 等产物。
+# 排除它的话,先跑的 client 构建写出 .output/public,随后 SSR 构建把这些产物也扫进去,
+# 两边 styles.css 内容不同 → SSR 页面 <link> 的 styles-*.css 哈希在 public/ 里不存在(404),
+# 首屏无样式,要等客户端 JS 接管才补上。
 .vscode
 .idea
 .DS_Store
