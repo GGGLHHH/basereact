@@ -5,7 +5,6 @@ import { NotFoundScreen } from '#/components/error-state'
 import i18next from '#/i18n'
 import appCss from '../styles.css?url'
 import { RootDocument } from './-root-document'
-import 'virtual:uno.css'
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
