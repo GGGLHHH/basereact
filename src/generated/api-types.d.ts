@@ -44,7 +44,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 认证事件实时推送(SSE)。projector 落库成功后立即推送;镜像 `widget::routes::widget_events`
+         * 认证事件实时推送(SSE)。projector 落库成功后立即推送;镜像 `widget` 的 `widget_events` handler
          *     的鉴权/心跳范式。best-effort 无回放:断线期间的事件丢失,EventSource 自动重连拿新订阅。
          *     ponytail:总线是单 idm 实例内广播,见 `AuthEventBus` 头注(多实例扇出需换 JetStream 直连)。
          */
@@ -233,6 +233,63 @@ export interface paths {
         get?: never;
         /** 全量设角色(原子替换)。未知角色名 → 422。 */
         put: operations["set_user_roles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 系统监控:每个进程的依赖健康、请求量 / 错误 / 耗时、数据库操作耗时、连接池、后台任务(outbox / projector)、
+         *     SSE 在线数、进程资源,以及最近一段时间(默认 1 小时,15 秒一个点)的历史曲线。数据只在进程内存里,重启清空。
+         */
+        get: operations["get_monitoring"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/monitoring/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 历史趋势:按时间范围(24 小时 ~ 1 年)给出各进程的曲线、范围合计,以及接口 / 数据库操作的明细。
+         *     数据来自 ops 数据库(分钟级留 15 天、小时级留 13 个月、明细留 30 天);没配时只有进程内存里最近一段。
+         */
+        get: operations["get_monitoring_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/monitoring/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 日志:WARN 及以上的日志、失败请求(5xx)和慢请求(≥1 秒),按时间倒序分页。保留 15 天。 */
+        get: operations["list_monitoring_logs"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -810,7 +867,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 存活探针:进程活着即 ok,**不查依赖**(给 k8s livenessProbe;失败会被重启)。 */
+        /** 存活探针:进程活着即 ok,**不查依赖**(给 livenessProbe;失败会被重启)。 */
         get: operations["livez"];
         put?: never;
         post?: never;
@@ -828,8 +885,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 就绪探针(给 k8s readinessProbe):DB 模式 ping `SELECT 1`,不通 → 503;内存模式无外部依赖,恒就绪。
-         *     失败只让流量绕开本实例(不重启),与 livez 分工不同。
+         * 就绪探针:并发检查本进程的全部依赖(各 schema 连接池 `select 1`、NATS 连接状态,每项 2s 超时),
+         *     任一项不可用 → 503。失败只让流量绕开本实例(不重启),与 livez 分工不同。
          */
         get: operations["readyz"];
         put?: never;
@@ -866,7 +923,7 @@ export interface components {
          * @enum {string}
          */
         AuthChannel: "public" | "admin";
-        /** @description 读模型行(admin 端点返回)。 */
+        /** @description 读模型行(admin 端点返回 / SSE 帧 data)。 */
         AuthEventRow: {
             actor?: string | null;
             browser?: string | null;
@@ -988,7 +1045,7 @@ export interface components {
              */
             tenant_id?: string | null;
         };
-        /** @description 建号(原子含角色)。`password` 复用 `RegisterRequest` 的长度口径(auth/types.rs `length(min=3)`)。 */
+        /** @description 建号(原子含角色)。username 1..=100、email 合法、password ≥3(领域校验)。 */
         CreateUserRequest: {
             email?: string | null;
             password: string;
@@ -996,13 +1053,33 @@ export interface components {
             roles: string[];
             username: string;
         };
-        /** @description 创建 widget 的入参。审计字段绝不入参(由 `AuditContext` 提供 created_by/updated_by)。 */
+        /** @description 创建 widget 的入参(name 1..=100 字符,由领域校验)。审计字段不入参。 */
         CreateWidget: {
             name: string;
+        };
+        /** @description 单个数据库操作的统计(来自仓储方法上的 `pg.*` span)。 */
+        DbOperationStats: {
+            /** Format: int64 */
+            calls: number;
+            /** @description 如 `pg.widgets.list`。 */
+            name: string;
+            /** Format: double */
+            p50_ms?: number | null;
+            /** Format: double */
+            p95_ms?: number | null;
         };
         /** @description 注销账户(需密码确认)。 */
         DeleteMeRequest: {
             password: string;
+        };
+        /** @description 单项依赖检查。 */
+        DependencyCheck: {
+            error?: string | null;
+            /** Format: int64 */
+            latency_ms: number;
+            /** @description `db_app` / `db_idm` / `db_content` / `db_search` / `nats`。 */
+            name: string;
+            ok: boolean;
         };
         /** @description 统一错误响应体。pub + ToSchema:让这个契约出现在 OpenAPI,前端 codegen 能看到错误形状。 */
         ErrorBody: {
@@ -1022,12 +1099,154 @@ export interface components {
          * @enum {string}
          */
         FailureReason: "unknown_user" | "bad_password" | "no_admin_perm" | "account_locked" | "rate_limited";
+        HistoryInstance: {
+            db_operations: components["schemas"]["DbOperationStats"][];
+            /** @description 时间升序;没有数据的时间段(进程没跑)不出点。 */
+            points: components["schemas"]["HistoryPoint"][];
+            role: components["schemas"]["InstanceRole"];
+            routes: components["schemas"]["RouteStats"][];
+            traffic: components["schemas"]["TrafficSummary"];
+        };
+        /** @description 历史曲线上的一个点。 */
+        HistoryPoint: {
+            /** Format: date-time */
+            at: string;
+            /** Format: double */
+            cpu_percent?: number | null;
+            /** Format: int64 */
+            db_calls: number;
+            /** Format: double */
+            db_p95_ms?: number | null;
+            /** Format: int64 */
+            errors_4xx: number;
+            /** Format: int64 */
+            errors_5xx: number;
+            /** Format: int64 */
+            in_flight: number;
+            /** Format: int64 */
+            outbox_published: number;
+            /** Format: double */
+            p95_ms?: number | null;
+            /** Format: int64 */
+            pool_in_use: number;
+            /** Format: int64 */
+            pool_max: number;
+            /** Format: int64 */
+            projector_pending: number;
+            /** Format: int64 */
+            projector_processed: number;
+            /** Format: int64 */
+            requests: number;
+            /** Format: int64 */
+            rss_bytes?: number | null;
+            /** Format: int64 */
+            sse_connections: number;
+        };
+        /**
+         * @description 历史时间范围。
+         * @enum {string}
+         */
+        HistoryRange: "24h" | "7d" | "30d" | "90d" | "1y";
+        /** @description 历史报告:按进程分组的曲线 + 整个范围的合计 + 接口 / 数据库明细。 */
+        HistoryReport: {
+            /**
+             * Format: date-time
+             * @description 接口 / 数据库明细的起点:明细只留 30 天,范围更长时只覆盖最近 30 天。
+             */
+            details_from: string;
+            /** Format: date-time */
+            from: string;
+            instances: components["schemas"]["HistoryInstance"][];
+            /** @description 数据是否持久化。`false` = 没配 ops 数据库,只有进程内存里最近一段(重启清空)。 */
+            persistent: boolean;
+            range: components["schemas"]["HistoryRange"];
+            /**
+             * Format: int64
+             * @description 曲线上一个点代表的秒数。
+             */
+            step_secs: number;
+            /** Format: date-time */
+            to: string;
+        };
+        /**
+         * @description 单个进程的监控数据。计数类字段(请求数、发布数…)都是**统计窗口内**的值:
+         *     窗口 = 进程内存里保留的最近一段(默认 1 小时),进程刚启动时从启动算起。
+         */
+        InstanceReport: {
+            /** @description 依赖检查(与 `/readyz` 同源)。 */
+            checks: components["schemas"]["DependencyCheck"][];
+            /** @description 按数据库操作(仓储方法)统计,按调用次数降序。 */
+            db_operations: components["schemas"]["DbOperationStats"][];
+            /** @description 拉取失败的原因。 */
+            error?: string | null;
+            /** @description 历史曲线(每个点是一个采样间隔内的增量或当时的读数),时间升序。 */
+            history: components["schemas"]["HistoryPoint"][];
+            /**
+             * Format: int64
+             * @description 正在处理的请求数。
+             */
+            in_flight: number;
+            outbox: components["schemas"]["OutboxStatus"][];
+            pools: components["schemas"]["PoolStatus"][];
+            process: components["schemas"]["ProcessStatus"];
+            projectors: components["schemas"]["ProjectorStatus"][];
+            /** @description 拉取这个进程的报告是否成功(app 汇总 idm 时可能失败)。失败时其余字段为空值。 */
+            reachable: boolean;
+            role: components["schemas"]["InstanceRole"];
+            /** @description 按接口(路由模板)统计,按请求数降序。 */
+            routes: components["schemas"]["RouteStats"][];
+            /**
+             * Format: int64
+             * @description 历史曲线的采样间隔(秒)。
+             */
+            sample_interval_secs: number;
+            sse: components["schemas"]["SseStatus"][];
+            /** Format: date-time */
+            started_at?: string | null;
+            traffic: components["schemas"]["TrafficSummary"];
+            /** Format: int64 */
+            uptime_secs: number;
+            version: string;
+            /**
+             * Format: int64
+             * @description 统计窗口长度(秒)。
+             */
+            window_secs: number;
+        };
+        /**
+         * @description 实例角色。
+         * @enum {string}
+         */
+        InstanceRole: "app" | "idm" | "combined";
         IpStat: {
             /** Format: int64 */
             failures: number;
             ip: string;
             /** Format: int64 */
             total: number;
+        };
+        /** @description 一条日志。 */
+        LogRecordView: {
+            /** @description 其余结构化字段(敏感字段已脱敏)。 */
+            attributes: Record<string, never>;
+            body: string;
+            /** Format: double */
+            duration_ms?: number | null;
+            /** Format: int64 */
+            id: number;
+            instance: components["schemas"]["InstanceRole"];
+            method?: string | null;
+            request_id?: string | null;
+            route?: string | null;
+            /** @description 归属服务(app / idm)。 */
+            service: components["schemas"]["Service"];
+            severity: components["schemas"]["Severity"];
+            /** Format: int32 */
+            status?: number | null;
+            /** @description 产生日志的模块(`http.access` = 失败 / 慢请求记录)。 */
+            target: string;
+            /** Format: date-time */
+            ts: string;
         };
         /** @description 登录请求(公开)。`identifier` = username 或 email,由 idm 自动识别。 */
         LoginRequest: {
@@ -1040,6 +1259,12 @@ export interface components {
              */
             identifier: string;
             password: string;
+        };
+        /** @description 整体报告:每个进程一份。 */
+        MonitoringReport: {
+            /** Format: date-time */
+            generated_at: string;
+            instances: components["schemas"]["InstanceReport"][];
         };
         /**
          * @description `GET /permissions/me` 响应。`roles` 来自 token claim;`permissions` 是**有效**集:
@@ -1076,6 +1301,25 @@ export interface components {
          * @enum {string}
          */
         ObjectStatusView: "created" | "uploading" | "uploaded" | "processing" | "processed" | "failed";
+        /** @description outbox relay(把发件箱里的事件发到 JetStream)。 */
+        OutboxStatus: {
+            /** Format: int64 */
+            failures: number;
+            /**
+             * Format: int64
+             * @description 最近一轮取到的条数(持续等于批大小 = 有积压)。
+             */
+            last_batch: number;
+            /**
+             * Format: date-time
+             * @description 最近一次轮询成功的时间;长时间不动 = relay 卡住。
+             */
+            last_poll_at?: string | null;
+            /** Format: int64 */
+            published: number;
+            /** @description 来源 schema(idm / app)。 */
+            source: string;
+        };
         /**
          * @description 分页元信息:offset 给 total/total_pages,cursor 给 next_cursor/has_more。
          *     内部标签 `mode` 区分(类型诚实:cursor 模式不可能混入 total);utoipa 生成带 mode 判别的 oneOf。
@@ -1100,8 +1344,8 @@ export interface components {
             next_cursor?: string | null;
         };
         /**
-         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
-         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
          */
         Page_AdminUserView: {
             items: {
@@ -1122,8 +1366,8 @@ export interface components {
             page_info: components["schemas"]["PageInfo"];
         };
         /**
-         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
-         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
          */
         Page_AuthEventRow: {
             items: {
@@ -1151,8 +1395,37 @@ export interface components {
             page_info: components["schemas"]["PageInfo"];
         };
         /**
-         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
-         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
+         */
+        Page_LogRecordView: {
+            items: {
+                /** @description 其余结构化字段(敏感字段已脱敏)。 */
+                attributes: Record<string, never>;
+                body: string;
+                /** Format: double */
+                duration_ms?: number | null;
+                /** Format: int64 */
+                id: number;
+                instance: components["schemas"]["InstanceRole"];
+                method?: string | null;
+                request_id?: string | null;
+                route?: string | null;
+                /** @description 归属服务(app / idm)。 */
+                service: components["schemas"]["Service"];
+                severity: components["schemas"]["Severity"];
+                /** Format: int32 */
+                status?: number | null;
+                /** @description 产生日志的模块(`http.access` = 失败 / 慢请求记录)。 */
+                target: string;
+                /** Format: date-time */
+                ts: string;
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
          */
         Page_RoleView: {
             items: {
@@ -1165,8 +1438,8 @@ export interface components {
             page_info: components["schemas"]["PageInfo"];
         };
         /**
-         * @description 统一分页响应。utoipa 5 把 `Page<Widget>` 渲染成 schema `Page_Widget`(泛型自动命名),
-         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
          */
         Page_WidgetView: {
             items: {
@@ -1191,6 +1464,19 @@ export interface components {
          * @enum {string}
          */
         Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
+        /** @description 数据库连接池。 */
+        PoolStatus: {
+            /** Format: int32 */
+            idle: number;
+            /** Format: int32 */
+            in_use: number;
+            /** Format: int32 */
+            max: number;
+            /** @description schema 名(app / idm / content / search)。 */
+            name: string;
+            /** Format: int32 */
+            size: number;
+        };
         /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
         PrepareUploadRequest: {
             description?: string | null;
@@ -1212,13 +1498,26 @@ export interface components {
             object: components["schemas"]["ObjectResponse"];
             upload_url?: string | null;
         };
+        /** @description 进程资源(取不到的平台上为空)。 */
+        ProcessStatus: {
+            /**
+             * Format: double
+             * @description CPU 占用(百分比,按单核计,多核可超过 100)。最近一个采样间隔的均值。
+             */
+            cpu_percent?: number | null;
+            /** Format: int64 */
+            open_fds?: number | null;
+            /**
+             * Format: int64
+             * @description 常驻内存(字节)。
+             */
+            rss_bytes?: number | null;
+            /** Format: int64 */
+            threads?: number | null;
+        };
         /**
-         * @description 出参 = 行字段 + 富化的 `avatar_url`(相对头像端点路径;悬空/未就绪/探测故障 → null)。
-         *
-         *     时间戳 `Option`:`/profiles/me` 在资料未建时回**空资料**(见 [`ProfileService::get_or_empty`]),
-         *     那一刻行还不存在、没有真时间戳 —— 回 null,而不是编一个 now() 冒充。其余端点回的都是真行,恒 `Some`。
-         *
-         *     [`ProfileService::get_or_empty`]: super::service::ProfileService::get_or_empty
+         * @description 出参 = 资料字段 + 富化的 `avatar_url`(相对头像端点路径;悬空/未就绪/探测故障 → null)。
+         *     时间戳:`/profiles/me` 在资料未建时回空资料,此时为 null;其余端点恒有值。
          */
         ProfileResponse: {
             /** Format: uuid */
@@ -1243,18 +1542,61 @@ export interface components {
             /** Format: uuid */
             user_id: string;
         };
+        /** @description projector(消费 JetStream 事件写读模型)。 */
+        ProjectorStatus: {
+            /**
+             * Format: int64
+             * @description 已投递、还没确认的消息数。
+             */
+            ack_pending?: number | null;
+            /** Format: int64 */
+            failed: number;
+            /**
+             * Format: double
+             * @description 最近一条消息从发布到处理完的延迟(毫秒)。
+             */
+            last_lag_ms?: number | null;
+            name: string;
+            /**
+             * Format: int64
+             * @description 还没投递给它的消息数(积压)。
+             */
+            pending?: number | null;
+            /** Format: int64 */
+            processed: number;
+        };
         /**
          * @description PUT 入参 —— **全量替换**:字段 null/缺省 = 清空(PUT 语义;不是 PATCH 的"跳过不改")。
-         *     phone 只做长度不做 E.164(刻意:格式是前端/业务关注,脚手架不猜地区)。
+         *     display_name / phone 最长 255;phone 只做长度不做 E.164。
          */
         PutProfileRequest: {
             /**
              * Format: uuid
-             * @description 绑定头像:必须指向**已 confirm** 的 image/* content(service 写前经端口三查)。
+             * @description 绑定头像:必须指向**已 confirm** 的本人栅格图 content(png/jpeg/gif/webp)。
              */
             avatar_content_id?: string | null;
             display_name?: string | null;
             phone?: string | null;
+        };
+        /** @description 单项依赖检查结果。 */
+        ReadinessCheck: {
+            /** @description 失败原因(成功时省略)。 */
+            error?: string | null;
+            /**
+             * Format: int64
+             * @description 检查耗时(毫秒)。
+             */
+            latency_ms: number;
+            ok: boolean;
+        };
+        /** @description 就绪报告:整体状态 + 每项依赖的检查结果。 */
+        ReadinessReport: {
+            /** @description 每项依赖(`db_app` / `db_idm` / `db_content` / `db_search` / `nats`;内存模式为空)。 */
+            checks: {
+                [key: string]: components["schemas"]["ReadinessCheck"];
+            };
+            /** @description `ok`:全部依赖可用;`unavailable`:至少一项不可用(此时 HTTP 503)。 */
+            status: string;
         };
         /** @description `reasons` group-by 计数的强类型版本(镜像 `TypeCount`)。 */
         ReasonCount: {
@@ -1290,6 +1632,28 @@ export interface components {
             /** @description 机器码(闭集,生成前端 union)。 */
             name: components["schemas"]["RoleName"];
         };
+        /** @description 单个接口的统计。 */
+        RouteStats: {
+            /** Format: int64 */
+            errors_4xx: number;
+            /** Format: int64 */
+            errors_5xx: number;
+            method: string;
+            /** Format: double */
+            p50_ms?: number | null;
+            /** Format: double */
+            p95_ms?: number | null;
+            /** Format: int64 */
+            requests: number;
+            /** @description 路由模板(如 `/api/v1/frontend/widgets/{id}`);没匹配上任何路由的请求记为 `unmatched`。 */
+            route: string;
+        };
+        /**
+         * @description 日志归属的服务:app(业务)/ idm(认证)。分进程部署时就是进程身份;单进程开发时按
+         *     [`classify_service`] 推断,口径与 nginx 的分流规则一致。
+         * @enum {string}
+         */
+        Service: "app" | "idm";
         /**
          * @description 设置内容元数据(全量替换,upsert)。
          *
@@ -1315,10 +1679,21 @@ export interface components {
             roles: string[];
         };
         /**
-         * @description 排序方向。默认 `Desc`(最新/最大在前)。query 解析 `"asc"`/`"desc"`。
+         * @description 日志级别(只存 WARN 及以上)。
+         * @enum {string}
+         */
+        Severity: "WARN" | "ERROR";
+        /**
+         * @description 排序方向(线格式)。默认 `Desc`(最新/最大在前)。
          * @enum {string}
          */
         SortOrder: "asc" | "desc";
+        /** @description SSE 推送流的在线连接数。 */
+        SseStatus: {
+            /** Format: int64 */
+            connections: number;
+            stream: string;
+        };
         /** @description 仪表盘统计(admin `/auth-events/stats`)。时间序列 + 各维度 group-by 计数。 */
         StatBucket: {
             /** Format: int64 */
@@ -1327,6 +1702,21 @@ export interface components {
             success: number;
             /** Format: date-time */
             t: string;
+        };
+        /** @description 窗口内的请求汇总。 */
+        TrafficSummary: {
+            /** Format: int64 */
+            errors_4xx: number;
+            /** Format: int64 */
+            errors_5xx: number;
+            /** Format: double */
+            p50_ms?: number | null;
+            /** Format: double */
+            p95_ms?: number | null;
+            /** Format: double */
+            p99_ms?: number | null;
+            /** Format: int64 */
+            requests: number;
         };
         /** @description `types` group-by 计数的强类型版本。 */
         TypeCount: {
@@ -1351,7 +1741,7 @@ export interface components {
             email?: string | null;
             username: string;
         };
-        /** @description 更新 widget 的入参(当前只改名)。 */
+        /** @description 更新 widget 的入参(当前只改名,全量替换)。 */
         UpdateWidget: {
             name: string;
         };
@@ -1360,7 +1750,7 @@ export interface components {
             content: components["schemas"]["ContentResponse"];
             object: components["schemas"]["ObjectResponse"];
         };
-        /** @description 富化用的用户瘦快照 —— **只含 widget 展示要的字段**,不是 idm.User 全貌(窄接口)。 */
+        /** @description 富化用的用户瘦快照(只含 widget 展示要的字段)。 */
         UserBrief: {
             email?: string | null;
             /** Format: uuid */
@@ -1382,12 +1772,7 @@ export interface components {
          * @enum {string}
          */
         UserSortField: "created_at" | "username" | "email" | "display_name";
-        /**
-         * @description 一个 widget(示例资源)+ **基础审计字段**(供后续业务 DTO 照抄)。
-         *     范式:出参 DTO derive `Serialize` + `ToSchema`;`FromRow` 让 sqlx/sea-query 直接映射。
-         *     `deleted_at` **不进 DTO**:可见行恒为存活(NULL),暴露无意义且会误导客户端。
-         *     时间用 `OffsetDateTime`(timestamptz),RFC3339 序列化。
-         */
+        /** @description 一个 widget(示例资源)+ 基础审计字段。时间是 RFC3339。 */
         Widget: {
             /** Format: date-time */
             created_at: string;
@@ -1399,13 +1784,7 @@ export interface components {
             updated_at: string;
             updated_by?: string | null;
         };
-        /**
-         * @description widget 变更事件。SSE 帧的 event name = serde tag(created/updated/deleted)。
-         *
-         *     **每个变体都带得出 owner**([`WidgetEvent::owner`])—— SSE handler 要按 `Access` 逐帧过滤,
-         *     没 owner 的帧无法判定:放行=泄露、丢弃=owner 收不到自己的删除。`Deleted` 因此单带 `created_by`
-         *     (删除后行已软删,订阅侧无从回查)。
-         */
+        /** @description widget 变更事件(SSE 帧 data / 总线负载)。帧的 event name = `type` 标签(created/updated/deleted)。 */
         WidgetEvent: {
             /** @enum {string} */
             type: "created";
@@ -1422,8 +1801,7 @@ export interface components {
             type: "deleted";
         };
         /**
-         * @description 列表排序字段(**白名单** —— 只暴露可排的列,防注入)。默认 `created_at`(配 `SortOrder::Desc` = 最新在前)。
-         *     范式:排序方向共享(`infra::sort::SortOrder`),可排字段各 feature 自己圈定。
+         * @description 列表排序字段(白名单)。默认 `created_at`。
          * @enum {string}
          */
         WidgetSortField: "created_at" | "name";
@@ -1432,7 +1810,7 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
-        /** @description `Widget` + 富化的 created_by 用户(脏值/已删/无 → `None`)。 */
+        /** @description `Widget` + 富化的 created_by 用户(脏值/已删/无 → `null`)。 */
         WidgetView: {
             /** Format: date-time */
             created_at: string;
@@ -1467,34 +1845,56 @@ export type ContentStatusView = components['schemas']['ContentStatusView'];
 export type CreateContentRequest = components['schemas']['CreateContentRequest'];
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
+export type DbOperationStats = components['schemas']['DbOperationStats'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
+export type DependencyCheck = components['schemas']['DependencyCheck'];
 export type ErrorBody = components['schemas']['ErrorBody'];
 export type ErrorCode = components['schemas']['ErrorCode'];
 export type FailureReason = components['schemas']['FailureReason'];
+export type HistoryInstance = components['schemas']['HistoryInstance'];
+export type HistoryPoint = components['schemas']['HistoryPoint'];
+export type HistoryRange = components['schemas']['HistoryRange'];
+export type HistoryReport = components['schemas']['HistoryReport'];
+export type InstanceReport = components['schemas']['InstanceReport'];
+export type InstanceRole = components['schemas']['InstanceRole'];
 export type IpStat = components['schemas']['IpStat'];
+export type LogRecordView = components['schemas']['LogRecordView'];
 export type LoginRequest = components['schemas']['LoginRequest'];
+export type MonitoringReport = components['schemas']['MonitoringReport'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type ObjectStatusView = components['schemas']['ObjectStatusView'];
+export type OutboxStatus = components['schemas']['OutboxStatus'];
 export type PageInfo = components['schemas']['PageInfo'];
 export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
 export type Page_AuthEventRow = components['schemas']['Page_AuthEventRow'];
+export type Page_LogRecordView = components['schemas']['Page_LogRecordView'];
 export type Page_RoleView = components['schemas']['Page_RoleView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type Perm = components['schemas']['Perm'];
+export type PoolStatus = components['schemas']['PoolStatus'];
 export type PrepareUploadRequest = components['schemas']['PrepareUploadRequest'];
 export type PrepareUploadResponse = components['schemas']['PrepareUploadResponse'];
+export type ProcessStatus = components['schemas']['ProcessStatus'];
 export type ProfileResponse = components['schemas']['ProfileResponse'];
+export type ProjectorStatus = components['schemas']['ProjectorStatus'];
 export type PutProfileRequest = components['schemas']['PutProfileRequest'];
+export type ReadinessCheck = components['schemas']['ReadinessCheck'];
+export type ReadinessReport = components['schemas']['ReadinessReport'];
 export type ReasonCount = components['schemas']['ReasonCount'];
 export type RegisterRequest = components['schemas']['RegisterRequest'];
 export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest'];
 export type RoleName = components['schemas']['RoleName'];
 export type RoleView = components['schemas']['RoleView'];
+export type RouteStats = components['schemas']['RouteStats'];
+export type Service = components['schemas']['Service'];
 export type SetContentMetadataRequest = components['schemas']['SetContentMetadataRequest'];
 export type SetRolesRequest = components['schemas']['SetRolesRequest'];
+export type Severity = components['schemas']['Severity'];
 export type SortOrder = components['schemas']['SortOrder'];
+export type SseStatus = components['schemas']['SseStatus'];
 export type StatBucket = components['schemas']['StatBucket'];
+export type TrafficSummary = components['schemas']['TrafficSummary'];
 export type TypeCount = components['schemas']['TypeCount'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
 export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
@@ -1518,7 +1918,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -1782,7 +2182,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -1833,7 +2233,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -2144,7 +2544,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -2528,6 +2928,146 @@ export interface operations {
             };
         };
     };
+    get_monitoring: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 各进程的监控数据(生产分进程时含 app 与 idm) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringReport"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_monitoring_history: {
+        parameters: {
+            query?: {
+                /** @description 时间范围,默认 24h。 */
+                range?: components["schemas"]["HistoryRange"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryReport"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_monitoring_logs: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                /** @description 最低级别:`WARN` = WARN + ERROR,`ERROR` = 只看 ERROR。不给 = 全部。 */
+                level?: components["schemas"]["Severity"];
+                instance?: components["schemas"]["InstanceRole"];
+                /** @description 服务:app(业务)/ idm(认证)。单进程开发时按接口前缀 / 代码模块推断。 */
+                service?: components["schemas"]["Service"];
+                /** @description 消息 / 模块 / 接口的子串,不区分大小写。 */
+                q?: string;
+                /** @description 精确匹配请求 id(响应头 `x-request-id`)。 */
+                request_id?: string;
+                /** @description 页码,从 1 开始。 */
+                page?: number;
+                /** @description 每页条数,1~200,默认 50。 */
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_LogRecordView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 users:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 参数不合法(size 超出 1~200 / from 晚于 to) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     admin_list_widgets: {
         parameters: {
             query?: {
@@ -2535,7 +3075,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -3723,7 +4263,7 @@ export interface operations {
                 page?: number;
                 /**
                  * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
-                 *     serde_html_form 基座(见 infra/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
                  *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
                  */
                 cursor?: string;
@@ -4349,19 +4889,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 就绪 */
+            /** @description 全部依赖可用 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReadinessReport"];
+                };
             };
-            /** @description 依赖未就绪 */
+            /** @description 至少一项依赖不可用 */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReadinessReport"];
+                };
             };
         };
     };
@@ -4374,6 +4918,7 @@ export type DeleteWidgetPath = operations['delete_widget']['parameters']['path']
 export type DownloadContentPath = operations['download_content']['parameters']['path'];
 export type GetContentMetadataPath = operations['get_content_metadata']['parameters']['path'];
 export type GetContentPath = operations['get_content']['parameters']['path'];
+export type GetMonitoringHistoryQuery = operations['get_monitoring_history']['parameters']['query'];
 export type GetProfilePath = operations['get_profile']['parameters']['path'];
 export type GetUserAvatarPath = operations['get_user_avatar']['parameters']['path'];
 export type GetUserPath = operations['get_user']['parameters']['path'];
@@ -4383,6 +4928,7 @@ export type ListAuthEventsQuery = operations['list_auth_events']['parameters']['
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListMonitoringLogsQuery = operations['list_monitoring_logs']['parameters']['query'];
 export type ListRolesQuery = operations['list_roles']['parameters']['query'];
 export type ListUserAuthEventsPath = operations['list_user_auth_events']['parameters']['path'];
 export type ListUserAuthEventsQuery = operations['list_user_auth_events']['parameters']['query'];

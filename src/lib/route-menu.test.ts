@@ -61,6 +61,7 @@ describe('buildAdminMenu with the real route tree', () => {
     expect(collectUrls(groups.flatMap(group => group.entries))).toEqual([
       '/admin/home',
       '/admin/auth-log',
+      '/admin/monitoring',
       '/admin/users',
       '/admin/widgets',
       '/admin/nested',
@@ -88,8 +89,9 @@ describe('buildAdminMenu with the real route tree', () => {
 
   it('hides policy-declaring entries until permissions are known (fail closed)', () => {
     const trimmed = buildAdminMenu({ ...router.routesById })
-    // widgets(声明 users:admin)缺席;nested 子树无策略,照常出现。
+    // widgets / monitoring(声明 users:admin)缺席;nested 子树无策略,照常出现。
     expect(collectUrls(trimmed.flatMap(group => group.entries))).not.toContain('/admin/widgets')
+    expect(collectUrls(trimmed.flatMap(group => group.entries))).not.toContain('/admin/monitoring')
     expect(collectUrls(trimmed.flatMap(group => group.entries))).toContain('/admin/nested')
   })
 

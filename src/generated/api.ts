@@ -54,6 +54,15 @@ export function setUserProfile(params: SetUserProfilePath): string {
 export function setUserRoles(params: SetUserRolesPath): string {
     return `admin/auth/users/${params.id}/roles`;
 }
+export function getMonitoring(): string {
+    return "admin/monitoring";
+}
+export function getMonitoringHistory(): string {
+    return "admin/monitoring/history";
+}
+export function listMonitoringLogs(): string {
+    return "admin/monitoring/logs";
+}
 export function adminListWidgets(): string {
     return "admin/widgets";
 }

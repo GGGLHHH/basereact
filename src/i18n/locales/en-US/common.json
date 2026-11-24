@@ -295,5 +295,152 @@
         "level3Prefix": "Level 3 · "
       }
     }
+  },
+  "monitoring": {
+    "title": "System monitoring",
+    "subtitle": "Live state and history of the backend processes. Live data every 15s; with the ops database, history is kept per minute for 15 days and per hour for 13 months, logs for 15 days.",
+    "loading": "Loading…",
+    "updatedAt": "Refreshes every 5s · updated {{time}}",
+    "loadFailed": "Failed to load monitoring data. Retrying automatically.",
+    "roles": {
+      "app": "App process",
+      "idm": "IdM process",
+      "combined": "Single process (app + idm)"
+    },
+    "health": {
+      "ok": "Healthy",
+      "warn": "Elevated errors",
+      "down": "Problem detected"
+    },
+    "instance": {
+      "version": "Version",
+      "uptime": "Uptime",
+      "started": "Started",
+      "window": "Window",
+      "unreachable": "Could not fetch this process: {{reason}}"
+    },
+    "deps": {
+      "title": "Dependencies",
+      "none": "Memory mode, no external dependencies",
+      "down": "Down"
+    },
+    "kpi": {
+      "requests": "Requests",
+      "inFlight": "In flight: {{count}}",
+      "errorRate": "5xx rate",
+      "errorCounts": "5xx {{e5}} · 4xx {{e4}}",
+      "p95": "p95 latency",
+      "p50p99": "p50 {{p50}} · p99 {{p99}}",
+      "pool": "Pool usage",
+      "poolFoot": "Databases: {{count}}",
+      "memory": "Memory",
+      "threads": "Threads: {{count}}",
+      "cpu": "CPU",
+      "cpuFoot": "Per core, last 15s average",
+      "sse": "SSE clients",
+      "dbCalls": "DB calls",
+      "dbOps": "Operations: {{count}}"
+    },
+    "charts": {
+      "title": "Trends",
+      "requests": "Requests (per 15s)",
+      "errors": "5xx errors (per 15s)",
+      "p95": "p95 latency (ms)",
+      "dbP95": "DB p95 (ms)",
+      "memory": "Memory (MB)",
+      "cpu": "CPU (%)",
+      "pool": "Pool connections in use",
+      "pipeline": "Outbox published (per 15s)",
+      "collecting": "Collecting: the first point appears about 15s after the backend starts.",
+      "empty": "No data in this period.",
+      "notPersistent": "No ops database configured: history is kept in backend memory for the last 24 hours and cleared on restart.",
+      "detailsSince": "Endpoint and database details are kept for 30 days; the tables below start at {{from}}."
+    },
+    "routes": {
+      "title": "Endpoints",
+      "count": "{{count}} total",
+      "path": "Path",
+      "requests": "Requests",
+      "empty": "No requests in the window yet."
+    },
+    "db": {
+      "title": "Database operations",
+      "count": "{{count}} total",
+      "operation": "Operation",
+      "calls": "Calls",
+      "empty": "No database calls in the window (none in memory mode)."
+    },
+    "pools": {
+      "title": "Connection pools",
+      "usage": "{{inUse}} / {{max}} in use · {{idle}} idle",
+      "empty": "No pools (memory mode)."
+    },
+    "outbox": {
+      "title": "Outbox relays",
+      "source": "Source",
+      "published": "Published",
+      "failures": "Failures",
+      "lastPoll": "Last poll",
+      "ago": "{{value}} ago",
+      "never": "Never",
+      "empty": "No relays (NATS not configured)."
+    },
+    "projectors": {
+      "title": "Projectors",
+      "name": "Name",
+      "processed": "Processed",
+      "failed": "Failed",
+      "lag": "Lag",
+      "pending": "Pending",
+      "empty": "No projectors (NATS or search DB not configured)."
+    },
+    "tabs": {
+      "overview": "Overview",
+      "logs": "Logs"
+    },
+    "range": {
+      "1h": "1 hour",
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "1y": "1 year"
+    },
+    "logs": {
+      "title": "Logs",
+      "time": "Time",
+      "level": "Level",
+      "instance": "Process",
+      "message": "Message",
+      "source": "Source",
+      "request": "Request",
+      "requestId": "Request ID",
+      "levels": {
+        "WARN": "Warning",
+        "ERROR": "Error"
+      },
+      "allLevels": "All levels",
+      "errorsOnly": "Errors only",
+      "span": {
+        "1h": "Last hour",
+        "24h": "Last 24 hours",
+        "7d": "Last 7 days",
+        "15d": "Last 15 days"
+      },
+      "window": "Window {{from}} – {{to}}",
+      "clearWindow": "Clear window",
+      "search": "Search message, source, endpoint…",
+      "requestIdPlaceholder": "Request ID",
+      "filterByRequest": "Only this request",
+      "refresh": "Refresh",
+      "empty": "No warnings or errors in this period.",
+      "detail": "Log details",
+      "service": "Service",
+      "allServices": "All services",
+      "services": {
+        "app": "App",
+        "idm": "IdM"
+      }
+    }
   }
 }

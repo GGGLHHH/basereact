@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "#/lib/api-client";
 import { requestJson, requestVoid } from "#/lib/api-client";
-import type { AdminListWidgetsQuery, AdminUserView, AuthStats, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetProfilePath, GetUserAvatarPath, GetUserPath, GetUserProfilePath, GetWidgetPath, ListAuthEventsQuery, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListRolesQuery, ListUserAuthEventsPath, ListUserAuthEventsQuery, ListUsersQuery, ListWidgetsQuery, LoginRequest, MyPermissionsResponse, Page_AdminUserView, Page_AuthEventRow, Page_RoleView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserAvatarPath, SetUserAvatarRequest, SetUserProfilePath, SetUserRolesPath, StatsAuthEventsQuery, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { listAuthEvents as buildListAuthEventsPath, statsAuthEvents as buildStatsAuthEventsPath, streamAuthEvents as buildStreamAuthEventsPath, adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listRoles as buildListRolesPath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, listUserAuthEvents as buildListUserAuthEventsPath, setUserAvatar as buildSetUserAvatarPath, resetUserPassword as buildResetUserPasswordPath, getUserProfile as buildGetUserProfilePath, setUserProfile as buildSetUserProfilePath, setUserRoles as buildSetUserRolesPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, getUserAvatar as buildGetUserAvatarPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
+import type { AdminListWidgetsQuery, AdminUserView, AuthStats, ChangePasswordRequest, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetMonitoringHistoryQuery, GetProfilePath, GetUserAvatarPath, GetUserPath, GetUserProfilePath, GetWidgetPath, HistoryReport, ListAuthEventsQuery, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListMonitoringLogsQuery, ListRolesQuery, ListUserAuthEventsPath, ListUserAuthEventsQuery, ListUsersQuery, ListWidgetsQuery, LoginRequest, MonitoringReport, MyPermissionsResponse, Page_AdminUserView, Page_AuthEventRow, Page_LogRecordView, Page_RoleView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserAvatarPath, SetUserAvatarRequest, SetUserProfilePath, SetUserRolesPath, StatsAuthEventsQuery, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { listAuthEvents as buildListAuthEventsPath, statsAuthEvents as buildStatsAuthEventsPath, streamAuthEvents as buildStreamAuthEventsPath, adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listRoles as buildListRolesPath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, listUserAuthEvents as buildListUserAuthEventsPath, setUserAvatar as buildSetUserAvatarPath, resetUserPassword as buildResetUserPasswordPath, getUserProfile as buildGetUserProfilePath, setUserProfile as buildSetUserProfilePath, setUserRoles as buildSetUserRolesPath, getMonitoring as buildGetMonitoringPath, getMonitoringHistory as buildGetMonitoringHistoryPath, listMonitoringLogs as buildListMonitoringLogsPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, getUserAvatar as buildGetUserAvatarPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, widgetStats as buildWidgetStatsPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -259,6 +259,47 @@ export function setUserRoles(options: SetUserRolesOptions, requestOptions: Runti
         ...requestOptions,
         method: "PUT",
         json: options.body,
+        signal: options.signal
+    });
+}
+export interface GetMonitoringOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getMonitoring(options: GetMonitoringOptions, requestOptions: RuntimeRequestOptions = {}): Promise<MonitoringReport> {
+    return requestJson<MonitoringReport>(buildGetMonitoringPath(), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
+export interface GetMonitoringHistoryOptions {
+    query?: GetMonitoringHistoryQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getMonitoringHistory(options: GetMonitoringHistoryOptions, requestOptions: RuntimeRequestOptions = {}): Promise<HistoryReport> {
+    return requestJson<HistoryReport>(buildGetMonitoringHistoryPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+export interface ListMonitoringLogsOptions {
+    query?: ListMonitoringLogsQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listMonitoringLogs(options: ListMonitoringLogsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_LogRecordView> {
+    return requestJson<Page_LogRecordView>(buildListMonitoringLogsPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
         signal: options.signal
     });
 }

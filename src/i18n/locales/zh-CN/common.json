@@ -295,5 +295,152 @@
         "level3Prefix": "第 3 级 · "
       }
     }
+  },
+  "monitoring": {
+    "title": "系统监控",
+    "subtitle": "后端进程的状态与历史。实时数据 15 秒一个点;配置了 ops 数据库时,历史按分钟保留 15 天、按小时保留 13 个月,日志保留 15 天。",
+    "loading": "加载中…",
+    "updatedAt": "每 5 秒刷新 · 更新于 {{time}}",
+    "loadFailed": "监控数据加载失败，稍后会自动重试。",
+    "roles": {
+      "app": "业务进程 app",
+      "idm": "认证进程 idm",
+      "combined": "单进程（app + idm）"
+    },
+    "health": {
+      "ok": "运行正常",
+      "warn": "错误偏多",
+      "down": "有异常"
+    },
+    "instance": {
+      "version": "版本",
+      "uptime": "已运行",
+      "started": "启动于",
+      "window": "统计窗口",
+      "unreachable": "拉不到这个进程的数据：{{reason}}"
+    },
+    "deps": {
+      "title": "依赖",
+      "none": "内存模式，没有外部依赖",
+      "down": "不可用"
+    },
+    "kpi": {
+      "requests": "请求数",
+      "inFlight": "处理中 {{count}}",
+      "errorRate": "5xx 比例",
+      "errorCounts": "5xx {{e5}} · 4xx {{e4}}",
+      "p95": "p95 延迟",
+      "p50p99": "p50 {{p50}} · p99 {{p99}}",
+      "pool": "连接池占用",
+      "poolFoot": "{{count}} 个库",
+      "memory": "内存",
+      "threads": "{{count}} 个线程",
+      "cpu": "CPU",
+      "cpuFoot": "按单核计，最近 15 秒均值",
+      "sse": "SSE 在线",
+      "dbCalls": "数据库调用",
+      "dbOps": "{{count}} 种操作"
+    },
+    "charts": {
+      "title": "趋势",
+      "requests": "请求数（每 15 秒）",
+      "errors": "5xx 错误（每 15 秒）",
+      "p95": "p95 延迟（ms）",
+      "dbP95": "数据库 p95（ms）",
+      "memory": "内存（MB）",
+      "cpu": "CPU（%）",
+      "pool": "连接池占用",
+      "pipeline": "outbox 发布（每 15 秒）",
+      "collecting": "采样中：第一个点在后端启动约 15 秒后出现。",
+      "empty": "这段时间没有数据。",
+      "notPersistent": "没配置 ops 数据库:历史只在后端内存里保留最近 24 小时,重启清空。",
+      "detailsSince": "接口与数据库明细只保留 30 天,下面的表格从 {{from}} 起算。"
+    },
+    "routes": {
+      "title": "接口",
+      "count": "{{count}} 个",
+      "path": "路径",
+      "requests": "请求",
+      "empty": "统计窗口内还没有请求。"
+    },
+    "db": {
+      "title": "数据库操作",
+      "count": "{{count}} 种",
+      "operation": "操作",
+      "calls": "调用",
+      "empty": "统计窗口内没有数据库调用（内存模式下没有）。"
+    },
+    "pools": {
+      "title": "连接池",
+      "usage": "使用 {{inUse}} / 上限 {{max}} · 空闲 {{idle}}",
+      "empty": "没有连接池（内存模式）。"
+    },
+    "outbox": {
+      "title": "发件箱 relay",
+      "source": "来源",
+      "published": "已发布",
+      "failures": "失败",
+      "lastPoll": "上次轮询",
+      "ago": "{{value}} 前",
+      "never": "未轮询",
+      "empty": "没有 relay（没配 NATS）。"
+    },
+    "projectors": {
+      "title": "投影 projector",
+      "name": "名称",
+      "processed": "已处理",
+      "failed": "失败",
+      "lag": "延迟",
+      "pending": "积压",
+      "empty": "没有 projector（没配 NATS 或 search 库）。"
+    },
+    "tabs": {
+      "overview": "概览",
+      "logs": "日志"
+    },
+    "range": {
+      "1h": "1 小时",
+      "24h": "24 小时",
+      "7d": "7 天",
+      "30d": "30 天",
+      "90d": "90 天",
+      "1y": "1 年"
+    },
+    "logs": {
+      "title": "日志",
+      "time": "时间",
+      "level": "级别",
+      "instance": "进程",
+      "message": "消息",
+      "source": "来源",
+      "request": "请求",
+      "requestId": "请求 ID",
+      "levels": {
+        "WARN": "警告",
+        "ERROR": "错误"
+      },
+      "allLevels": "全部级别",
+      "errorsOnly": "只看错误",
+      "span": {
+        "1h": "最近 1 小时",
+        "24h": "最近 24 小时",
+        "7d": "最近 7 天",
+        "15d": "最近 15 天"
+      },
+      "window": "时间段 {{from}} – {{to}}",
+      "clearWindow": "清除时间段",
+      "search": "搜索消息、来源、接口…",
+      "requestIdPlaceholder": "请求 ID",
+      "filterByRequest": "只看这个请求的日志",
+      "refresh": "刷新",
+      "empty": "这段时间没有警告或错误日志。",
+      "detail": "日志详情",
+      "service": "服务",
+      "allServices": "全部服务",
+      "services": {
+        "app": "业务 app",
+        "idm": "认证 idm"
+      }
+    }
   }
 }
