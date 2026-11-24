@@ -1,5 +1,6 @@
 import type { AuthEvent } from './types'
 
+import { ScrollArea } from '@gedatou/cadenza-ui'
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
@@ -88,7 +89,7 @@ export function EventTape({
         </button>
       </CardHeader>
 
-      <div className='min-h-0 flex-1 overflow-y-auto'>
+      <ScrollArea className='min-h-0 flex-1'>
         {rows.map(e => (
           <TapeRow
             key={e.id}
@@ -96,7 +97,7 @@ export function EventTape({
             fresh={e.id === freshId}
           />
         ))}
-      </div>
+      </ScrollArea>
 
       {/* 到达高亮关键帧(一次注入;reduced-motion 下不触发,见行上 motion-safe)。 */}
       <style>{`@keyframes auth-tape-in{from{opacity:0;transform:translateY(-4px);background:color-mix(in oklch,var(--flash) 20%,transparent)}to{opacity:1;transform:none;background:transparent}}`}</style>

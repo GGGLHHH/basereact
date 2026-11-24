@@ -3,6 +3,7 @@ import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 
 import { globalRouter } from './lib/global-router'
+import { ADMIN_SCROLL_SELECTOR } from './lib/scroll-ids'
 import { RouterError } from './router-error'
 import { routeTree } from './routeTree.gen'
 
@@ -33,6 +34,8 @@ export function getRouter() {
     defaultErrorComponent: RouterError,
     context: { queryClient },
     scrollRestoration: true,
+    // 后台页面在壳里的 ScrollArea 内滚动(不是 window),新导航时它也要回顶。
+    scrollToTopSelectors: ['window', ADMIN_SCROLL_SELECTOR],
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
   })

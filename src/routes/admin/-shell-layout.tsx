@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next'
 import type { ReactNode } from 'react'
 import type { AdminMenuEntry } from '@/lib/route-menu'
 import { ChevronDownIcon } from '@gedatou/cadenza-icons'
-import { DropdownMenu, DropdownMenuPopup, DropdownMenuTrigger, SidebarInset, SidebarProvider, SidebarTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuPopup, DropdownMenuTrigger, ScrollArea, SidebarInset, SidebarProvider, SidebarTrigger } from '@gedatou/cadenza-ui'
 import { getRouteApi, Link, Outlet, useMatches, useRouterState } from '@tanstack/react-router'
 import { Fragment } from 'react'
 
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { findMenuEntry } from '@/lib/route-menu'
+import { ADMIN_SCROLL_ID } from '@/lib/scroll-ids'
 import { useAdminMenu } from '@/lib/use-admin-menu'
 import { cn } from '@/lib/utils'
 
@@ -189,14 +190,18 @@ export function AdminShell() {
   const { me } = routeApi.useRouteContext()
 
   return (
-    <SidebarProvider defaultOpen={readSidebarOpen()}>
+    // 整壳锁在一屏高(h-svh):页面内容在下面的 ScrollArea 里滚,用组件库的滚动条,不出浏览器原生滚动条。
+    <SidebarProvider
+      defaultOpen={readSidebarOpen()}
+      className='h-svh'
+    >
       <AppSidebar
         variant='inset'
         user={{ avatar: '', email: me.email ?? '', name: me.username }}
       />
       {/* min-w-0:让 inset(sidebar 的 flex peer)能缩到 flex 轨道以下,宽表(如 users 8 列)
           转表格内部横滚,而非撑出页面级横滚。cadenza 的 SidebarInset 没带 min-w-0,在调用方补。 */}
-      <SidebarInset className='min-w-0'>
+      <SidebarInset className='min-h-0 min-w-0 overflow-hidden'>
         <header className='flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
           <div className='flex items-center gap-2 px-4'>
             <SidebarTrigger className='-ml-1' />
@@ -207,9 +212,16 @@ export function AdminShell() {
             <CurrentPageBreadcrumb />
           </div>
         </header>
-        <div className='flex flex-1 flex-col gap-4 p-4'>
-          <Outlet />
-        </div>
+        {/* 滚动位置随路由:data-scroll-restoration-id 让 TanStack Router 按历史记录还原,
+            新导航回顶靠 router 的 scrollToTopSelectors(见 router.tsx)。 */}
+        <ScrollArea
+          className='min-h-0 flex-1'
+          viewportRender={<div data-scroll-restoration-id={ADMIN_SCROLL_ID} />}
+        >
+          <div className='flex min-h-full flex-col gap-4 p-4'>
+            <Outlet />
+          </div>
+        </ScrollArea>
       </SidebarInset>
     </SidebarProvider>
   )
