@@ -45,7 +45,7 @@ export function UsersPage() {
             defaultValue={q}
             // q 变即回第 1 页;SearchField 已归一化(trim 后空串 → undefined)。
             onQueryValueChange={(next) => {
-              void navigate({ search: prev => ({ ...prev, page: 1, q: next }) })
+              void navigate({ resetScroll: false, search: prev => ({ ...prev, page: 1, q: next }) })
             }}
           />
           <RoleInfiniteSelect
@@ -56,6 +56,7 @@ export function UsersPage() {
             onValueChange={(items) => {
               const picked = items.map(r => ({ id: r.id, name: r.name }))
               void navigate({
+                resetScroll: false,
                 search: prev => ({
                   ...prev,
                   page: 1,
@@ -112,10 +113,10 @@ export function UsersPage() {
         onLimitChange={(limit) => {
           // 必须 spread prev:整体替换 search 会把搜索词与筛选条件一起抹掉
           // (下面的 onPageChange 一直是对的,这条一直不是)。
-          void navigate({ search: prev => ({ ...prev, page: 1, size: limit }) })
+          void navigate({ resetScroll: false, search: prev => ({ ...prev, page: 1, size: limit }) })
         }}
         onPageChange={(nextPage) => {
-          void navigate({ search: prev => ({ ...prev, page: nextPage }) })
+          void navigate({ resetScroll: false, search: prev => ({ ...prev, page: nextPage }) })
         }}
         onRowClick={goDetail}
         onView={goDetail}

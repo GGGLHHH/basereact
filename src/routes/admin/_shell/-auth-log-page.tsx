@@ -60,9 +60,15 @@ export function AuthLogPage() {
   const navigate = routeApi.useNavigate()
   const [outcome, setOutcome] = useState<'all' | AuthOutcome>('all')
   const [q, setQ] = useState('')
+  const outcomeItems: { value: 'all' | AuthOutcome, label: string }[] = [
+    { value: 'all', label: t('authLog.table.allOutcomes') },
+    { value: 'success', label: t('authLog.chart.success') },
+    { value: 'failure', label: t('authLog.chart.failure') },
+  ]
 
-  // 过滤变化回第一页;保留 size。
-  const goPage = (p: number) => void navigate({ search: prev => ({ ...prev, page: p }) })
+  // 过滤变化回第一页;保留 size。翻页 / 改每页行数只换 search,resetScroll:false 留在原地,
+  // 不让路由把后台主滚动区拉回顶部(新页面才回顶,见 router.tsx 的 scrollToTopSelectors)。
+  const goPage = (p: number) => void navigate({ resetScroll: false, search: prev => ({ ...prev, page: p }) })
 
   const table = useAuthEventsPage({ page, size, q, outcome })
   const pageRows = useMemo(() => (table.data?.items ?? []).map(toAuthEvent), [table.data])
@@ -132,6 +138,8 @@ export function AuthLogPage() {
               className='w-44'
             />
             <Select
+              // SelectValue 不读选项列表,只从 items 映射里取显示文字;不给就直接打印原始值(all)。
+              items={outcomeItems}
               value={outcome}
               onValueChange={(v) => {
                 // cadenza 的 onValueChange 第二参是 eventDetails(cancel 协议),这里用不到。
@@ -149,9 +157,14 @@ export function AuthLogPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectPopup>
-                <SelectItem value='all'>{t('authLog.table.allOutcomes')}</SelectItem>
-                <SelectItem value='success'>{t('authLog.chart.success')}</SelectItem>
-                <SelectItem value='failure'>{t('authLog.chart.failure')}</SelectItem>
+                {outcomeItems.map(item => (
+                  <SelectItem
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectPopup>
             </Select>
           </div>
@@ -163,7 +176,7 @@ export function AuthLogPage() {
           page={page}
           total={total}
           onLimitChange={(l) => {
-            void navigate({ search: { page: 1, size: l } })
+            void navigate({ resetScroll: false, search: { page: 1, size: l } })
           }}
           onPageChange={goPage}
         />
