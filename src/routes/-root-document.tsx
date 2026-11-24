@@ -31,11 +31,20 @@ function LocaleSync() {
 
 export function RootDocument({ children }: { children: React.ReactNode }) {
   return (
+    // translate='no' + notranslate:界面有自己的 i18n(中 / 英),禁止浏览器整页机翻。
+    // SSR 首屏按 DEFAULT_LOCALE(英文)出,Chrome 据此判成英文页、对中文用户自动翻译;
+    // 翻译会替换文字节点,之后 React 对这些节点的更新全部丢失(分页显示「本页 0 · 共 0 条」
+    // 一直停在首帧)。
     <html
       lang='en'
+      translate='no'
       suppressHydrationWarning
     >
       <head>
+        <meta
+          name='google'
+          content='notranslate'
+        />
         <HeadContent />
       </head>
       <body>
