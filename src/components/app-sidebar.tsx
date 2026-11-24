@@ -3,12 +3,13 @@
 import type { TFunction } from 'i18next'
 import type { AdminMenuEntry } from '@/lib/route-menu'
 
-import { AudioLinesIcon, ChevronRightIcon, GalleryVerticalEndIcon, TerminalIcon } from '@gedatou/cadenza-icons'
+import { ChevronRightIcon } from '@gedatou/cadenza-icons'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuPopup, DropdownMenuTrigger, Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarRail, useSidebar } from '@gedatou/cadenza-ui'
 
 import { Link, useRouterState } from '@tanstack/react-router'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
+import { BRAND_TEAMS } from '@/brand'
 import { PlayOnHover } from '@/components/icon-motion'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { FlyoutMenuNode, MenuIcon } from '@/components/menu-flyout'
@@ -19,27 +20,6 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { pickActiveMenuUrl } from '@/lib/route-menu'
 import { useAdminMenu } from '@/lib/use-admin-menu'
 import { cn } from '@/lib/utils'
-
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: <GalleryVerticalEndIcon />,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: <AudioLinesIcon />,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: <TerminalIcon />,
-      plan: 'Free',
-    },
-  ],
-}
 
 // 收起(icon)态下,有子项的顶层菜单点了没法展开——子菜单容器被 CSS 隐藏,点父行
 // 只切了个不可见的 open。改走向右弹出的飞出层(FlyoutMenuNode,见 menu-flyout.tsx)。
@@ -286,7 +266,7 @@ export function AppSidebar({
       {...props}
     >
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={BRAND_TEAMS} />
       </SidebarHeader>
       <SidebarContent className='scroll-fade-y'>
         <NavAdminRoutes />
