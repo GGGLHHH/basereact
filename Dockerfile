@@ -10,6 +10,11 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 ENV CI=1
+# Optional npm registry mirror (passed by baserust-stack scripts/prod/build.sh when
+# BUILD_MIRROR=cn). Empty = the public registry; plain `docker build` is unaffected.
+ARG NPM_REGISTRY=
+ENV COREPACK_NPM_REGISTRY=${NPM_REGISTRY:-https://registry.npmjs.org}
+RUN if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
 # Lockfile-first so the deps layer caches across source-only changes.
