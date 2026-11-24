@@ -176,6 +176,9 @@ export function refresh(): string {
 export function register(): string {
     return "public/auth/register";
 }
+export function reportClientErrors(): string {
+    return "public/client-errors";
+}
 export function widgetStats(): string {
     return "public/widgets/stats";
 }

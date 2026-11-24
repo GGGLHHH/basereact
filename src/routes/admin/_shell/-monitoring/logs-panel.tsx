@@ -58,8 +58,12 @@ function LevelBadge({ severity }: { severity: LogRecordView['severity'] }) {
 }
 
 /** 结构化字段的前几项(`k=v`),让"request rejected"这类简短消息也看得出原因。 */
+/** 长字段(调用栈、UA)不进表格里的摘要,只在详情里看。 */
+const LONG_ATTRS = new Set(['stack', 'user_agent'])
+
 function attrSummary(r: LogRecordView, max = 3): string | null {
   const parts = Object.entries(r.attributes)
+    .filter(([k]) => !LONG_ATTRS.has(k))
     .slice(0, max)
     .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
   return parts.length === 0 ? null : parts.join(' ')
@@ -156,7 +160,10 @@ function LogDetail({ log, onClose }: { log: LogRecordView | null, onClose: () =>
         [t('monitoring.logs.requestId'), log.request_id ?? '—'],
         [t('monitoring.logs.request'), requestSummary(log) ?? '—'],
       ]
-  const attrs = log != null && Object.keys(log.attributes).length > 0 ? JSON.stringify(log.attributes, null, 2) : null
+  // 调用栈单独按原样多行显示,其余结构化字段放 JSON 里。
+  const stack = typeof log?.attributes.stack === 'string' ? log.attributes.stack : null
+  const rest = log == null ? {} : Object.fromEntries(Object.entries(log.attributes).filter(([k]) => k !== 'stack'))
+  const attrs = Object.keys(rest).length > 0 ? JSON.stringify(rest, null, 2) : null
   return (
     <Dialog
       open={log != null}
@@ -184,10 +191,17 @@ function LogDetail({ log, onClose }: { log: LogRecordView | null, onClose: () =>
                     </div>
                   ))}
                 </dl>
+                {stack != null
+                  ? (
+                      <ScrollArea className='max-h-64 rounded-md border border-border'>
+                        <pre className='p-3 font-mono text-xs break-all whitespace-pre-wrap'>{stack}</pre>
+                      </ScrollArea>
+                    )
+                  : null}
                 {attrs != null
                   ? (
                       <ScrollArea className='max-h-64 rounded-md border border-border'>
-                        <pre className='p-3 font-mono text-xs'>{attrs}</pre>
+                        <pre className='p-3 font-mono text-xs break-all whitespace-pre-wrap'>{attrs}</pre>
                       </ScrollArea>
                     )
                   : null}
@@ -240,6 +254,7 @@ export function LogsPanel() {
     { value: 'all', label: t('monitoring.logs.allServices') },
     { value: 'app', label: t('monitoring.logs.services.app') },
     { value: 'idm', label: t('monitoring.logs.services.idm') },
+    { value: 'web', label: t('monitoring.logs.services.web') },
   ]
 
   return (

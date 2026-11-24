@@ -823,6 +823,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/client-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 前端错误上报(免登录)。进后台「系统监控 → 日志」,服务为「前端」。超出限流的部分静默丢弃,同样回 204。 */
+        post: operations["report_client_errors"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/widgets/stats": {
         parameters: {
             query?: never;
@@ -987,6 +1004,29 @@ export interface components {
         ChangePasswordRequest: {
             current_password: string;
             new_password: string;
+        };
+        /** @description 一批前端错误(1~10 条)。 */
+        ClientErrorBatch: {
+            errors: components["schemas"]["ClientErrorReport"][];
+        };
+        /**
+         * @description 错误来源。
+         * @enum {string}
+         */
+        ClientErrorKind: "error" | "unhandled_rejection" | "render";
+        /** @description 一条前端错误。 */
+        ClientErrorReport: {
+            kind: components["schemas"]["ClientErrorKind"];
+            /** @description 错误消息。 */
+            message: string;
+            /** @description 出错时的页面路径(`location.pathname`;带了 query / hash 也会被去掉)。 */
+            page?: string | null;
+            /** @description 前端版本(构建号)。 */
+            release?: string | null;
+            /** @description 出错的脚本位置(`文件:行:列`)。 */
+            source?: string | null;
+            /** @description 调用栈。 */
+            stack?: string | null;
         };
         /** @description 内容元数据的对外响应(投影 `content::ContentMetadata`)。 */
         ContentMetadataResponse: {
@@ -1649,11 +1689,12 @@ export interface components {
             route: string;
         };
         /**
-         * @description 日志归属的服务:app(业务)/ idm(认证)。分进程部署时就是进程身份;单进程开发时按
-         *     [`classify_service`] 推断,口径与 nginx 的分流规则一致。
+         * @description 日志归属的服务:app(业务)/ idm(认证)/ web(前端,浏览器上报的错误)。app / idm 分进程部署时
+         *     就是进程身份;单进程开发时按 [`classify_service`] 推断,口径与 nginx 的分流规则一致。
+         *     web 只来自前端上报接口(`app::client_errors`),不经推断。
          * @enum {string}
          */
-        Service: "app" | "idm";
+        Service: "app" | "idm" | "web";
         /**
          * @description 设置内容元数据(全量替换,upsert)。
          *
@@ -1839,6 +1880,9 @@ export type AuthKpi = components['schemas']['AuthKpi'];
 export type AuthOutcome = components['schemas']['AuthOutcome'];
 export type AuthStats = components['schemas']['AuthStats'];
 export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
+export type ClientErrorBatch = components['schemas']['ClientErrorBatch'];
+export type ClientErrorKind = components['schemas']['ClientErrorKind'];
+export type ClientErrorReport = components['schemas']['ClientErrorReport'];
 export type ContentMetadataResponse = components['schemas']['ContentMetadataResponse'];
 export type ContentResponse = components['schemas']['ContentResponse'];
 export type ContentStatusView = components['schemas']['ContentStatusView'];
@@ -4812,6 +4856,53 @@ export interface operations {
                 };
             };
             /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    report_client_errors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientErrorBatch"];
+            };
+        };
+        responses: {
+            /** @description 已收下(超出限流的部分静默丢弃) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description JSON 格式不对(如 kind 不认识) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 请求体超过 64 KB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 条数不在 1~10 之间 */
             422: {
                 headers: {
                     [name: string]: unknown;

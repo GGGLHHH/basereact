@@ -439,7 +439,8 @@
       "allServices": "全部服务",
       "services": {
         "app": "业务 app",
-        "idm": "认证 idm"
+        "idm": "认证 idm",
+        "web": "前端"
       }
     }
   }

@@ -439,7 +439,8 @@
       "allServices": "All services",
       "services": {
         "app": "App",
-        "idm": "IdM"
+        "idm": "IdM",
+        "web": "Web"
       }
     }
   }

@@ -9,7 +9,7 @@ const monitoringSearchSchema = z.object({
   tab: z.enum(['overview', 'logs']).catch('overview').default('overview'),
   range: z.enum(['1h', '24h', '7d', '30d', '90d', '1y']).catch('1h').default('1h'),
   level: z.enum(['all', 'ERROR']).catch('all').default('all'),
-  service: z.enum(['all', 'app', 'idm']).catch('all').default('all'),
+  service: z.enum(['all', 'app', 'idm', 'web']).catch('all').default('all'),
   q: z.string().catch('').default(''),
   rid: z.string().catch('').default(''),
   span: z.enum(['1h', '24h', '7d', '15d']).catch('24h').default('24h'),

@@ -8,6 +8,7 @@ import { Toaster } from '#/components/feedback/toaster'
 import { ThemeProvider } from '#/components/theme-provider'
 import i18next from '#/i18n'
 import { detectInitialLocale } from '#/i18n/config'
+import { installErrorReporting } from '#/lib/error-reporting'
 
 // SSR 恒以 DEFAULT_LOCALE 出首屏;hydration 后按 localStorage/浏览器语言切换,
 // 避免服务端-客户端首帧不一致(hydration mismatch)。
@@ -26,6 +27,12 @@ function LocaleSync() {
     return () => clearTimeout(timer)
   }, [])
 
+  return null
+}
+
+// 前端错误上报(只在生产构建里开,见 lib/error-reporting.ts)。
+function ErrorReporting() {
+  useEffect(() => installErrorReporting(), [])
   return null
 }
 
@@ -50,6 +57,7 @@ export function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider>
           <LocaleSync />
+          <ErrorReporting />
           {children}
           <Toaster />
           <TanStackDevtools
