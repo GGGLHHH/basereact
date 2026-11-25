@@ -1,6 +1,6 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
-import type { LogRecordView } from '#/generated/api-types'
+import type { LogRecordView } from '@/generated/api-types'
 
 import {
   Badge,
@@ -57,10 +57,10 @@ function LevelBadge({ severity }: { severity: LogRecordView['severity'] }) {
   )
 }
 
-/** 结构化字段的前几项(`k=v`),让"request rejected"这类简短消息也看得出原因。 */
 /** 长字段(调用栈、UA)不进表格里的摘要,只在详情里看。 */
 const LONG_ATTRS = new Set(['stack', 'user_agent'])
 
+/** 结构化字段的前几项(`k=v`),让"request rejected"这类简短消息也看得出原因。 */
 function attrSummary(r: LogRecordView, max = 3): string | null {
   const parts = Object.entries(r.attributes)
     .filter(([k]) => !LONG_ATTRS.has(k))
@@ -213,6 +213,32 @@ function LogDetail({ log, onClose }: { log: LogRecordView | null, onClose: () =>
   )
 }
 
+/**
+ * 和 URL search 同步的搜索框:输入防抖后写进 URL;URL 被外面改了(前进后退、点请求 ID)时跟着变。
+ * 不用 key 重建:输入停顿一下就会提交,重建会换掉正在打字的输入框、丢焦点。
+ */
+function UrlSearchField({ value, onCommit, placeholder }: {
+  value: string
+  onCommit: (value: string) => void
+  placeholder: string
+}) {
+  const [text, setText] = useState(value)
+  const [synced, setSynced] = useState(value)
+  if (value !== synced) {
+    setSynced(value)
+    if (value !== text.trim())
+      setText(value)
+  }
+  return (
+    <SearchField
+      value={text}
+      onValueChange={v => setText(v)}
+      onQueryValueChange={v => onCommit(v ?? '')}
+      placeholder={placeholder}
+    />
+  )
+}
+
 export function LogsPanel() {
   const { t } = useTranslation('common')
   const search = routeApi.useSearch()
@@ -355,17 +381,16 @@ export function LogsPanel() {
           </SelectPopup>
         </Select>
         <div className='w-60'>
-          <SearchField
-            defaultValue={search.q}
-            onQueryValueChange={v => update({ q: v ?? '' })}
+          <UrlSearchField
+            value={search.q}
+            onCommit={q => update({ q })}
             placeholder={t('monitoring.logs.search')}
           />
         </div>
         <div className='w-48'>
-          <SearchField
-            key={search.rid}
-            defaultValue={search.rid}
-            onQueryValueChange={v => update({ rid: v ?? '' })}
+          <UrlSearchField
+            value={search.rid}
+            onCommit={rid => update({ rid })}
             placeholder={t('monitoring.logs.requestIdPlaceholder')}
           />
         </div>
