@@ -3,8 +3,8 @@ import i18next from 'i18next'
 import { MotionGlobalConfig } from 'motion/react'
 import { initReactI18next } from 'react-i18next'
 
-import common from '#/i18n/locales/en-US/common.json'
-import route from '#/i18n/locales/en-US/route.json'
+import common from '@/i18n/locales/en-US/common.json'
+import route from '@/i18n/locales/en-US/route.json'
 
 // DOM test environments may lack the Web Animations API. Base UI components call
 // element.getAnimations() to coordinate enter/exit transitions; stub it to avoid

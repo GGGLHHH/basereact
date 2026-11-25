@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 
 // route-guard 经 #/api/auth 引 myPermissionsQueryOptions,auth.ts 的其余
 // generated 导入也走这个 mock,缺一个命名导出就是 import 期报错——全部补上。
-vi.mock('#/generated/client', () => ({
+vi.mock('@/generated/client', () => ({
   adminGetMe: mocks.adminGetMe,
   adminLogin: vi.fn(),
   changePassword: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('#/generated/client', () => ({
 }))
 
 // 守卫在模块内用 matchRoutes 现算匹配链;测试注入假体控制链上的 staticData。
-vi.mock('#/lib/global-router', () => ({
+vi.mock('@/lib/global-router', () => ({
   globalRouter: { instance: { matchRoutes: mocks.matchRoutes } },
 }))
 

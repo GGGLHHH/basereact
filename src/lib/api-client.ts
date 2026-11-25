@@ -5,15 +5,15 @@
 
 import type { LinkProps } from '@tanstack/react-router'
 import type { Options as KyOptions } from 'ky'
-import type { ErrorBody } from '#/generated/api-types'
+import type { ErrorBody } from '@/generated/api-types'
 
 import i18next from 'i18next'
 import ky, { isNetworkError, isTimeoutError } from 'ky'
 
 import { toast } from 'sonner'
-import { refresh as buildRefreshPath } from '#/generated/api'
-import { globalRouter } from '#/lib/global-router'
-import { queryKeys } from '#/lib/query-keys'
+import { refresh as buildRefreshPath } from '@/generated/api'
+import { globalRouter } from '@/lib/global-router'
+import { queryKeys } from '@/lib/query-keys'
 
 export const API_BASE_URL = '/api/v1'
 export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']

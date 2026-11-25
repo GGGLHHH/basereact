@@ -1,5 +1,5 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
-import type { WidgetView } from '#/generated/api-types'
+import type { WidgetView } from '@/generated/api-types'
 import { DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
 import { useMemo } from 'react'

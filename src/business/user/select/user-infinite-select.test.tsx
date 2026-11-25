@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react'
-import type { AdminUserView, ListUsersQuery, Page_AdminUserView } from '#/generated/api-types'
+import type { AdminUserView, ListUsersQuery, Page_AdminUserView } from '@/generated/api-types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
@@ -9,7 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 const listUsersMock = vi.fn<(options: { query?: ListUsersQuery }) => Promise<Page_AdminUserView>>()
 
-vi.mock('#/generated/client', () => ({
+vi.mock('@/generated/client', () => ({
   listUsers: listUsersMock,
 }))
 

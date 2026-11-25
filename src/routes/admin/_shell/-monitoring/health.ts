@@ -1,5 +1,5 @@
-import type { InstanceReport } from '#/generated/api-types'
 import type { Health } from './status'
+import type { InstanceReport } from '@/generated/api-types'
 
 /** 5xx 比例超过它就算"错误偏多"(与 KPI 卡片的标红阈值一致)。 */
 export const ERROR_RATE_WARN = 0.05

@@ -1,7 +1,7 @@
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 
-import type { AccessPolicyKey, OperationAccessPolicy } from '#/generated/access-policies'
-import { accessPolicies } from '#/generated/access-policies'
+import type { AccessPolicyKey, OperationAccessPolicy } from '@/generated/access-policies'
+import { accessPolicies } from '@/generated/access-policies'
 
 /**
  * 单个操作策略对有效权限集的判定,公式与 access-policies.ts 生成注释一致:

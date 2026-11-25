@@ -1,4 +1,4 @@
-import type { AuthEvent } from '#/routes/admin/_shell/-auth-log/types'
+import type { AuthEvent } from '@/routes/admin/_shell/-auth-log/types'
 import { DataTable, DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

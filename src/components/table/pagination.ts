@@ -1,4 +1,4 @@
-import type { PageInfo } from '#/generated/api-types'
+import type { PageInfo } from '@/generated/api-types'
 
 export interface OffsetPage {
   limit: number

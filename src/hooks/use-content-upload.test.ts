@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import type { ContentResponse, ObjectResponse } from '#/generated/api-types'
+import type { ContentResponse, ObjectResponse } from '@/generated/api-types'
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -10,11 +10,11 @@ import {
   prepareUpload,
   updateContent,
   uploadContent,
-} from '#/generated/client'
+} from '@/generated/client'
 
 import { uploadContentFlow } from './use-content-upload'
 
-vi.mock('#/generated/client', () => ({
+vi.mock('@/generated/client', () => ({
   confirmUpload: vi.fn(),
   deleteContent: vi.fn(),
   prepareUpload: vi.fn(),

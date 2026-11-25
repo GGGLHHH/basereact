@@ -1,4 +1,4 @@
-import type { AdminUserView } from '#/generated/api-types'
+import type { AdminUserView } from '@/generated/api-types'
 import {
   AlertDialog,
   AlertDialogClose,

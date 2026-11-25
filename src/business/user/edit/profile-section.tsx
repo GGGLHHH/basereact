@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react'
-import type { ProfileResponse } from '#/generated/api-types'
+import type { ProfileResponse } from '@/generated/api-types'
 import { Button, Spinner } from '@gedatou/cadenza-ui'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'

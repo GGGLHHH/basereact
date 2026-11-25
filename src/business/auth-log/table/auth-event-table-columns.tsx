@@ -3,11 +3,11 @@ import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
 // 领域形状/调色板/格式化仍在路由私有 -auth-log 里(整个 dashboard 共用)。ponytail: 若更多
 // 部件外迁 business,再把 types/palette/format 一并挪过来,这里改成同级 import。
-import type { AuthEvent } from '#/routes/admin/_shell/-auth-log/types'
+import type { AuthEvent } from '@/routes/admin/_shell/-auth-log/types'
 
-import { ago, hms } from '#/routes/admin/_shell/-auth-log/format'
-import { EVENT_META, REASON_LABEL_KEY, TONE_VAR } from '#/routes/admin/_shell/-auth-log/palette'
 import { cn } from '@/lib/utils'
+import { ago, hms } from '@/routes/admin/_shell/-auth-log/format'
+import { EVENT_META, REASON_LABEL_KEY, TONE_VAR } from '@/routes/admin/_shell/-auth-log/palette'
 
 import { OutcomePill } from './outcome-pill'
 

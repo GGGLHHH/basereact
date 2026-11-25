@@ -1,6 +1,6 @@
 // 认证审计事件 —— 前端视图形状,镜像后端 search.auth_event(camelCase)。
 
-import type { AuthChannel, AuthEventType, AuthOutcome, FailureReason } from '#/generated/api-types'
+import type { AuthChannel, AuthEventType, AuthOutcome, FailureReason } from '@/generated/api-types'
 
 // 事件类型/通道/结果/失败原因单一真相源 = 后端枚举(regen 的闭合 union)。后端加变体 → regen →
 // union 变宽 → palette 的 exhaustive Record 编译不过,逼前端处理(漂移构建期抓)。

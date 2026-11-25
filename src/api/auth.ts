@@ -4,7 +4,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   UpdateMeRequest,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -20,9 +20,9 @@ import {
   logout as logoutApi,
   register as registerApi,
   updateMe as updateMeApi,
-} from '#/generated/client'
-import { AUTH_PROBE_HEADER, SOFT_AUTH_HEADER } from '#/lib/api-client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/generated/client'
+import { AUTH_PROBE_HEADER, SOFT_AUTH_HEADER } from '@/lib/api-client'
+import { queryKeys } from '@/lib/query-keys'
 
 // ---- admin surface (admin/auth/*) ----
 // beforeLoad 守卫的探针在 lib/route-guard.ts(带 AUTH_PROBE_HEADER,不走 hook)。

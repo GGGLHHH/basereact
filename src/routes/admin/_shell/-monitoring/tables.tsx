@@ -6,7 +6,7 @@ import type {
   OutboxStatus,
   ProjectorStatus,
   RouteStats,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 
 import { DataTable, DataTableEmpty, Progress } from '@gedatou/cadenza-ui'
 import { useMemo } from 'react'

@@ -1,4 +1,4 @@
-import type { RoleView } from '#/generated/api-types'
+import type { RoleView } from '@/generated/api-types'
 import { ChevronDownIcon } from '@gedatou/cadenza-icons'
 import { Badge, Button } from '@gedatou/cadenza-ui'
 import { useNavigate, useRouter } from '@tanstack/react-router'

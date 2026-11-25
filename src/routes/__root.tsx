@@ -1,8 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext } from '@tanstack/react-router'
-import { NotFoundScreen } from '#/components/error-state'
+import { NotFoundScreen } from '@/components/error-state'
 
-import i18next from '#/i18n'
+import i18next from '@/i18n'
 import appCss from '../styles.css?url'
 import { RootDocument } from './-root-document'
 

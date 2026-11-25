@@ -1,4 +1,4 @@
-import type { ContentResponse, PrepareUploadRequest } from '#/generated/api-types'
+import type { ContentResponse, PrepareUploadRequest } from '@/generated/api-types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import i18next from 'i18next'
@@ -10,9 +10,9 @@ import {
   prepareUpload,
   updateContent,
   uploadContent,
-} from '#/generated/client'
+} from '@/generated/client'
 
-import { queryKeys } from '#/lib/query-keys'
+import { queryKeys } from '@/lib/query-keys'
 
 export type ContentUploadPhase
   = | 'confirming'

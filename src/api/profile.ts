@@ -3,21 +3,21 @@ import type {
   ContentResponse,
   ProfileResponse,
   PutProfileRequest,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { patchUserInLists } from '#/api/users'
-import { setUserAvatar as buildSetUserAvatarPath } from '#/generated/api'
+import { patchUserInLists } from '@/api/users'
+import { setUserAvatar as buildSetUserAvatarPath } from '@/generated/api'
 import {
   getMyProfile as getMyProfileApi,
   getUserProfile as getUserProfileApi,
   putProfile as putProfileApi,
   setUserProfile as setUserProfileApi,
-} from '#/generated/client'
-import { uploadContentFlow } from '#/hooks/use-content-upload'
-import { requestJson } from '#/lib/api-client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/generated/client'
+import { uploadContentFlow } from '@/hooks/use-content-upload'
+import { requestJson } from '@/lib/api-client'
+import { queryKeys } from '@/lib/query-keys'
 
 // 资料/头像改动会改到 AdminUserView 的富化列(display_name/avatar_url),故也要让用户
 // 列表乐观反映 + 失活:补 detail(userId) 的同时补列表行、再 invalidate(users.all)。

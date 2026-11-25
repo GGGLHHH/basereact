@@ -1,6 +1,6 @@
-import type { HistoryPoint } from '#/generated/api-types'
 import type { TrendRange } from './ranges'
 import type { ChartConfig } from '@/components/ui/chart'
+import type { HistoryPoint } from '@/generated/api-types'
 
 import { ToggleGroup, ToggleGroupItem } from '@gedatou/cadenza-ui'
 import { useId } from 'react'

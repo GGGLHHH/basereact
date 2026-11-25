@@ -1,4 +1,4 @@
-import type { InstanceReport } from '#/generated/api-types'
+import type { InstanceReport } from '@/generated/api-types'
 
 import { Badge } from '@gedatou/cadenza-ui'
 import { useTranslation } from 'react-i18next'

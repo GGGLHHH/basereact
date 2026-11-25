@@ -1,4 +1,4 @@
-import type { AdminUserView } from '#/generated/api-types'
+import type { AdminUserView } from '@/generated/api-types'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'

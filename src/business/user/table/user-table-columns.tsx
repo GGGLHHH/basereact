@@ -1,7 +1,7 @@
 import type { DataTableColumn } from '@gedatou/cadenza-ui'
 import type { TFunction } from 'i18next'
 import type { KeyboardEvent } from 'react'
-import type { AdminUserView } from '#/generated/api-types'
+import type { AdminUserView } from '@/generated/api-types'
 import { EyeIcon, PencilIcon, Trash2Icon } from '@gedatou/cadenza-icons'
 
 import { Button } from '@gedatou/cadenza-ui'

@@ -1,4 +1,4 @@
-import type { HistoryRange, InstanceRole } from '#/generated/api-types'
+import type { HistoryRange, InstanceRole } from '@/generated/api-types'
 
 import { Tabs, TabsList, TabsTab } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'

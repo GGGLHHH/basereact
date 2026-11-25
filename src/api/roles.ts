@@ -1,13 +1,13 @@
-import type { BaseInfiniteListOptions } from '#/components/select/use-infinite-list'
+import type { BaseInfiniteListOptions } from '@/components/select/use-infinite-list'
 
-import type { RoleView } from '#/generated/api-types'
+import type { RoleView } from '@/generated/api-types'
 import { useQuery } from '@tanstack/react-query'
 import {
 
   useInfiniteCursorList,
-} from '#/components/select/use-infinite-list'
-import { listRoles as listRolesApi } from '#/generated/client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/components/select/use-infinite-list'
+import { listRoles as listRolesApi } from '@/generated/client'
+import { queryKeys } from '@/lib/query-keys'
 
 // 全量角色目录(小而有界,单页返回)。用于按名→id 映射(编辑页回填用户当前角色)。
 export function useRoles(options?: { enabled?: boolean }) {

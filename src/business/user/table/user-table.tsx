@@ -1,5 +1,5 @@
-import type { AdminUserView } from '#/generated/api-types'
 import type { UserRowActions } from './user-table-columns'
+import type { AdminUserView } from '@/generated/api-types'
 import { DataTableEmpty, DataTableLoadingOverlay } from '@gedatou/cadenza-ui'
 
 import { useMemo } from 'react'

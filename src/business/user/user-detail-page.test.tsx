@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import type { AdminUserView } from '#/generated/api-types'
+import type { AdminUserView } from '@/generated/api-types'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

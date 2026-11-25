@@ -1,24 +1,24 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react'
-import type { ContentResponse, ProfileResponse } from '#/generated/api-types'
+import type { ContentResponse, ProfileResponse } from '@/generated/api-types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyProfile, putProfile } from '#/generated/client'
-import { uploadContentFlow } from '#/hooks/use-content-upload'
-import { queryKeys } from '#/lib/query-keys'
+import { getMyProfile, putProfile } from '@/generated/client'
+import { uploadContentFlow } from '@/hooks/use-content-upload'
+import { queryKeys } from '@/lib/query-keys'
 
 import { profileQueryOptions, useMyProfile, useUpdateProfile, useUploadAvatar } from './profile'
 
-vi.mock('#/generated/client', () => ({
+vi.mock('@/generated/client', () => ({
   getMyProfile: vi.fn(),
   putProfile: vi.fn(),
 }))
 
-vi.mock('#/hooks/use-content-upload', () => ({
+vi.mock('@/hooks/use-content-upload', () => ({
   uploadContentFlow: vi.fn(),
 }))
 

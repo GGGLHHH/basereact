@@ -2,8 +2,6 @@
 // 快照之后不再轮询——SSE 送来的每条事件本身就够把 KPI/图表/分布/列表继续往前滚
 // (见 use-live.ts 的 useLiveStats),大屏该有的样子:一次快照 + 纯推送,没有"定时问一遍"。
 
-import type { AuthEventRow, AuthStats } from '#/generated/api-types'
-
 import type {
   AuthEvent,
   AuthEventType,
@@ -15,9 +13,11 @@ import type {
   Kpi,
 } from './types'
 
+import type { AuthEventRow, AuthStats } from '@/generated/api-types'
+
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
-import { listAuthEvents, statsAuthEvents } from '#/generated/client'
+import { listAuthEvents, statsAuthEvents } from '@/generated/client'
 
 const STATS_KEY = ['auth-events', 'stats'] as const
 const LIST_KEY = ['auth-events', 'list'] as const

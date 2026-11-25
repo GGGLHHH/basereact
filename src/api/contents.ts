@@ -3,7 +3,7 @@ import type {
   SetContentMetadataRequest,
   UpdateContentRequest,
   UploadContentRequest,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -17,8 +17,8 @@ import {
   setContentMetadata as setContentMetadataApi,
   updateContent as updateContentApi,
   uploadContent as uploadContentApi,
-} from '#/generated/client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/generated/client'
+import { queryKeys } from '@/lib/query-keys'
 
 export function useContents(options?: { enabled?: boolean }) {
   return useQuery({

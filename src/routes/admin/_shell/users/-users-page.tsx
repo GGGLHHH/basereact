@@ -1,4 +1,4 @@
-import type { AdminUserView } from '#/generated/api-types'
+import type { AdminUserView } from '@/generated/api-types'
 import { ChevronDownIcon, PlusIcon } from '@gedatou/cadenza-icons'
 import { Button, InfiniteSelectClear, InfiniteSelectClose, InfiniteSelectFooter, SearchField } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'

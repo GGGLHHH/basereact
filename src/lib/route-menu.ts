@@ -1,6 +1,6 @@
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 
-import { isStaticDataGranted } from '#/lib/access-control'
+import { isStaticDataGranted } from '@/lib/access-control'
 
 // 分组键指向 route 命名空间(消费端 t() 译),与 titleKey/menuTitleKey 同范式。
 type GroupKey = NonNullable<StaticDataRouteOption['groupKey']>

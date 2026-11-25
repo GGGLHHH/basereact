@@ -1,4 +1,4 @@
-import type { AuthOutcome } from '#/routes/admin/_shell/-auth-log/types'
+import type { AuthOutcome } from '@/routes/admin/_shell/-auth-log/types'
 
 // 从 auth-event-table-columns.tsx 拆出来:那个文件导出的 createAuthEventColumns
 // 是非组件,组件和它同住会拦住 Fast Refresh。

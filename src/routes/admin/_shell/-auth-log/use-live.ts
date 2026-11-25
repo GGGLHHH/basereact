@@ -1,17 +1,17 @@
 // 实时:SSE(/admin/auth/auth-events/stream)。EventSource 同源走 httponly cookie 鉴权,自动重连。
 // 新事件置顶 tape;KPI/图表/分布 = stats 快照 + 快照之后的 SSE 事件逐条叠加(见 useLiveStats)。
 
-import type { AuthEventRow } from '#/generated/api-types'
-
 import type { MappedStats } from './data'
 
 import type { AuthEvent } from './types'
 
+import type { AuthEventRow } from '@/generated/api-types'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { streamAuthEvents } from '#/generated/api'
+import { streamAuthEvents } from '@/generated/api'
 
-import { API_BASE_URL } from '#/lib/api-client'
+import { API_BASE_URL } from '@/lib/api-client'
 import { toAuthEvent } from './data'
 
 // path 来自生成的 path builder(同 profile.ts 的 buildSetUserAvatarPath 套路)——

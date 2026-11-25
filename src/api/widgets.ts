@@ -3,7 +3,7 @@ import type {
   CreateWidget,
   ListWidgetsQuery,
   UpdateWidget,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -15,8 +15,8 @@ import {
   myWidgetCount as myWidgetCountApi,
   updateWidget as updateWidgetApi,
   widgetStats as widgetStatsApi,
-} from '#/generated/client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/generated/client'
+import { queryKeys } from '@/lib/query-keys'
 
 export function useWidgets(request?: ListWidgetsQuery, options?: { enabled?: boolean }) {
   return useQuery({

@@ -1,15 +1,15 @@
 import type { QueryClient } from '@tanstack/react-query'
 
 import type { ParsedLocation } from '@tanstack/react-router'
-import type { UserResponse } from '#/generated/api-types'
+import type { UserResponse } from '@/generated/api-types'
 import { redirect } from '@tanstack/react-router'
 
-import { myPermissionsQueryOptions } from '#/api/auth'
-import { adminGetMe, getMe } from '#/generated/client'
-import { declaresAccessPolicy, isStaticDataGranted } from '#/lib/access-control'
-import { ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE } from '#/lib/api-client'
-import { globalRouter } from '#/lib/global-router'
-import { queryKeys } from '#/lib/query-keys'
+import { myPermissionsQueryOptions } from '@/api/auth'
+import { adminGetMe, getMe } from '@/generated/client'
+import { declaresAccessPolicy, isStaticDataGranted } from '@/lib/access-control'
+import { ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE } from '@/lib/api-client'
+import { globalRouter } from '@/lib/global-router'
+import { queryKeys } from '@/lib/query-keys'
 
 /**
  * 守卫只吃目标 location 的 pathname/search——结构化最小类型,测试免造完整

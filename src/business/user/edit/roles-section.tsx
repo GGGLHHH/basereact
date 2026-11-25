@@ -1,4 +1,4 @@
-import type { AdminUserView, RoleView } from '#/generated/api-types'
+import type { AdminUserView, RoleView } from '@/generated/api-types'
 import { ChevronDownIcon } from '@gedatou/cadenza-icons'
 import { Badge, Button, Spinner } from '@gedatou/cadenza-ui'
 import { useMemo, useState } from 'react'

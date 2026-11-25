@@ -4,7 +4,7 @@ import type {
   InfiniteSelectOption,
 } from '@gedatou/cadenza-ui'
 import type { ReactElement, ReactNode } from 'react'
-import type { RoleView } from '#/generated/api-types'
+import type { RoleView } from '@/generated/api-types'
 import {
   InfiniteCombobox,
   InfiniteSelectEmpty,

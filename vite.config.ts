@@ -31,7 +31,7 @@ const config = defineConfig(({ command, mode }) => {
         pathPrefix: '/api/v1/',
         typeAliases: true,
         httpClient: {
-          module: '#/lib/api-client',
+          module: '@/lib/api-client',
         },
         generateOnDev: false,
         generateOnHmr: false,

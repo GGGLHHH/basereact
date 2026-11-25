@@ -1,13 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query'
 
-import type { BaseInfiniteListOptions } from '#/components/select/use-infinite-list'
+import type { BaseInfiniteListOptions } from '@/components/select/use-infinite-list'
 import type {
   AdminUserView,
   CreateUserRequest,
   ListUsersQuery,
   Page_AdminUserView,
   UpdateUserRequest,
-} from '#/generated/api-types'
+} from '@/generated/api-types'
 import {
   keepPreviousData,
 
@@ -19,7 +19,7 @@ import {
 import {
 
   useInfiniteCursorList,
-} from '#/components/select/use-infinite-list'
+} from '@/components/select/use-infinite-list'
 import {
   createUser as createUserApi,
   deleteUser as deleteUserApi,
@@ -28,8 +28,8 @@ import {
   resetUserPassword as resetUserPasswordApi,
   setUserRoles as setUserRolesApi,
   updateUser as updateUserApi,
-} from '#/generated/client'
-import { queryKeys } from '#/lib/query-keys'
+} from '@/generated/client'
+import { queryKeys } from '@/lib/query-keys'
 
 // 列表查询按 {page,size} 分片缓存,key 前缀 [users.all,'list'] 命中所有已缓存分页
 // (不含 detail / options-infinite)。乐观更新:mutation 影响 AdminUserView(含富化的
