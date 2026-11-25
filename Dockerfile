@@ -15,13 +15,17 @@ ENV CI=1
 ARG NPM_REGISTRY=
 ENV COREPACK_NPM_REGISTRY=${NPM_REGISTRY:-https://registry.npmjs.org}
 RUN if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi
-RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+# pnpm version comes from package.json "packageManager" (same as CI and local).
+RUN corepack enable
 
 # Lockfile-first so the deps layer caches across source-only changes.
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm --version && pnpm install --frozen-lockfile
 
 COPY . .
+# 前端版本号,随错误上报带给后端(baserust-stack 的 build.sh 传前端仓库的提交号;不传就不带)
+ARG APP_RELEASE=
+ENV VITE_APP_RELEASE=$APP_RELEASE
 # openapi codegen only runs on `vite dev` (command === 'serve'); `vite build`
 # compiles the committed src/generated/* — no backend needed at build time.
 RUN pnpm run build
