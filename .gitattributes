@@ -1,5 +1,4 @@
-# 生成的文件按生成器写出的 LF 检出。Windows 上 core.autocrlf=true 会把它们检出成 CRLF,
-# 而 vite / vitest / pnpm generate 一重新生成就写回 LF —— 内容没变,git 却一直显示「已修改」。
-src/routeTree.gen.ts text eol=lf
-src/generated/** text eol=lf
-**/__snapshots__/*.snap text eol=lf
+# 换行一律 LF:仓库里和检出到工作区都是(和 baserust-stack、rust-idm、rust-content、cadenza 同一份规则)。
+# Windows 上 core.autocrlf=true 会把文件检出成 CRLF:shell 脚本进 Linux 容器会 "bad interpreter",
+# 生成器(vite / tsr / insta)写回 LF 后 git 又一直显示「已修改」。
+* text=auto eol=lf
