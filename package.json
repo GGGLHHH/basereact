@@ -1,11 +1,11 @@
 {
   "name": "basereact",
   "type": "module",
+  "private": true,
   "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": ">=22"
   },
-  "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS=--disable-warning=ExperimentalWarning vite dev",
     "generate-routes": "tsr generate",
