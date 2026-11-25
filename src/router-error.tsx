@@ -12,7 +12,9 @@ export function RouterError({ error }: ErrorComponentProps) {
   const { t } = useTranslation()
   useEffect(() => {
     // 接口错误后端自己有记录(5xx 进日志、网络错误不是代码问题),这里只报前端代码本身的错。
-    if (!(error instanceof ApiErrorClass))
+    // SSR 传到客户端的错误会还原成普通 Error(自定义子类丢了,name 还在),所以也按 name 认。
+    const isApiError = error instanceof ApiErrorClass || (error instanceof Error && error.name === 'ApiError')
+    if (!isApiError)
       reportClientError('render', error)
   }, [error])
   return (
