@@ -32,7 +32,7 @@ export const Route = createFileRoute('/admin/_shell/monitoring')({
     icon: ActivityIcon,
     groupKey: 'menuGroups.admin',
     order: 4,
-    // 页面数据就是这个操作,准入随它(users:admin):缺权限时菜单不出现、直连进壳内 403。
+    // 页面数据就是这个操作,准入随它(ops:read,superadmin 独占):缺权限时菜单不出现、直连进壳内 403。
     accessPolicyKeys: ['getMonitoring'],
   },
 })

@@ -66,7 +66,7 @@ describe('userCreatePage', () => {
     fireEvent.change(screen.getByLabelText(/Username/), { target: { value: 'ada' } })
     fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'secret' } })
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: '  ada@example.com ' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1))
     expect(h.mutateAsync).toHaveBeenCalledWith({
@@ -83,7 +83,7 @@ describe('userCreatePage', () => {
 
     fireEvent.change(screen.getByLabelText(/Username/), { target: { value: 'bob' } })
     fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'hunter2' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1))
     expect(h.mutateAsync).toHaveBeenCalledWith({
@@ -109,7 +109,7 @@ describe('userCreatePage', () => {
       fireEvent.click(admin)
     }
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     await waitFor(() =>
       expect(h.mutateAsync).toHaveBeenCalledWith({
@@ -125,7 +125,7 @@ describe('userCreatePage', () => {
     render(<UserCreatePage />)
 
     fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'secret' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     await waitFor(() => expect(screen.getByText('Username is required')).toBeTruthy())
     expect(h.mutateAsync).not.toHaveBeenCalled()
@@ -136,7 +136,7 @@ describe('userCreatePage', () => {
 
     fireEvent.change(screen.getByLabelText(/Username/), { target: { value: '   ' } })
     fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'secret' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Create user' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     await new Promise(resolve => setTimeout(resolve, 30))
     expect(h.mutateAsync).not.toHaveBeenCalled()

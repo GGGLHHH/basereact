@@ -49,7 +49,8 @@
       "refreshed": "会话刷新",
       "loggedOut": "登出",
       "logoutAll": "登出所有会话",
-      "accountDeleted": "注销账户"
+      "accountDeleted": "注销账户",
+      "tenantSwitched": "切换组织"
     },
     "reasons": {
       "unknownUser": "用户不存在",
@@ -172,21 +173,21 @@
       "username": "用户名"
     },
     "create": {
-      "description": "新建账号并分配角色。",
-      "submit": "创建用户",
-      "success": "用户已创建",
-      "title": "创建用户"
+      "description": "创建平台账号并授予平台角色。要让他进入某个组织,在「成员」或「组织管理」里把他加进去。",
+      "submit": "创建账号",
+      "success": "账号已创建",
+      "title": "新建账号"
     },
     "delete": {
       "confirm": "删除",
       "description": "将永久删除 {{name}},且无法恢复。",
-      "success": "用户已删除",
-      "title": "删除用户"
+      "success": "账号已删除",
+      "title": "删除账号"
     },
     "detail": {
       "account": "账号 ID",
-      "notFound": "用户不存在",
-      "title": "用户详情"
+      "notFound": "账号不存在",
+      "title": "账号详情"
     },
     "edit": {
       "accountDescription": "修改登录用户名与邮箱。",
@@ -200,13 +201,15 @@
       "profileDescription": "头像、显示名与手机号存于用户资料。",
       "profileSaved": "资料已保存",
       "profileTitle": "资料",
+      "protected": "这是持有平台角色的账号(超级管理员 / 平台管理员),只有超级管理员能修改它。",
       "rolesDescription": "增删角色。未知角色名保存时会被拒绝。",
+      "rolesFixed": "超级管理员的角色不能在这里修改(只由初始数据声明)。",
       "rolesSaved": "角色已保存",
       "rolesTitle": "角色",
       "success": "修改已保存",
-      "title": "编辑用户"
+      "title": "编辑账号"
     },
-    "empty": "暂无用户",
+    "empty": "暂无账号",
     "filterRoles": "角色",
     "form": {
       "avatarHint": "支持 JPG、PNG 或 GIF。",
@@ -225,10 +228,14 @@
       "rolesPlaceholder": "如 admin, editor",
       "usernamePlaceholder": "请输入用户名"
     },
-    "new": "新建用户",
+    "new": "新建账号",
     "noRoles": "无角色",
+    "roles": {
+      "platform_admin": "平台管理员",
+      "superadmin": "超级管理员"
+    },
     "searchPlaceholder": "搜索用户名或显示名",
-    "tableLabel": "用户列表",
+    "tableLabel": "账号列表",
     "unverified": "未验证",
     "validation": {
       "passwordMin": "密码至少 3 个字符",
@@ -245,6 +252,116 @@
     },
     "empty": "暂无组件",
     "tableLabel": "组件列表"
+  },
+  "members": {
+    "actions": "操作",
+    "add": "添加成员",
+    "addDialog": {
+      "description": "输入完整用户名,把已有账号加进本组织。新账号由平台管理员创建。",
+      "notFound": "账号不存在",
+      "submit": "添加",
+      "success": "已添加成员",
+      "title": "添加成员",
+      "username": "用户名",
+      "usernamePlaceholder": "完整用户名",
+      "usernameRequired": "请输入用户名"
+    },
+    "columns": {
+      "displayName": "显示名",
+      "roles": "角色",
+      "status": "状态",
+      "username": "用户名"
+    },
+    "editRoles": {
+      "action": "修改角色",
+      "description": "{{name}} 在本组织里的角色。",
+      "success": "角色已保存",
+      "title": "修改角色"
+    },
+    "empty": "还没有成员",
+    "remove": {
+      "action": "移除",
+      "confirm": "移除成员",
+      "description": "{{name}} 将不能再进入本组织,在本组织里的登录会被注销。账号本身保留。",
+      "success": "已移除成员",
+      "title": "移除成员?"
+    },
+    "roles": {
+      "admin": "管理员",
+      "legend": "角色",
+      "required": "至少选一个角色",
+      "user": "普通成员"
+    },
+    "searchPlaceholder": "搜索用户名或显示名",
+    "status": {
+      "active": "正常",
+      "inactive": "已停用"
+    },
+    "tableLabel": "成员表"
+  },
+  "tenants": {
+    "actions": "操作",
+    "columns": {
+      "createdAt": "创建时间",
+      "name": "名称",
+      "slug": "标识",
+      "status": "状态"
+    },
+    "create": {
+      "description": "组织之间互相隔离,彼此看不到对方的数据。建好后再给它添加第一个管理员。",
+      "name": "名称",
+      "nameInvalid": "名称长度为 1–100 个字符",
+      "namePlaceholder": "例如:某某公司",
+      "slug": "标识",
+      "slugHint": "创建后不能修改",
+      "slugInvalid": "1–63 个小写字母、数字或连字符,不能以连字符开头或结尾",
+      "slugPlaceholder": "例如:acme",
+      "slugTaken": "这个标识已被占用",
+      "submit": "创建",
+      "success": "已创建组织",
+      "title": "新建组织"
+    },
+    "detail": {
+      "account": "账号",
+      "accountPlaceholder": "选择账号",
+      "accountRequired": "请选择账号",
+      "addMember": "添加成员",
+      "addMemberDescription": "选择一个已有账号。如果他已经是成员,会用这里选的角色替换他现有的角色。",
+      "id": "组织 ID",
+      "info": "基本信息",
+      "infoDescription": "修改组织名称。标识不能修改。",
+      "memberSaved": "成员已保存",
+      "members": "成员",
+      "membersDescription": "这个组织里的账号和他们在这里的角色。新组织的第一个管理员在这里指定。",
+      "renamed": "名称已保存",
+      "statusActive": "成员可以正常登录和使用这个组织。",
+      "statusSuspended": "已停用:成员不能进入这个组织,数据保留。",
+      "statusTitle": "状态"
+    },
+    "empty": "还没有组织",
+    "manage": "管理",
+    "new": "新建组织",
+    "resume": {
+      "action": "恢复",
+      "confirm": "恢复",
+      "description": "{{name}} 的成员可以重新进入这个组织。",
+      "success": "已恢复组织",
+      "title": "恢复这个组织?"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "已停用"
+    },
+    "suspend": {
+      "action": "停用",
+      "confirm": "停用",
+      "description": "{{name}} 的成员会被注销在这个组织里的登录,恢复之前都不能进入。已经发出的访问凭证到期前仍有效(默认最长 15 分钟)。数据保留。",
+      "success": "已停用组织",
+      "title": "停用这个组织?",
+      "warningCurrent": "这是你当前所在的组织:停用后该组织的所有成员(包括你)都将无法进入。",
+      "warningDefault": "这是默认组织:停用后该组织的所有成员(包括你)都将无法进入。"
+    },
+    "tableLabel": "组织表"
   },
   "nav": {
     "main": {
@@ -263,9 +380,21 @@
       "profile": "个人信息"
     }
   },
-  "teamSwitcher": {
-    "addTeam": "添加团队",
-    "teams": "团队"
+  "tenant": {
+    "switcher": {
+      "label": "组织",
+      "failed": "切换组织失败,请重试。",
+      "trigger": "当前组织:{{name}},点击切换",
+      "forbiddenHint": "在当前组织里没有权限?可以切换到其他组织:"
+    },
+    "empty": {
+      "title": "还没加入任何组织",
+      "description": "你的账号还没有加入任何组织。请联系管理员把你加进组织,然后重新登录。"
+    },
+    "choose": {
+      "title": "选择组织",
+      "description": "你现在不在任何组织里。选一个你所属的组织进入:"
+    }
   },
   "admin": {
     "home": {

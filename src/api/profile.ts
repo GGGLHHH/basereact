@@ -1,6 +1,5 @@
 import type {
   AdminUserView,
-  ContentResponse,
   ProfileResponse,
   PutProfileRequest,
 } from '@/generated/api-types'
@@ -8,14 +7,16 @@ import type {
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { patchUserInLists } from '@/api/users'
-import { setUserAvatar as buildSetUserAvatarPath } from '@/generated/api'
+import {
+  setUserAvatar as buildSetUserAvatarPath,
+  uploadMyAvatar as buildUploadMyAvatarPath,
+} from '@/generated/api'
 import {
   getMyProfile as getMyProfileApi,
   getUserProfile as getUserProfileApi,
-  putProfile as putProfileApi,
+  putMyProfile as putMyProfileApi,
   setUserProfile as setUserProfileApi,
 } from '@/generated/client'
-import { uploadContentFlow } from '@/hooks/use-content-upload'
 import { requestJson } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 
@@ -54,15 +55,17 @@ export function useMyProfile(options?: { enabled?: boolean }) {
   })
 }
 
-// PUT /frontend/profiles/{user_id} —— 全量替换(缺省字段=清空)。onSuccess 直接
-// 种缓存,侧边栏 NavUser 与本页共用 profile.me,头像/姓名即时刷新。
+// PUT /frontend/profiles/me —— 改自己的资料,全量替换(缺省字段=清空)。onSuccess 直接
+// 种缓存,侧边栏 NavUser 与本页共用 profile.me,头像/姓名即时刷新;自己若在后台
+// 用户列表里,那一行的富化列(display_name/avatar_url)也一起补。
+// (PUT /profiles/{user_id} 对普通成员已是 403:资料全局一份,改别人走后台接口。)
 export function useUpdateProfile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ userId, request }: { userId: string, request: PutProfileRequest }) =>
-      putProfileApi({ body: request, path: { user_id: userId } }),
+    mutationFn: (request: PutProfileRequest) => putMyProfileApi({ body: request }),
     onSuccess: (profile) => {
       queryClient.setQueryData(queryKeys.profile.me(), profile)
+      syncUserListFromProfile(queryClient, profile.user_id, profile)
     },
   })
 }
@@ -118,16 +121,24 @@ export function useUploadUserAvatar(userId: string) {
   })
 }
 
-// 头像上传复用统一内容上传流(prepare→直传/回退 multipart→confirm + 孤儿清理,
-// 见 use-content-upload)。返回已 confirm 的 content —— 其 id 可直接作
-// avatar_content_id(service 写前再查 confirm + image/*)。不必自建 multipart:
-// uploadContentFlow 同时覆盖预签名与一步回退两条路径,且已有测试。
-export function uploadAvatarFile(file: File): Promise<ContentResponse> {
-  return uploadContentFlow({ file })
-}
-
+// 自己传头像(POST /frontend/profiles/me/avatar,multipart,不需要任何租户权限)。后端把图存成
+// 个人内容(不属于任何租户)并立即绑定到资料,返回更新后的 ProfileResponse;旧头像由后端回收。
+// 不能再走内容上传流(contents/upload 是租户内容,拿去绑头像 → 422)。
+// 生成的 uploadMyAvatar 把 multipart 误当 JSON,故绕过它直接用 requestJson 送 FormData。
 export function useUploadAvatar() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (file: File) => uploadAvatarFile(file),
+    mutationFn: (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      return requestJson<ProfileResponse>(buildUploadMyAvatarPath(), {
+        body: form,
+        method: 'POST',
+      })
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.profile.me(), profile)
+      syncUserListFromProfile(queryClient, profile.user_id, profile)
+    },
   })
 }

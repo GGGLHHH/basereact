@@ -10,6 +10,7 @@ import { UserEditPage } from './user-edit-page'
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
 const h = vi.hoisted(() => ({
+  permissions: [] as string[],
   user: null as AdminUserView | null,
   navigate: vi.fn(),
   stub: () => ({ isPending: false, mutateAsync: vi.fn() }),
@@ -20,6 +21,9 @@ vi.mock('@/api/users', () => ({
   useUpdateUser: h.stub,
   useSetUserRoles: h.stub,
   useResetUserPassword: h.stub,
+}))
+vi.mock('@/lib/use-access-policy', () => ({
+  useMyPermissions: () => h.permissions,
 }))
 vi.mock('@/api/profile', () => ({
   useUserProfile: () => ({ data: null, isLoading: false }),
@@ -59,6 +63,7 @@ function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
 
 beforeEach(() => {
   h.user = fakeUser()
+  h.permissions = ['users:admin']
   h.navigate.mockReset()
   vi.stubGlobal(
     'ResizeObserver',
@@ -92,5 +97,33 @@ describe('userEditPage composition', () => {
     expect(screen.getByText('System')).toBeTruthy()
     // read-only id surfaced (identity header stamp + System reference)
     expect(screen.getAllByText('u1').length).toBeGreaterThan(0)
+  })
+})
+
+describe('userEditPage platform-role accounts', () => {
+  it('shows only a notice (no editable sections) when the operator lacks platform:roles', () => {
+    h.user = fakeUser({ roles: ['platform_admin'] })
+    h.permissions = ['users:admin', 'tenants:admin']
+    render(<UserEditPage userId='u1' />)
+    expect(screen.getByRole('note').textContent).toContain('Only the super admin')
+    expect(screen.queryByText('Account')).toBeNull()
+    expect(screen.queryByText('Password')).toBeNull()
+    expect(screen.queryByText('Profile')).toBeNull()
+    expect(screen.getByText('System')).toBeTruthy()
+  })
+
+  it('lets the super admin edit a platform admin, but never offers role editing on the super admin account', () => {
+    h.permissions = ['users:admin', 'platform:roles']
+    h.user = fakeUser({ roles: ['platform_admin'] })
+    render(<UserEditPage userId='u1' />)
+    expect(screen.getByText('Account')).toBeTruthy()
+    expect(screen.queryByText(/cannot be changed here/)).toBeNull()
+    cleanup()
+
+    h.user = fakeUser({ roles: ['superadmin'] })
+    render(<UserEditPage userId='u1' />)
+    expect(screen.getByText('Account')).toBeTruthy()
+    expect(screen.getByText('Password')).toBeTruthy()
+    expect(screen.getByText(/cannot be changed here/)).toBeTruthy()
   })
 })

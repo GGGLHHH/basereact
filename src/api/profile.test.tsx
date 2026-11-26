@@ -1,25 +1,28 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react'
-import type { ContentResponse, ProfileResponse } from '@/generated/api-types'
+import type { ProfileResponse } from '@/generated/api-types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyProfile, putProfile } from '@/generated/client'
-import { uploadContentFlow } from '@/hooks/use-content-upload'
+import { getMyProfile, putMyProfile } from '@/generated/client'
+import { requestJson } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 
 import { profileQueryOptions, useMyProfile, useUpdateProfile, useUploadAvatar } from './profile'
 
 vi.mock('@/generated/client', () => ({
   getMyProfile: vi.fn(),
-  putProfile: vi.fn(),
+  getUserProfile: vi.fn(),
+  putMyProfile: vi.fn(),
+  setUserProfile: vi.fn(),
 }))
 
-vi.mock('@/hooks/use-content-upload', () => ({
-  uploadContentFlow: vi.fn(),
+// 头像自传走 multipart(生成的客户端把它当 JSON),绕过它直接 requestJson 送 FormData。
+vi.mock('@/lib/api-client', () => ({
+  requestJson: vi.fn(),
 }))
 
 // 全必填字段 fixture(created_at/updated_at/user_id),codegen 类型变更时编译期抓过期 mock。
@@ -64,48 +67,41 @@ describe('profileQueryOptions', () => {
 })
 
 describe('useUpdateProfile', () => {
-  it('pUTs a full-replace body to /profiles/{user_id} and seeds the profile.me cache', async () => {
+  it('pUTs a full-replace body to /profiles/me and seeds the profile.me cache', async () => {
     const updated = fakeProfile({ avatar_content_id: 'c9', display_name: 'New Name', phone: '123' })
-    vi.mocked(putProfile).mockResolvedValue(updated)
+    vi.mocked(putMyProfile).mockResolvedValue(updated)
 
     const client = makeClient()
     const { result } = renderHook(() => useUpdateProfile(), { wrapper: wrapper(client) })
 
-    await result.current.mutateAsync({
-      userId: 'u1',
-      request: { avatar_content_id: 'c9', display_name: 'New Name', phone: '123' },
-    })
+    await result.current.mutateAsync({ avatar_content_id: 'c9', display_name: 'New Name', phone: '123' })
 
-    expect(putProfile).toHaveBeenCalledWith({
+    // 自己改资料走 PUT /profiles/me(PUT /profiles/{user_id} 对普通成员已是 403)。
+    expect(putMyProfile).toHaveBeenCalledWith({
       body: { avatar_content_id: 'c9', display_name: 'New Name', phone: '123' },
-      path: { user_id: 'u1' },
     })
     // onSuccess 种缓存:侧边栏 NavUser 与页面共读 profile.me,存后即刷。
     expect(client.getQueryData(queryKeys.profile.me())).toEqual(updated)
   })
 
   it('forwards a cleared (null) field as-is (PUT clears, not skips)', async () => {
-    vi.mocked(putProfile).mockResolvedValue(fakeProfile())
+    vi.mocked(putMyProfile).mockResolvedValue(fakeProfile())
 
     const client = makeClient()
     const { result } = renderHook(() => useUpdateProfile(), { wrapper: wrapper(client) })
 
-    await result.current.mutateAsync({
-      userId: 'u1',
-      request: { avatar_content_id: null, display_name: null, phone: null },
-    })
+    await result.current.mutateAsync({ avatar_content_id: null, display_name: null, phone: null })
 
-    expect(putProfile).toHaveBeenCalledWith({
+    expect(putMyProfile).toHaveBeenCalledWith({
       body: { avatar_content_id: null, display_name: null, phone: null },
-      path: { user_id: 'u1' },
     })
   })
 })
 
 describe('useUploadAvatar', () => {
-  it('delegates to uploadContentFlow with the picked file and returns its confirmed content', async () => {
-    const content = { id: 'c1' } as ContentResponse
-    vi.mocked(uploadContentFlow).mockResolvedValue(content)
+  it('pOSTs the picked file as multipart to /profiles/me/avatar and seeds profile.me', async () => {
+    const bound = fakeProfile({ avatar_content_id: 'c1', avatar_url: '/api/v1/frontend/contents/c1/preview' })
+    vi.mocked(requestJson).mockResolvedValue(bound)
 
     const client = makeClient()
     const { result } = renderHook(() => useUploadAvatar(), { wrapper: wrapper(client) })
@@ -113,7 +109,12 @@ describe('useUploadAvatar', () => {
     const file = new File(['x'], 'a.png', { type: 'image/png' })
     const out = await result.current.mutateAsync(file)
 
-    expect(uploadContentFlow).toHaveBeenCalledWith({ file })
-    expect(out).toBe(content)
+    const [path, options] = vi.mocked(requestJson).mock.calls[0] ?? []
+    expect(path).toBe('frontend/profiles/me/avatar')
+    expect(options?.method).toBe('POST')
+    expect((options?.body as FormData).get('file')).toBe(file)
+    // 上传即绑定:返回的就是更新后的资料,侧栏头像即刻换新。
+    expect(out).toBe(bound)
+    expect(client.getQueryData(queryKeys.profile.me())).toEqual(bound)
   })
 })

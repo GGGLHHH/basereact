@@ -2,6 +2,8 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router'
 
 import { z } from 'zod'
 
+import { ROLE_NAMES } from '@/business/user/roles'
+
 import { UsersPage } from './-users-page'
 
 // 默认值单一来源:schema 的 default 与 stripSearchParams 共用,避免两处漂移
@@ -15,10 +17,10 @@ const usersSearchSchema = z.object({
   page: z.number().int().min(1).catch(SEARCH_DEFAULTS.page).default(SEARCH_DEFAULTS.page),
   size: z.number().int().min(1).max(100).catch(SEARCH_DEFAULTS.size).default(SEARCH_DEFAULTS.size),
   q: z.string().trim().min(1).optional().catch(undefined),
-  // role 过滤存 {id,name} 对象(search params 支持嵌套 JSON):id 直接喂 RoleInfiniteSelect
-  // (uuid 键),name 直接喂后端 filter(RoleName)—— URL 自带两者,免掉目录拉取 + 名↔uuid 映射。
+  // role 过滤存角色名(RoleName):筛选候选是固定的平台角色闭集(不拉 /roles 目录,那只列可授出的),
+  // 名字既是选择器的键,也直接喂后端 filter。取值来自生成的 RoleName(ROLE_NAMES 由穷尽表派生)。
   role: z
-    .array(z.object({ id: z.string(), name: z.enum(['superadmin', 'admin', 'user']) }))
+    .array(z.enum(ROLE_NAMES))
     .optional()
     .catch(undefined),
 })

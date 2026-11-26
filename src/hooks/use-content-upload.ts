@@ -60,8 +60,7 @@ function buildMultipartForm(
     form.append('tags', tags.join(','))
   if (request?.document_type != null)
     form.append('document_type', request.document_type)
-  if (request?.tenant_id != null)
-    form.append('tenant_id', request.tenant_id)
+  // 租户不由请求决定:后端从 token 的当前租户取(spec §4.3)。
   return form
 }
 

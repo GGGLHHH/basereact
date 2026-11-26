@@ -89,6 +89,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/auth/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 本租户的成员列表(替代旧的后台「用户」页;数据来自租户成员索引,没接 search 时读 idm)。
+         *     默认 offset;带 `cursor` 切 keyset。`q`(用户名 + 显示名模糊)仅接了 search 投影后端时可用,未接 → 422。
+         */
+        get: operations["list_members"];
+        put?: never;
+        /**
+         * 按**完整用户名**把已有账号加进本租户(spec §4.5)。精确匹配(邮箱、大小写不同都不算),查不到 → 404
+         *     `account_not_found`(不建账号:账号由平台管理员建)。只能授租户角色,且不能授出自己没有的权限。
+         *     对方持平台角色(superadmin / 平台管理员)→ 要 `platform:roles`(与「移出」同一口径:组织管理员加进来就移不走)。
+         */
+        post: operations["add_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 把某成员移出本租户,并立即吊销他在本租户的会话(他在别的租户的成员关系 / 会话不动;账号本身不删)。
+         *     别的租户的成员 / 不是成员 → 404;不能移出自己(409);不能移出权限比自己大的成员(403)。
+         */
+        delete: operations["remove_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/members/{user_id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 全量设本租户某成员的租户角色(原子替换)。别的租户的成员 / 不是成员 → 404。
+         *     不能授出自己没有的权限、不能改权限比自己大的成员(403);改自己时不能丢掉 `members:admin`(409)。
+         */
+        put: operations["set_member_roles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/auth/roles": {
         parameters: {
             query?: never;
@@ -97,8 +162,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 角色目录(admin 分配角色的候选集)。全量存活角色,单页游标包络(has_more=false)。
+         * 角色目录(分配角色的候选集 = **调用者能授出的平台角色**),单页游标包络(has_more=false)。
          *     供前端 role-select 拉候选;`name`=机器码,`display_name`=展示名。
+         *     superadmin 永不出现(不经接口授予);授平台角色要 `platform:roles`,没有它的调用者(平台管理员)拿到空目录。
          */
         get: operations["list_roles"];
         put?: never;
@@ -118,6 +184,8 @@ export interface paths {
         };
         /**
          * 分页列出用户(过滤 + 排序 + 富化)。默认 offset;带 `cursor` 切 keyset。
+         *     **平台账号列表**:不论当前租户,列全部账号(不属于任何租户的也在),角色列 / `roles_any` / `roles_none` 都是平台角色。
+         *     接了 search 投影读全局账号目录,没接读 idm。租户成员列表是另外的接口。
          *     cursor + 非默认 sort_by → 422(keyset 恒按 id 序,非默认排序只能配 offset)。
          *     `q`(用户名 + 显示名模糊)与 `sort_by=display_name` 仅在接了 search 投影后端时可用;
          *     未接后端时二者 → 422(回退路只能 idm 直查,不具备搜索能力)。
@@ -297,6 +365,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/platform/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 租户列表(存活租户,按创建序)。默认 offset;带 `cursor` 切 keyset。 */
+        get: operations["list_tenants"];
+        put?: never;
+        /** 建租户(status = active,还没有成员;用 PUT 成员接口指定第一个管理员)。 */
+        post: operations["create_tenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 租户详情。不存在 / 已删除 → 404。 */
+        get: operations["get_tenant"];
+        /**
+         * 改租户(PUT 全量:名称 + 状态)。停用(`suspended`)立即吊销该租户里所有人的会话:refresh 立刻 401,
+         *     已发出的 access token 到期前仍有效(最长 = access token 有效期)。恢复(`active`)后成员重新登录即可。
+         */
+        put: operations["update_tenant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/tenants/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 某租户的成员列表(平台管理员看任意租户)。租户不存在 → 404。过滤 / 分页同 `GET /admin/auth/members`。 */
+        get: operations["list_tenant_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/tenants/{id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 设某租户的成员(PUT:不是成员则加入,是成员则全量替换租户角色)。用于给新租户指定第一个管理员。
+         *     只能授租户角色(平台角色 → 422)。租户 / 账号不存在 → 404。
+         */
+        put: operations["put_tenant_member"];
+        post?: never;
+        /** 把某人移出某租户,并立即吊销他在该租户的会话。租户不存在 / 不是成员 → 404。 */
+        delete: operations["remove_tenant_member"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/widgets": {
         parameters: {
             query?: never;
@@ -305,8 +450,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * **superadmin-only**:跨所有人列出全部 widget。gate 在 `users:admin`(seed 里只 superadmin 持有)。
-         *     演示"role 限制 = gate 一个该 role 专属的 perm";注意 admin 虽有 `read:all`,无 `users:admin` 仍 403。
+         * **后台 widget 列表**:列出**当前租户**的 widget(富化创建人)。
+         * @description 准入 = admin 组闸(后台准入)+ 租户级 `widgets:read` —— 租户管理员(租户角色 admin)就能看,不要平台级权限(租户数据的后台接口不拿平台权限当闸,spec §4.3)。
+         *     可见域照旧:有当前租户角色给的 `widgets:read:all` → 本租户全部,否则只列自己建的
+         *     (平台管理员在某租户里只是普通成员时也一样)。数据限当前租户(缺 → 403 `tenant_required`)。
          */
         get: operations["admin_list_widgets"];
         put?: never;
@@ -365,6 +512,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/frontend/auth/switch-tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["switch_tenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/auth/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_my_tenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/frontend/contents": {
         parameters: {
             query?: never;
@@ -373,8 +552,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 列当前用户的内容(单租户:tenant=nil)。需 `contents:read`。
-         *     所有权固有:service 按 (owner_id, tenant_id) 列,只回自己创建的。
+         * 列当前用户在**当前租户**里的内容。需 `contents:read`。
+         *     所有权固有:service 按 (当前租户, owner_id) 列,只回自己创建的。
          *     ponytail: `contents:read:all` 在此**不生效**(content 库 list 签名强制 owner,无"列全部"入口);
          *     单条端点已按 mode 放行。要让越权读贯通列表,需 content 库 list 的 owner 参数改 Option。
          */
@@ -399,7 +578,8 @@ export interface paths {
         put?: never;
         /**
          * 一次性上传(multipart/form-data):建 content + object 行、推字节、同步元数据、翻状态。需 `contents:write`。
-         *     表单字段:`file`(必填,带 filename + content-type)、`name`、`tags`(逗号分隔)、`document_type`、`tenant_id`(可选)。
+         *     表单字段:`file`(必填,带 filename + content-type)、`name`、`tags`(逗号分隔)、`document_type`。
+         *     内容落当前租户(令牌里的租户)。
          */
         post: operations["upload_content"];
         delete?: never;
@@ -579,8 +759,33 @@ export interface paths {
          *     与按 id 读(`get_profile`)刻意不同,理由见 `ProfileService::get_or_empty`。
          */
         get: operations["get_my_profile"];
-        put?: never;
+        /**
+         * 全量替换 upsert **自己**的资料(仅登录,零 perm;不要当前租户 —— 资料全局一份)。
+         *     未建 → 201,已有 → 200。头像只能绑本人的个人内容(`POST /profiles/me/avatar` 传的那种)。
+         */
+        put: operations["put_my_profile"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/profiles/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 传**自己**的头像(multipart 表单,`file` 部分为栅格图)。仅登录,零 perm,不要当前租户。
+         *     存成个人内容(`ContentScope::Personal`,owner = 本人,不属于任何租户)并立即绑定(保留 display_name / phone),
+         *     返回更新后的资料。换下来的旧头像(本人的个人内容)会被 best-effort 软删(见 `upload_and_bind_avatar`)。
+         */
+        post: operations["upload_my_avatar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -595,13 +800,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 读任意用户的资料(需 `profiles:read`;所有登录角色都有)。
-         *     注意:响应含 phone 等 PII,"任意登录可读"是脚手架的刻意选择——收紧时给 GET 加 ownership 或拆敏感字段视图。
+         * 按 id 读任意用户的资料(需 `profiles:read`,**平台级**:只有平台管理员有)。
+         *     响应含 phone 等 PII,且资料跨租户全局一份 —— 所以不给租户成员;本人读自己走 `/profiles/me`。
          */
         get: operations["get_profile"];
         /**
-         * 全量替换 upsert 自己的资料(`profiles:write`);带 `profiles:write:all` 可替任何人。
-         *     未建 → 201,已有 → 200(PUT 即建即替,RFC 7231 本义;profile 无独立 POST)。
+         * 按 id 全量替换 upsert 资料(`profiles:write`,**平台级**);带 `profiles:write:all` 可替任何人。
+         *     未建 → 201,已有 → 200(PUT 即建即替,RFC 7231 本义;profile 无独立 POST)。本人改自己走 `PUT /profiles/me`。
          */
         put: operations["put_profile"];
         post?: never;
@@ -663,8 +868,9 @@ export interface paths {
          * 订阅 widget 变更事件流(SSE)。需登录 + `widgets:read` —— 与列表同权:能看列表就能看变更。
          *     EventSource 不能自定义 header,凭据靠 httponly cookie(Bearer 兜底给 curl/测试)。
          *     best-effort 无回放:断线期间的事件丢失,EventSource 自动重连拿新订阅。
-         * @description **行级 ownership 与 list 同口径**:总线是广播(不分频道),过滤落在本 handler —— 逐帧
-         *     `allows_created_by`,不过就跳帧(`continue`),**不**结束流。没这层,无 `read:all` 的 `user`
+         * @description **先比租户、再比 owner**:总线是全实例广播(不分租户、不分频道),过滤落在本 handler —— 逐帧先看
+         *     `event.tenant_id() == 当前租户`,再 `allows_created_by`,不过就跳帧(`continue`),**不**结束流。
+         *     租户这一道在前:`read:all` 的 admin 也只是「本租户全部」,别的租户的帧一律看不见。没这层,无 `read:all` 的 `user`
          *     能从流里读到 `list_widgets`/`get_widget` 都不给他看的**别人的 widget**(名字等全量 `Widget`)。
          *     `Access` 在开流时刻算定并随流存活 —— 同下面的鉴权时刻取舍。
          *
@@ -688,8 +894,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * **仅登录**(authenticated):当前用户创建的 widget 数。要 `CurrentUser`、**无特定 perm**
+         * **仅登录**(authenticated):当前用户在**当前租户**里创建的 widget 数。要 `CurrentUser`、**无特定 perm**
          *     (`OP_PERMS` 标 `None` → 文档 `security:[{"oauth2":[]}]`)。演示"只需登录"形态。
+         *     数的是租户数据,所以仍要当前租户(平台上下文 → 403 `tenant_required`)。
          */
         get: operations["my_widget_count"];
         put?: never;
@@ -708,7 +915,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * **多权限 OR 样板**:概览 —— 普通读权**或**管理员任一即可。
+         * **多权限 OR 样板**:概览 —— 普通读权**或**本组织成员管理员(`members:admin`)任一即可。
+         *     两支都是租户级权限:租户数据的接口不拿平台级权限(如 `users:admin`)当闸(spec §4.3)。
          *     `require_any` 全败才 403;文档 = 多 requirement 各一 scope(`PermReq::Any`)。
          */
         get: operations["widget_overview"];
@@ -732,6 +940,28 @@ export interface paths {
          *     `require_all` 缺任一 perm 即 403;文档 = 单 requirement 多 scope(`OP_PERMS` 的 `PermReq::All`)。
          */
         get: operations["purge_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/frontend/widgets/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * **仅登录**:当前租户的 widget 计数。要登录(frontend 组闸)+ 当前租户(`CurrentTenant`,缺 → 403
+         *     `tenant_required`),**无特定 perm**(`OP_PERMS` 标 `LoginOnly`)。按租户计数走普通运行时池 + 租户事务。
+         * @description 曾是免登录的「全站计数」:多租户下匿名请求没有租户,跨租户汇总要绕过 RLS,违背「租户互相看不见」,
+         *     所以移到 frontend 组、只数当前租户。业务里要做公开数字,先想清楚它属于哪个租户。
+         */
+        get: operations["widget_stats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -840,26 +1070,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/public/widgets/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * **public**:全站 widget 计数。无 `CurrentUser`/`require_scoped` → 任何人可调
-         *     (不进 `OP_PERMS` → 文档不挂 security)。演示"无需登录"形态。
-         */
-        get: operations["widget_stats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/health": {
         parameters: {
             query?: never;
@@ -918,6 +1128,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description 按**完整用户名**把已有账号加进本租户(精确匹配;查不到 → 404 `account_not_found`)。
+         *     `roles` 只能是租户角色(平台角色 → 422)。
+         */
+        AddMemberRequest: {
+            roles: components["schemas"]["TenantRoleName"][];
+            username: string;
+        };
         /** @description 后台用户视图:身份(idm.users)+ 角色(idm)+ 富化的资料(app.profiles;缺/分进程降级 → null)。 */
         AdminUserView: {
             /** @description 富化:相对头像端点路径(悬空/分进程 → null)。 */
@@ -959,6 +1177,11 @@ export interface components {
             outcome: components["schemas"]["AuthOutcome"];
             /** Format: uuid */
             session_id?: string | null;
+            /**
+             * Format: uuid
+             * @description 事件所在的租户(登录进租户 / 切换 / 刷新该租户的会话等);登录失败等没有租户的事件为 null。
+             */
+            tenant_id?: string | null;
             user_agent?: string | null;
             /** Format: uuid */
             user_id?: string | null;
@@ -970,7 +1193,7 @@ export interface components {
          *     出现未知值本身就是数据异常,该让它在解码处炸出来而不是悄悄吞掉。
          * @enum {string}
          */
-        AuthEventType: "auth.login_succeeded" | "auth.login_failed" | "auth.admin_access_denied" | "auth.refreshed" | "auth.logged_out" | "auth.logout_all" | "auth.password_changed" | "auth.registered" | "auth.account_deleted";
+        AuthEventType: "auth.login_succeeded" | "auth.login_failed" | "auth.admin_access_denied" | "auth.refreshed" | "auth.logged_out" | "auth.logout_all" | "auth.password_changed" | "auth.registered" | "auth.account_deleted" | "auth.tenant_switched";
         AuthKpi: {
             /** Format: int64 */
             failed_count: number;
@@ -1061,8 +1284,12 @@ export interface components {
             owner_type?: string | null;
             /** @description 生命周期状态(闭集,生成前端 union)。 */
             status: components["schemas"]["ContentStatusView"];
-            /** Format: uuid */
-            tenant_id: string;
+            /**
+             * Format: uuid
+             * @description 所属租户;`null` = 个人内容(不属于任何租户,如头像 —— 本模块的端点看不到个人内容,
+             *     但形状上如实反映库的 `Option`)。
+             */
+            tenant_id?: string | null;
             /** Format: date-time */
             updated_at: string;
         };
@@ -1072,18 +1299,18 @@ export interface components {
          * @enum {string}
          */
         ContentStatusView: "created" | "uploading" | "uploaded" | "processing" | "processed" | "failed" | "archived";
-        /** @description 建内容的入参(仅建 content 行,不碰对象/字节)。owner_id 来自认证主体(不入参)。 */
+        /** @description 建内容的入参(仅建 content 行,不碰对象/字节)。owner_id 来自认证主体、租户来自令牌(都不入参)。 */
         CreateContentRequest: {
             derivation_type?: string | null;
             description?: string | null;
             document_type?: string | null;
             name?: string | null;
             owner_type?: string | null;
-            /**
-             * Format: uuid
-             * @description 单租户脚手架:省略 → `Uuid::nil()`(多租户隔离是 app authz 的职责,见 routes.rs)。
-             */
-            tenant_id?: string | null;
+        };
+        /** @description 建租户。slug:1-63 个小写字母 / 数字 / 连字符,不以连字符开头或结尾,全局唯一(含已删的);name 1..=100。 */
+        CreateTenantRequest: {
+            name: string;
+            slug: string;
         };
         /** @description 建号(原子含角色)。username 1..=100、email 合法、password ≥3(领域校验)。 */
         CreateUserRequest: {
@@ -1096,6 +1323,15 @@ export interface components {
         /** @description 创建 widget 的入参(name 1..=100 字符,由领域校验)。审计字段不入参。 */
         CreateWidget: {
             name: string;
+        };
+        /** @description 当前租户的展示信息(`GET /permissions/me` 的 `tenant`)。 */
+        CurrentTenantView: {
+            /** Format: uuid */
+            id: string;
+            /** @description 同上(租户改名后,到 token 过期 / refresh 前仍是旧名)。 */
+            name: string;
+            /** @description 来自登录 / 切换时签进 token 的值;降权令牌没有 → 空串。 */
+            slug: string;
         };
         /** @description 单个数据库操作的统计(来自仓储方法上的 `pg.*` span)。 */
         DbOperationStats: {
@@ -1132,7 +1368,7 @@ export interface components {
          * @description 错误机器码闭集(前端按它分支;闭集生成前端 union,见 closed-enums skill)。
          * @enum {string}
          */
-        ErrorCode: "not_found" | "validation" | "bad_request" | "unauthorized" | "conflict" | "forbidden" | "internal" | "timeout" | "rate_limited";
+        ErrorCode: "not_found" | "validation" | "bad_request" | "unauthorized" | "conflict" | "forbidden" | "tenant_required" | "account_not_found" | "internal" | "timeout" | "rate_limited";
         /**
          * @description 失败原因闭集。同上头注;`account_locked`/`rate_limited` 目前 emit 侧未产出(预留取值,
          *     闭集只增不改 —— 出现才炸,不提前拒绝合法但暂未使用的取值)。
@@ -1300,6 +1536,37 @@ export interface components {
             identifier: string;
             password: string;
         };
+        /** @description 全量设成员的租户角色(原子替换;只能是租户角色,平台角色 → 422)。 */
+        MemberRolesRequest: {
+            roles: components["schemas"]["TenantRoleName"][];
+        };
+        /**
+         * @description 成员状态闭集
+         * @enum {string}
+         */
+        MemberStatus: "active" | "inactive";
+        /** @description 租户成员:账号 + 该租户里的租户角色 / 成员状态 + 富化的资料(缺 → null)。 */
+        MemberView: {
+            /** @description 富化:相对头像端点路径(缺 → null)。 */
+            avatar_url?: string | null;
+            /** @description 富化:显示名(缺 → null)。 */
+            display_name?: string | null;
+            email?: string | null;
+            /**
+             * @description 该账号持有任一平台角色(superadmin / 平台管理员)。这样的成员只有持 `platform:roles` 的人能改角色 / 移出
+             *     (防接管,否则 403);前端据此隐藏按钮。
+             */
+            holds_platform_role: boolean;
+            /**
+             * Format: uuid
+             * @description 账号 id(user id)。
+             */
+            id: string;
+            /** @description 该租户里的租户角色(闭集)。 */
+            roles: components["schemas"]["TenantRoleName"][];
+            status: components["schemas"]["MemberStatus"];
+            username: string;
+        };
         /** @description 整体报告:每个进程一份。 */
         MonitoringReport: {
             /** Format: date-time */
@@ -1308,13 +1575,27 @@ export interface components {
         };
         /**
          * @description `GET /permissions/me` 响应。`roles` 来自 token claim;`permissions` 是**有效**集:
-         *     role 展开(含 implies)∩ scope 收窄,wire 串排序输出。
+         *     (平台角色给的平台级 ∪ 当前租户角色给的租户级,含 implies)∩ scope 收窄,wire 串排序输出。
          */
         MyPermissionsResponse: {
             /** @description 有效权限(闭集,wire 串序输出)。前端按钮显隐 / codegen accessPolicies `has()` 的数据源。 */
             permissions: components["schemas"]["Perm"][];
-            /** @description token claim 里的角色名(闭集,生成前端 union)。 */
+            /** @description token claim 里的**平台角色**名(闭集,生成前端 union)。 */
             roles: components["schemas"]["RoleName"][];
+            tenant?: null | components["schemas"]["CurrentTenantView"];
+            /** @description 当前租户内的角色名(平台上下文 → 空)。 */
+            tenant_roles: components["schemas"]["RoleName"][];
+        };
+        /** @description 我的一个租户(`GET /auth/tenants` 的元素):当前账号**有效**的成员关系。 */
+        MyTenantView: {
+            /** @description 是否是当前 token 所在的租户。 */
+            current: boolean;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @description 我在该租户内的角色(闭集,生成前端 union)。 */
+            roles: components["schemas"]["RoleName"][];
+            slug: string;
         };
         /** @description 存储对象的对外响应(投影 `content::Object`)。 */
         ObjectResponse: {
@@ -1428,6 +1709,11 @@ export interface components {
                 outcome: components["schemas"]["AuthOutcome"];
                 /** Format: uuid */
                 session_id?: string | null;
+                /**
+                 * Format: uuid
+                 * @description 事件所在的租户(登录进租户 / 切换 / 刷新该租户的会话等);登录失败等没有租户的事件为 null。
+                 */
+                tenant_id?: string | null;
                 user_agent?: string | null;
                 /** Format: uuid */
                 user_id?: string | null;
@@ -1467,6 +1753,34 @@ export interface components {
          * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
          *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
          */
+        Page_MemberView: {
+            items: {
+                /** @description 富化:相对头像端点路径(缺 → null)。 */
+                avatar_url?: string | null;
+                /** @description 富化:显示名(缺 → null)。 */
+                display_name?: string | null;
+                email?: string | null;
+                /**
+                 * @description 该账号持有任一平台角色(superadmin / 平台管理员)。这样的成员只有持 `platform:roles` 的人能改角色 / 移出
+                 *     (防接管,否则 403);前端据此隐藏按钮。
+                 */
+                holds_platform_role: boolean;
+                /**
+                 * Format: uuid
+                 * @description 账号 id(user id)。
+                 */
+                id: string;
+                /** @description 该租户里的租户角色(闭集)。 */
+                roles: components["schemas"]["TenantRoleName"][];
+                status: components["schemas"]["MemberStatus"];
+                username: string;
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
+         */
         Page_RoleView: {
             items: {
                 display_name: string;
@@ -1474,6 +1788,24 @@ export interface components {
                 id: string;
                 /** @description 机器码(闭集,生成前端 union)。 */
                 name: components["schemas"]["RoleName"];
+            }[];
+            page_info: components["schemas"]["PageInfo"];
+        };
+        /**
+         * @description 统一分页响应。utoipa 5 把 `Page<WidgetView>` 渲染成 schema `Page_WidgetView`(泛型自动命名),
+         *     path 自动收集,无需 `#[aliases]`(v5 已移除)。由核心 `Page<T>` 经 [`Page::from_core`] 转来。
+         */
+        Page_TenantView: {
+            items: {
+                /** Format: date-time */
+                created_at: string;
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+                status: components["schemas"]["TenantStatus"];
+                /** Format: date-time */
+                updated_at: string;
             }[];
             page_info: components["schemas"]["PageInfo"];
         };
@@ -1503,7 +1835,7 @@ export interface components {
          *     加权限 = 加一个变体 + `rename`,别处不动。
          * @enum {string}
          */
-        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
+        Perm: "widgets:read" | "widgets:read:all" | "widgets:write" | "widgets:write:all" | "widgets:delete" | "contents:read" | "contents:read:all" | "contents:write" | "contents:write:all" | "contents:delete" | "users:admin" | "tenants:admin" | "ops:read" | "audit:read" | "platform:roles" | "members:read" | "members:admin" | "admin:login" | "profiles:read" | "profiles:write" | "profiles:write:all";
         /** @description 数据库连接池。 */
         PoolStatus: {
             /** Format: int32 */
@@ -1517,7 +1849,7 @@ export interface components {
             /** Format: int32 */
             size: number;
         };
-        /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体;tenant 单租户默认 nil(同 create)。 */
+        /** @description 两步上传①的入参(仅声明,不带字节)。owner_id 来自认证主体、租户来自令牌(同 create)。 */
         PrepareUploadRequest: {
             description?: string | null;
             document_type?: string | null;
@@ -1526,8 +1858,6 @@ export interface components {
             name?: string | null;
             owner_type?: string | null;
             tags?: string[];
-            /** Format: uuid */
-            tenant_id?: string | null;
         };
         /**
          * @description 两步上传①的响应:账 + 格 + 凭证。`upload_url = null` = 后端不支持直传,
@@ -1612,7 +1942,8 @@ export interface components {
         PutProfileRequest: {
             /**
              * Format: uuid
-             * @description 绑定头像:必须指向**已 confirm** 的本人栅格图 content(png/jpeg/gif/webp)。
+             * @description 绑定头像:必须指向资料主人的**个人内容**(`POST /profiles/me/avatar` 或后台传头像上传的那种;
+             *     租户内容不行)、已 confirm 的栅格图(png/jpeg/gif/webp)。
              */
             avatar_content_id?: string | null;
             display_name?: string | null;
@@ -1657,10 +1988,10 @@ export interface components {
         /**
          * @description 角色名的**唯一真相**(封闭集)。角色本身不做动态 CRUD(角色**有哪些权限**才可运行时改,
          *     见 `role_permissions` 表);故角色集编进代码。wire 串经 `rename`,与 idm.roles.name / JWT
-         *     claim / `role_permissions.role_name` 同源。加角色 = 加变体 + 补 `ALL`/`display_name`/`default_permissions`。
+         *     claim / `role_permissions.role_name` 同源。加角色 = 加变体 + 补 `ALL`/`display_name`/`scope`/`default_permissions`。
          * @enum {string}
          */
-        RoleName: "superadmin" | "admin" | "user";
+        RoleName: "superadmin" | "platform_admin" | "admin" | "user";
         /**
          * @description 角色目录项(admin 分配角色的候选集;`GET /roles` 返回)。
          *     `name`=机器码(唯一稳定,JWT/权限引用),`display_name`=展示名(UI,可改)。
@@ -1744,6 +2075,33 @@ export interface components {
             /** Format: date-time */
             t: string;
         };
+        /** @description 切换当前租户(`POST /auth/switch-tenant`)。只能切到自己是**有效成员**的租户(成员 active + 租户 active)。 */
+        SwitchTenantRequest: {
+            /** Format: uuid */
+            tenant_id: string;
+        };
+        /**
+         * @description 租户角色闭集(成员关系上能授的角色;平台角色不在内)
+         * @enum {string}
+         */
+        TenantRoleName: "admin" | "user";
+        /**
+         * @description 租户状态闭集
+         * @enum {string}
+         */
+        TenantStatus: "active" | "suspended";
+        /** @description 租户。`slug` 建后不可改、删除后也不复用。 */
+        TenantView: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            status: components["schemas"]["TenantStatus"];
+            /** Format: date-time */
+            updated_at: string;
+        };
         /** @description 窗口内的请求汇总。 */
         TrafficSummary: {
             /** Format: int64 */
@@ -1776,6 +2134,11 @@ export interface components {
         UpdateMeRequest: {
             email?: string | null;
             username: string;
+        };
+        /** @description 改租户(PUT 全量:名称 + 状态;slug 不可改)。`status = suspended` 即停用(立即吊销该租户的会话)。 */
+        UpdateTenantRequest: {
+            name: string;
+            status: components["schemas"]["TenantStatus"];
         };
         /** @description 改身份(PUT 全量)。`email=None` 即清空(替换 email 会重置 email_verified,idm 语义)。 */
         UpdateUserRequest: {
@@ -1825,12 +2188,20 @@ export interface components {
             updated_at: string;
             updated_by?: string | null;
         };
-        /** @description widget 变更事件(SSE 帧 data / 总线负载)。帧的 event name = `type` 标签(created/updated/deleted)。 */
+        /**
+         * @description widget 变更事件(SSE 帧 data / 总线负载)。帧的 event name = `type` 标签(created/updated/deleted)。
+         *     `tenant_id` = 事件所属租户:总线跨实例扇出(PG NOTIFY / NATS)时靠它让订阅侧先按租户过滤;
+         *     SSE 帧里它总是订阅者自己的当前租户(别的租户的帧在 handler 里就跳过了)。
+         */
         WidgetEvent: {
+            /** Format: uuid */
+            tenant_id: string;
             /** @enum {string} */
             type: "created";
             widget: components["schemas"]["Widget"];
         } | {
+            /** Format: uuid */
+            tenant_id: string;
             /** @enum {string} */
             type: "updated";
             widget: components["schemas"]["Widget"];
@@ -1838,6 +2209,8 @@ export interface components {
             created_by?: string | null;
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            tenant_id: string;
             /** @enum {string} */
             type: "deleted";
         };
@@ -1872,6 +2245,7 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type AddMemberRequest = components['schemas']['AddMemberRequest'];
 export type AdminUserView = components['schemas']['AdminUserView'];
 export type AuthChannel = components['schemas']['AuthChannel'];
 export type AuthEventRow = components['schemas']['AuthEventRow'];
@@ -1887,8 +2261,10 @@ export type ContentMetadataResponse = components['schemas']['ContentMetadataResp
 export type ContentResponse = components['schemas']['ContentResponse'];
 export type ContentStatusView = components['schemas']['ContentStatusView'];
 export type CreateContentRequest = components['schemas']['CreateContentRequest'];
+export type CreateTenantRequest = components['schemas']['CreateTenantRequest'];
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type CreateWidget = components['schemas']['CreateWidget'];
+export type CurrentTenantView = components['schemas']['CurrentTenantView'];
 export type DbOperationStats = components['schemas']['DbOperationStats'];
 export type DeleteMeRequest = components['schemas']['DeleteMeRequest'];
 export type DependencyCheck = components['schemas']['DependencyCheck'];
@@ -1904,8 +2280,12 @@ export type InstanceRole = components['schemas']['InstanceRole'];
 export type IpStat = components['schemas']['IpStat'];
 export type LogRecordView = components['schemas']['LogRecordView'];
 export type LoginRequest = components['schemas']['LoginRequest'];
+export type MemberRolesRequest = components['schemas']['MemberRolesRequest'];
+export type MemberStatus = components['schemas']['MemberStatus'];
+export type MemberView = components['schemas']['MemberView'];
 export type MonitoringReport = components['schemas']['MonitoringReport'];
 export type MyPermissionsResponse = components['schemas']['MyPermissionsResponse'];
+export type MyTenantView = components['schemas']['MyTenantView'];
 export type ObjectResponse = components['schemas']['ObjectResponse'];
 export type ObjectStatusView = components['schemas']['ObjectStatusView'];
 export type OutboxStatus = components['schemas']['OutboxStatus'];
@@ -1913,7 +2293,9 @@ export type PageInfo = components['schemas']['PageInfo'];
 export type Page_AdminUserView = components['schemas']['Page_AdminUserView'];
 export type Page_AuthEventRow = components['schemas']['Page_AuthEventRow'];
 export type Page_LogRecordView = components['schemas']['Page_LogRecordView'];
+export type Page_MemberView = components['schemas']['Page_MemberView'];
 export type Page_RoleView = components['schemas']['Page_RoleView'];
+export type Page_TenantView = components['schemas']['Page_TenantView'];
 export type Page_WidgetView = components['schemas']['Page_WidgetView'];
 export type Perm = components['schemas']['Perm'];
 export type PoolStatus = components['schemas']['PoolStatus'];
@@ -1938,10 +2320,15 @@ export type Severity = components['schemas']['Severity'];
 export type SortOrder = components['schemas']['SortOrder'];
 export type SseStatus = components['schemas']['SseStatus'];
 export type StatBucket = components['schemas']['StatBucket'];
+export type SwitchTenantRequest = components['schemas']['SwitchTenantRequest'];
+export type TenantRoleName = components['schemas']['TenantRoleName'];
+export type TenantStatus = components['schemas']['TenantStatus'];
+export type TenantView = components['schemas']['TenantView'];
 export type TrafficSummary = components['schemas']['TrafficSummary'];
 export type TypeCount = components['schemas']['TypeCount'];
 export type UpdateContentRequest = components['schemas']['UpdateContentRequest'];
 export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
+export type UpdateTenantRequest = components['schemas']['UpdateTenantRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
 export type UpdateWidget = components['schemas']['UpdateWidget'];
 export type UploadResponse = components['schemas']['UploadResponse'];
@@ -2009,7 +2396,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 audit:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2066,7 +2453,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 audit:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2112,7 +2499,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 audit:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2145,7 +2532,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 后台登录成功,token 写入 httponly cookie */
+            /** @description 后台登录成功,token 写入 httponly cookie。进入的上下文:有效成员关系里按最近使用挑第一个有 admin:login 的租户;都没有而有平台级权限 → 平台上下文(无当前租户) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2163,7 +2550,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 凭据正确但无后台准入(admin:login),不发 token 不设 cookie */
+            /** @description 凭据正确但无后台准入,不发 token 不设 cookie:一个有效成员关系都没有、也没有平台级权限 → `tenant_required`;有成员关系但哪个租户里都没有 admin:login(也没有平台级权限)→ `forbidden` */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2219,6 +2606,266 @@ export interface operations {
             };
         };
     };
+    list_members: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+                /** @description 用户名 + 显示名模糊搜索(仅接了 search 投影后端时可用;未接 → 422)。 */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成员分页列表(display_name / avatar 富化,缺则 null) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_MemberView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 members:read 权限 / 没有当前租户(tenant_required) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description q 但无 search 投影后端 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    add_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description 已加入本租户 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 members:admin 权限 / 授出的角色超出自己的权限 / 对方持平台角色(要 platform:roles)/ 没有当前租户 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description account_not_found:没有这个用户名的账号 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 已是本租户成员 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 / 平台角色 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已移出,本租户里的会话已吊销 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 members:admin 权限 / 越权 / 目标持平台角色(要 platform:roles)/ 没有当前租户 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不是本租户的成员 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不能移出自己 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_member_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description user id */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberRolesRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 members:admin 权限 / 越权 / 目标持平台角色(要 platform:roles)/ 没有当前租户 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不是本租户的成员 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 改自己的角色会丢掉成员管理权 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 / 平台角色 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_roles: {
         parameters: {
             query?: {
@@ -2241,7 +2888,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 角色目录(单页,全量存活角色) */
+            /** @description 角色目录(单页;调用者能授出的平台角色:不含 superadmin,无 platform:roles 时为空) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2637,7 +3284,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 audit:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2715,7 +3362,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 users:admin 权限 / 目标持平台角色而无 platform:roles */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2880,7 +3527,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 users:admin 权限 / 目标持平台角色而无 platform:roles */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2999,7 +3646,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 ops:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3039,7 +3686,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 ops:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3092,7 +3739,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限 */
+            /** @description 无 ops:read 权限(superadmin 独占) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3103,6 +3750,419 @@ export interface operations {
             };
             /** @description 参数不合法(size 超出 1~200 / from 晚于 to) */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_tenants: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 租户分页列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_TenantView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限(平台级) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description slug 已被占用(含已删除的租户,slug 不复用) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败(slug / name 不合规) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 找到 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 / 已删除 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不存在 / 已删除 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_tenant_members: {
+        parameters: {
+            query?: {
+                /** @description 提供 ⇒ offset 模式(可跳页),1-based。 */
+                page?: number;
+                /**
+                 * @description 提供 ⇒ cursor 模式;opaque token,原样回传、勿解析。空值 `cursor=` = 首页。
+                 *     serde_html_form 基座(见 infra/http/extract.rs)会把空值 Option 解成 None,丢掉
+                 *     "cursor 模式首页"的表达 —— 自定义 deserializer 保住 `Some("")`。
+                 */
+                cursor?: string;
+                /** @description 每页条数,两模式共用;越界自动 clamp 到 [1,100]。 */
+                size?: number;
+                /** @description 仅 offset 有意义:是否计算 total(默认 true)。 */
+                with_total?: boolean;
+                /** @description 用户名 + 显示名模糊搜索(仅接了 search 投影后端时可用;未接 → 422)。 */
+                q?: string;
+            };
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成员分页列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_MemberView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 租户不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description q 但无 search 投影后端 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_tenant_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+                /** @description user id */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberRolesRequest"];
+            };
+        };
+        responses: {
+            /** @description 已加入 / 已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberView"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 / 改持平台角色的成员而无 platform:roles */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 租户或账号不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 / 平台角色 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_tenant_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description tenant id */
+                id: string;
+                /** @description user id */
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已移出,该租户里的会话已吊销 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 无 tenants:admin 权限 / 移出持平台角色的账号而无 platform:roles */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 租户不存在 / 不是该租户的成员 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3136,7 +4196,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 全部 widget(跨所有人,富化) */
+            /** @description 当前租户内;无租户级 read:all 时只含本人创建的(富化) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3154,7 +4214,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 users:admin 权限(仅 superadmin) */
+            /** @description 无后台准入(admin 组闸)/ 无 widgets:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3356,6 +4416,85 @@ export interface operations {
             };
         };
     };
+    switch_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwitchTenantRequest"];
+            };
+        };
+        responses: {
+            /** @description 已切换:旧会话吊销,带新租户的 token 写入 httponly cookie */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description 未登录 / refresh cookie 无效 / refresh 会话不属于当前身份(原会话不动) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 不是该租户的有效成员(含平台管理员切进自己不是成员的租户),原会话不动 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_my_tenants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 当前账号有效的成员关系(租户 active + 成员 active),最近用过的在前;`current` 标出当前 token 所在租户 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTenantView"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_contents: {
         parameters: {
             query?: never;
@@ -3383,7 +4522,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3425,7 +4564,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3464,8 +4603,6 @@ export interface operations {
                     name?: string | null;
                     /** @description 逗号分隔。 */
                     tags?: string | null;
-                    /** Format: uuid */
-                    tenant_id?: string | null;
                 };
             };
         };
@@ -3497,7 +4634,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3548,7 +4685,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3598,7 +4735,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3607,7 +4744,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人(不区分,防泄露存在;contents:read:all 可看全部) */
+            /** @description 不存在 / 别的租户 / 非本人(不区分,防泄露存在;contents:read:all 可看全部) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3652,7 +4789,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3661,7 +4798,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3709,7 +4846,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:delete 权限 */
+            /** @description 无 contents:delete 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3718,7 +4855,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3759,7 +4896,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3768,7 +4905,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3825,7 +4962,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3834,7 +4971,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:read:all / 无可下载对象(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:read:all / 无可下载对象(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3884,7 +5021,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3893,7 +5030,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:read:all / 无元数据(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:read:all / 无元数据(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3936,7 +5073,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:write 权限 */
+            /** @description 无 contents:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3945,7 +5082,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:write:all(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:write:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3995,7 +5132,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4004,7 +5141,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4052,7 +5189,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 contents:read 权限 */
+            /** @description 无 contents:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4061,7 +5198,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人且无 contents:read:all(不区分,防泄露存在) */
+            /** @description 不存在 / 别的租户 / 非本人且无 contents:read:all(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4090,7 +5227,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 当前令牌的角色与有效权限(role ∩ scope,排序) */
+            /** @description 当前令牌的角色、当前租户与有效权限(role ∩ scope,排序) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4139,6 +5276,114 @@ export interface operations {
             };
         };
     };
+    put_my_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description 已替换 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 首次建立 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 校验失败(超长 / 头像不是本人的个人内容 / 未 confirm / 非栅格图) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    upload_my_avatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description 图片本体(必填,带 filename + content-type,须 image/*)。
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 头像已上传并绑定 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+            /** @description multipart 解析失败 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 缺 file 部分 / 非栅格图 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_profile: {
         parameters: {
             query?: never;
@@ -4169,7 +5414,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 profiles:read 权限 */
+            /** @description 无 profiles:read 权限(平台级) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4232,7 +5477,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 profiles:write / 改别人无 write:all */
+            /** @description 无 profiles:write / 改别人无 write:all(平台级) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4241,7 +5486,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 校验失败(超长 / 头像不存在或非本人 / 未 confirm / 非 image) */
+            /** @description 校验失败(超长 / 头像不是目标本人的个人内容 / 未 confirm / 非栅格图) */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -4342,7 +5587,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:read 权限 */
+            /** @description 无 widgets:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4393,7 +5638,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:write 权限 */
+            /** @description 无 widgets:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4402,7 +5647,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description name 已存在(存活行内唯一) */
+            /** @description name 已存在(本租户存活行内唯一) */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -4449,7 +5694,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:read 权限 */
+            /** @description 无 widgets:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4469,7 +5714,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 当前用户创建的 widget 数 */
+            /** @description 当前用户在当前租户里创建的 widget 数 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4480,6 +5725,15 @@ export interface operations {
             };
             /** @description 未认证 */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 没有当前租户(tenant_required) */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4498,7 +5752,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 全站 widget 计数(读权或管理员) */
+            /** @description 当前租户的 widget 计数(读权或本组织成员管理员) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4516,7 +5770,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description widgets:read 与 users:admin 皆无 */
+            /** @description widgets:read 与 members:admin 皆无 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4554,7 +5808,45 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 缺 widgets:read 或 widgets:delete 任一 */
+            /** @description 缺 widgets:read 或 widgets:delete 任一 / 没有当前租户(tenant_required) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    widget_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 当前租户的 widget 计数(仅登录) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetStats"];
+                };
+            };
+            /** @description 未认证 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4595,7 +5887,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:read 权限 */
+            /** @description 无 widgets:read 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4604,7 +5896,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 / 非本人(不区分,防泄露存在) */
+            /** @description 不存在 / 非本人 / 别的租户的(不区分,防泄露存在) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4649,7 +5941,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:write 权限 */
+            /** @description 无 widgets:write 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4658,7 +5950,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人 / 别的租户的 */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4667,7 +5959,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description name 撞已有(存活行内唯一) */
+            /** @description name 撞已有(本租户存活行内唯一) */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -4715,7 +6007,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 widgets:delete 权限 */
+            /** @description 无 widgets:delete 权限 / 没有当前租户(tenant_required) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4724,7 +6016,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 不存在 */
+            /** @description 不存在 / 非本人 / 别的租户的 */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4886,7 +6178,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description JSON 格式不对(如 kind 不认识) */
+            /** @description JSON 格式不对(如 kind 不认识),或请求体超过 64 KB */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -4895,13 +6187,6 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 请求体超过 64 KB */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             /** @description 条数不在 1~10 之间 */
             422: {
                 headers: {
@@ -4909,26 +6194,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
-                };
-            };
-        };
-    };
-    widget_stats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 全站 widget 计数(公开) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WidgetStats"];
                 };
             };
         };
@@ -5011,6 +6276,7 @@ export type GetContentMetadataPath = operations['get_content_metadata']['paramet
 export type GetContentPath = operations['get_content']['parameters']['path'];
 export type GetMonitoringHistoryQuery = operations['get_monitoring_history']['parameters']['query'];
 export type GetProfilePath = operations['get_profile']['parameters']['path'];
+export type GetTenantPath = operations['get_tenant']['parameters']['path'];
 export type GetUserAvatarPath = operations['get_user_avatar']['parameters']['path'];
 export type GetUserPath = operations['get_user']['parameters']['path'];
 export type GetUserProfilePath = operations['get_user_profile']['parameters']['path'];
@@ -5019,22 +6285,33 @@ export type ListAuthEventsQuery = operations['list_auth_events']['parameters']['
 export type ListContentObjectsPath = operations['list_content_objects']['parameters']['path'];
 export type ListContentObjectsResponse = operations['list_content_objects']['responses'][200]['content']['application/json'];
 export type ListContentsResponse = operations['list_contents']['responses'][200]['content']['application/json'];
+export type ListMembersQuery = operations['list_members']['parameters']['query'];
 export type ListMonitoringLogsQuery = operations['list_monitoring_logs']['parameters']['query'];
+export type ListMyTenantsResponse = operations['list_my_tenants']['responses'][200]['content']['application/json'];
 export type ListRolesQuery = operations['list_roles']['parameters']['query'];
+export type ListTenantMembersPath = operations['list_tenant_members']['parameters']['path'];
+export type ListTenantMembersQuery = operations['list_tenant_members']['parameters']['query'];
+export type ListTenantsQuery = operations['list_tenants']['parameters']['query'];
 export type ListUserAuthEventsPath = operations['list_user_auth_events']['parameters']['path'];
 export type ListUserAuthEventsQuery = operations['list_user_auth_events']['parameters']['query'];
 export type ListUsersQuery = operations['list_users']['parameters']['query'];
 export type ListWidgetsQuery = operations['list_widgets']['parameters']['query'];
 export type PreviewContentPath = operations['preview_content']['parameters']['path'];
 export type PutProfilePath = operations['put_profile']['parameters']['path'];
+export type PutTenantMemberPath = operations['put_tenant_member']['parameters']['path'];
+export type RemoveMemberPath = operations['remove_member']['parameters']['path'];
+export type RemoveTenantMemberPath = operations['remove_tenant_member']['parameters']['path'];
 export type ResetUserPasswordPath = operations['reset_user_password']['parameters']['path'];
 export type SetContentMetadataPath = operations['set_content_metadata']['parameters']['path'];
+export type SetMemberRolesPath = operations['set_member_roles']['parameters']['path'];
 export type SetUserAvatarPath = operations['set_user_avatar']['parameters']['path'];
 export type SetUserAvatarRequest = FormData;
 export type SetUserProfilePath = operations['set_user_profile']['parameters']['path'];
 export type SetUserRolesPath = operations['set_user_roles']['parameters']['path'];
 export type StatsAuthEventsQuery = operations['stats_auth_events']['parameters']['query'];
 export type UpdateContentPath = operations['update_content']['parameters']['path'];
+export type UpdateTenantPath = operations['update_tenant']['parameters']['path'];
 export type UpdateUserPath = operations['update_user']['parameters']['path'];
 export type UpdateWidgetPath = operations['update_widget']['parameters']['path'];
 export type UploadContentRequest = FormData;
+export type UploadMyAvatarRequest = FormData;

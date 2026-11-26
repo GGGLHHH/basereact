@@ -1,7 +1,8 @@
 import { UsersIcon } from '@gedatou/cadenza-icons'
 import { createFileRoute } from '@tanstack/react-router'
 
-// 用户区一级父路由:/admin/users。route.tsx = 纯布局(无 component → 默认渲染
+// 平台「账号管理」区(多租户后账号是全局的,只给平台权限 users:admin;本租户的人在「成员」页
+// /admin/members 管)。URL 仍是 /admin/users,下游项目的链接不用改。一级父路由:/admin/users。route.tsx = 纯布局(无 component → 默认渲染
 // <Outlet/>,子路由整屏承载,不加任何 chrome,视觉与拆分前一致)。菜单标题、图标、
 // 分组、准入声明都挂这里:菜单节点即本路由,列表/建号/详情/编辑作为子路由挂在
 // /admin/users 之下,面包屑因此带上可点的 "Users" 父级。

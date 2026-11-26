@@ -3,8 +3,8 @@
 
 import type { ApiRequestOptions } from "@/lib/api-client";
 import { requestJson, requestVoid } from "@/lib/api-client";
-import type { AdminListWidgetsQuery, AdminUserView, AuthStats, ChangePasswordRequest, ClientErrorBatch, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetMonitoringHistoryQuery, GetProfilePath, GetUserAvatarPath, GetUserPath, GetUserProfilePath, GetWidgetPath, HistoryReport, ListAuthEventsQuery, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListMonitoringLogsQuery, ListRolesQuery, ListUserAuthEventsPath, ListUserAuthEventsQuery, ListUsersQuery, ListWidgetsQuery, LoginRequest, MonitoringReport, MyPermissionsResponse, Page_AdminUserView, Page_AuthEventRow, Page_LogRecordView, Page_RoleView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, RegisterRequest, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetRolesRequest, SetUserAvatarPath, SetUserAvatarRequest, SetUserProfilePath, SetUserRolesPath, StatsAuthEventsQuery, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
-import { listAuthEvents as buildListAuthEventsPath, statsAuthEvents as buildStatsAuthEventsPath, streamAuthEvents as buildStreamAuthEventsPath, adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listRoles as buildListRolesPath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, listUserAuthEvents as buildListUserAuthEventsPath, setUserAvatar as buildSetUserAvatarPath, resetUserPassword as buildResetUserPasswordPath, getUserProfile as buildGetUserProfilePath, setUserProfile as buildSetUserProfilePath, setUserRoles as buildSetUserRolesPath, getMonitoring as buildGetMonitoringPath, getMonitoringHistory as buildGetMonitoringHistoryPath, listMonitoringLogs as buildListMonitoringLogsPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, getUserAvatar as buildGetUserAvatarPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, reportClientErrors as buildReportClientErrorsPath, widgetStats as buildWidgetStatsPath } from "./api";
+import type { AddMemberRequest, AdminListWidgetsQuery, AdminUserView, AuthStats, ChangePasswordRequest, ClientErrorBatch, ConfirmUploadPath, ContentMetadataResponse, ContentResponse, CreateContentRequest, CreateTenantRequest, CreateUserRequest, CreateWidget, DeleteContentPath, DeleteMeRequest, DeleteUserPath, DeleteWidgetPath, DownloadContentPath, GetContentMetadataPath, GetContentPath, GetMonitoringHistoryQuery, GetProfilePath, GetTenantPath, GetUserAvatarPath, GetUserPath, GetUserProfilePath, GetWidgetPath, HistoryReport, ListAuthEventsQuery, ListContentObjectsPath, ListContentObjectsResponse, ListContentsResponse, ListMembersQuery, ListMonitoringLogsQuery, ListMyTenantsResponse, ListRolesQuery, ListTenantMembersPath, ListTenantMembersQuery, ListTenantsQuery, ListUserAuthEventsPath, ListUserAuthEventsQuery, ListUsersQuery, ListWidgetsQuery, LoginRequest, MemberRolesRequest, MemberView, MonitoringReport, MyPermissionsResponse, Page_AdminUserView, Page_AuthEventRow, Page_LogRecordView, Page_MemberView, Page_RoleView, Page_TenantView, Page_WidgetView, PrepareUploadRequest, PrepareUploadResponse, PreviewContentPath, ProfileResponse, PutProfilePath, PutProfileRequest, PutTenantMemberPath, RegisterRequest, RemoveMemberPath, RemoveTenantMemberPath, ResetPasswordRequest, ResetUserPasswordPath, SetContentMetadataPath, SetContentMetadataRequest, SetMemberRolesPath, SetRolesRequest, SetUserAvatarPath, SetUserAvatarRequest, SetUserProfilePath, SetUserRolesPath, StatsAuthEventsQuery, SwitchTenantRequest, TenantView, UpdateContentPath, UpdateContentRequest, UpdateMeRequest, UpdateTenantPath, UpdateTenantRequest, UpdateUserPath, UpdateUserRequest, UpdateWidget, UpdateWidgetPath, UploadContentRequest, UploadMyAvatarRequest, UploadResponse, UserResponse, Widget, WidgetStats } from "./api-types";
+import { listAuthEvents as buildListAuthEventsPath, statsAuthEvents as buildStatsAuthEventsPath, streamAuthEvents as buildStreamAuthEventsPath, adminLogin as buildAdminLoginPath, adminGetMe as buildAdminGetMePath, listMembers as buildListMembersPath, addMember as buildAddMemberPath, removeMember as buildRemoveMemberPath, setMemberRoles as buildSetMemberRolesPath, listRoles as buildListRolesPath, listUsers as buildListUsersPath, createUser as buildCreateUserPath, getUser as buildGetUserPath, updateUser as buildUpdateUserPath, deleteUser as buildDeleteUserPath, listUserAuthEvents as buildListUserAuthEventsPath, setUserAvatar as buildSetUserAvatarPath, resetUserPassword as buildResetUserPasswordPath, getUserProfile as buildGetUserProfilePath, setUserProfile as buildSetUserProfilePath, setUserRoles as buildSetUserRolesPath, getMonitoring as buildGetMonitoringPath, getMonitoringHistory as buildGetMonitoringHistoryPath, listMonitoringLogs as buildListMonitoringLogsPath, listTenants as buildListTenantsPath, createTenant as buildCreateTenantPath, getTenant as buildGetTenantPath, updateTenant as buildUpdateTenantPath, listTenantMembers as buildListTenantMembersPath, putTenantMember as buildPutTenantMemberPath, removeTenantMember as buildRemoveTenantMemberPath, adminListWidgets as buildAdminListWidgetsPath, logoutAll as buildLogoutAllPath, getMe as buildGetMePath, updateMe as buildUpdateMePath, deleteMe as buildDeleteMePath, changePassword as buildChangePasswordPath, switchTenant as buildSwitchTenantPath, listMyTenants as buildListMyTenantsPath, listContents as buildListContentsPath, createContent as buildCreateContentPath, uploadContent as buildUploadContentPath, prepareUpload as buildPrepareUploadPath, getContent as buildGetContentPath, updateContent as buildUpdateContentPath, deleteContent as buildDeleteContentPath, confirmUpload as buildConfirmUploadPath, downloadContent as buildDownloadContentPath, getContentMetadata as buildGetContentMetadataPath, setContentMetadata as buildSetContentMetadataPath, listContentObjects as buildListContentObjectsPath, previewContent as buildPreviewContentPath, getMyPermissions as buildGetMyPermissionsPath, getMyProfile as buildGetMyProfilePath, putMyProfile as buildPutMyProfilePath, uploadMyAvatar as buildUploadMyAvatarPath, getProfile as buildGetProfilePath, putProfile as buildPutProfilePath, getUserAvatar as buildGetUserAvatarPath, listWidgets as buildListWidgetsPath, createWidget as buildCreateWidgetPath, widgetEvents as buildWidgetEventsPath, myWidgetCount as buildMyWidgetCountPath, widgetOverview as buildWidgetOverviewPath, purgePreview as buildPurgePreviewPath, widgetStats as buildWidgetStatsPath, getWidget as buildGetWidgetPath, updateWidget as buildUpdateWidgetPath, deleteWidget as buildDeleteWidgetPath, login as buildLoginPath, logout as buildLogoutPath, refresh as buildRefreshPath, register as buildRegisterPath, reportClientErrors as buildReportClientErrorsPath } from "./api";
 type RuntimeRequestOptions = Omit<ApiRequestOptions, "json" | "method" | "searchParams" | "signal">;
 function buildSearchParams(query: Record<string, unknown> | undefined): URLSearchParams | undefined {
     if (query === undefined)
@@ -94,6 +94,61 @@ export function adminGetMe(options: AdminGetMeOptions, requestOptions: RuntimeRe
     return requestJson<UserResponse>(buildAdminGetMePath(), {
         ...requestOptions,
         method: "GET",
+        signal: options.signal
+    });
+}
+export interface ListMembersOptions {
+    query?: ListMembersQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listMembers(options: ListMembersOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_MemberView> {
+    return requestJson<Page_MemberView>(buildListMembersPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+export interface AddMemberOptions {
+    query?: never;
+    path?: never;
+    body: AddMemberRequest;
+    signal?: AbortSignal;
+}
+export function addMember(options: AddMemberOptions, requestOptions: RuntimeRequestOptions = {}): Promise<MemberView> {
+    return requestJson<MemberView>(buildAddMemberPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface RemoveMemberOptions {
+    query?: never;
+    path: RemoveMemberPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function removeMember(options: RemoveMemberOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
+    return requestVoid(buildRemoveMemberPath(options.path), {
+        ...requestOptions,
+        method: "DELETE",
+        signal: options.signal
+    });
+}
+export interface SetMemberRolesOptions {
+    query?: never;
+    path: SetMemberRolesPath;
+    body: MemberRolesRequest;
+    signal?: AbortSignal;
+}
+export function setMemberRoles(options: SetMemberRolesOptions, requestOptions: RuntimeRequestOptions = {}): Promise<MemberView> {
+    return requestJson<MemberView>(buildSetMemberRolesPath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
         signal: options.signal
     });
 }
@@ -303,6 +358,102 @@ export function listMonitoringLogs(options: ListMonitoringLogsOptions, requestOp
         signal: options.signal
     });
 }
+export interface ListTenantsOptions {
+    query?: ListTenantsQuery;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listTenants(options: ListTenantsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_TenantView> {
+    return requestJson<Page_TenantView>(buildListTenantsPath(), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+export interface CreateTenantOptions {
+    query?: never;
+    path?: never;
+    body: CreateTenantRequest;
+    signal?: AbortSignal;
+}
+export function createTenant(options: CreateTenantOptions, requestOptions: RuntimeRequestOptions = {}): Promise<TenantView> {
+    return requestJson<TenantView>(buildCreateTenantPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface GetTenantOptions {
+    query?: never;
+    path: GetTenantPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function getTenant(options: GetTenantOptions, requestOptions: RuntimeRequestOptions = {}): Promise<TenantView> {
+    return requestJson<TenantView>(buildGetTenantPath(options.path), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
+export interface UpdateTenantOptions {
+    query?: never;
+    path: UpdateTenantPath;
+    body: UpdateTenantRequest;
+    signal?: AbortSignal;
+}
+export function updateTenant(options: UpdateTenantOptions, requestOptions: RuntimeRequestOptions = {}): Promise<TenantView> {
+    return requestJson<TenantView>(buildUpdateTenantPath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface ListTenantMembersOptions {
+    query?: ListTenantMembersQuery;
+    path: ListTenantMembersPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listTenantMembers(options: ListTenantMembersOptions, requestOptions: RuntimeRequestOptions = {}): Promise<Page_MemberView> {
+    return requestJson<Page_MemberView>(buildListTenantMembersPath(options.path), {
+        ...requestOptions,
+        method: "GET",
+        searchParams: buildSearchParams(options.query),
+        signal: options.signal
+    });
+}
+export interface PutTenantMemberOptions {
+    query?: never;
+    path: PutTenantMemberPath;
+    body: MemberRolesRequest;
+    signal?: AbortSignal;
+}
+export function putTenantMember(options: PutTenantMemberOptions, requestOptions: RuntimeRequestOptions = {}): Promise<MemberView> {
+    return requestJson<MemberView>(buildPutTenantMemberPath(options.path), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface RemoveTenantMemberOptions {
+    query?: never;
+    path: RemoveTenantMemberPath;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function removeTenantMember(options: RemoveTenantMemberOptions, requestOptions: RuntimeRequestOptions = {}): Promise<void> {
+    return requestVoid(buildRemoveTenantMemberPath(options.path), {
+        ...requestOptions,
+        method: "DELETE",
+        signal: options.signal
+    });
+}
 export interface AdminListWidgetsOptions {
     query?: AdminListWidgetsQuery;
     path?: never;
@@ -383,6 +534,33 @@ export function changePassword(options: ChangePasswordOptions, requestOptions: R
         ...requestOptions,
         method: "POST",
         json: options.body,
+        signal: options.signal
+    });
+}
+export interface SwitchTenantOptions {
+    query?: never;
+    path?: never;
+    body: SwitchTenantRequest;
+    signal?: AbortSignal;
+}
+export function switchTenant(options: SwitchTenantOptions, requestOptions: RuntimeRequestOptions = {}): Promise<UserResponse> {
+    return requestJson<UserResponse>(buildSwitchTenantPath(), {
+        ...requestOptions,
+        method: "POST",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface ListMyTenantsOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function listMyTenants(options: ListMyTenantsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ListMyTenantsResponse> {
+    return requestJson<ListMyTenantsResponse>(buildListMyTenantsPath(), {
+        ...requestOptions,
+        method: "GET",
         signal: options.signal
     });
 }
@@ -586,6 +764,34 @@ export function getMyProfile(options: GetMyProfileOptions, requestOptions: Runti
         signal: options.signal
     });
 }
+export interface PutMyProfileOptions {
+    query?: never;
+    path?: never;
+    body: PutProfileRequest;
+    signal?: AbortSignal;
+}
+export function putMyProfile(options: PutMyProfileOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildPutMyProfilePath(), {
+        ...requestOptions,
+        method: "PUT",
+        json: options.body,
+        signal: options.signal
+    });
+}
+export interface UploadMyAvatarOptions {
+    query?: never;
+    path?: never;
+    body: UploadMyAvatarRequest;
+    signal?: AbortSignal;
+}
+export function uploadMyAvatar(options: UploadMyAvatarOptions, requestOptions: RuntimeRequestOptions = {}): Promise<ProfileResponse> {
+    return requestJson<ProfileResponse>(buildUploadMyAvatarPath(), {
+        ...requestOptions,
+        method: "POST",
+        body: options.body,
+        signal: options.signal
+    });
+}
 export interface GetProfileOptions {
     query?: never;
     path: GetProfilePath;
@@ -706,6 +912,19 @@ export function purgePreview(options: PurgePreviewOptions, requestOptions: Runti
         signal: options.signal
     });
 }
+export interface WidgetStatsOptions {
+    query?: never;
+    path?: never;
+    body?: never;
+    signal?: AbortSignal;
+}
+export function widgetStats(options: WidgetStatsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<WidgetStats> {
+    return requestJson<WidgetStats>(buildWidgetStatsPath(), {
+        ...requestOptions,
+        method: "GET",
+        signal: options.signal
+    });
+}
 export interface GetWidgetOptions {
     query?: never;
     path: GetWidgetPath;
@@ -812,19 +1031,6 @@ export function reportClientErrors(options: ReportClientErrorsOptions, requestOp
         ...requestOptions,
         method: "POST",
         json: options.body,
-        signal: options.signal
-    });
-}
-export interface WidgetStatsOptions {
-    query?: never;
-    path?: never;
-    body?: never;
-    signal?: AbortSignal;
-}
-export function widgetStats(options: WidgetStatsOptions, requestOptions: RuntimeRequestOptions = {}): Promise<WidgetStats> {
-    return requestJson<WidgetStats>(buildWidgetStatsPath(), {
-        ...requestOptions,
-        method: "GET",
         signal: options.signal
     });
 }

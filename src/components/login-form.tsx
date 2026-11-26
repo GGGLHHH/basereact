@@ -1,11 +1,13 @@
 import type { ComponentProps } from 'react'
+import type { UserResponse } from '@/generated/api-types'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { useAdminLogin, useLogin } from '@/api/auth'
+import { frontendLandingAfterLogin, useAdminLogin, useLogin } from '@/api/auth'
 import { Field, FieldGroup } from '@/components/field'
 import { formProps, useAppForm } from '@/components/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,10 +23,10 @@ export function LoginForm({
 }: ComponentProps<'div'> & { surface?: 'admin' | 'frontend' }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const adminLogin = useAdminLogin()
   const userLogin = useLogin()
   const login = surface === 'admin' ? adminLogin : userLogin
-  const redirectTo = surface === 'admin' ? '/admin/home' : '/frontend/home'
   const loginSchema = useMemo(
     () =>
       z.object({
@@ -42,14 +44,20 @@ export function LoginForm({
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
+      let user: UserResponse
       try {
-        await login.mutateAsync(value)
+        user = await login.mutateAsync(value)
       }
       catch (error) {
         toast.error(getErrorMessage(error))
         return
       }
-      // ponytail: 登录后固定去 surface 首页;要"回跳来源页"时加 redirect search param。
+      // 后台:固定去首页,没加入任何组织由守卫(403 tenant_required)转空状态页。
+      // 公开站:没有成员关系也没有平台角色 → 直接去「还没加入任何组织」(spec §4.2)。
+      // ponytail: 要"回跳来源页"时加 redirect search param。
+      const redirectTo = surface === 'admin'
+        ? '/admin/home'
+        : await frontendLandingAfterLogin(queryClient, user)
       // 同 user-create-page:cadenza-form 的提交管线不 catch,导航失败
       // 会逃逸成无处理的 promise rejection —— 在这里收口。
       await navigate({ to: redirectTo }).catch((error: unknown) => {

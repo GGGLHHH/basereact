@@ -9,7 +9,6 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger, DropdownMenu, Dropdo
 import { Link, useRouterState } from '@tanstack/react-router'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { BRAND_TEAMS } from '@/brand'
 import { PlayOnHover } from '@/components/icon-motion'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { FlyoutMenuNode, MenuIcon } from '@/components/menu-flyout'
@@ -266,7 +265,7 @@ export function AppSidebar({
       {...props}
     >
       <SidebarHeader>
-        <TeamSwitcher teams={BRAND_TEAMS} />
+        <TeamSwitcher />
       </SidebarHeader>
       <SidebarContent className='scroll-fade-y'>
         <NavAdminRoutes />

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { RoleName } from '@/generated/api-types'
 import { BadgeCheckIcon, CircleAlertIcon, ShieldCheckIcon } from '@gedatou/cadenza-icons'
 import { Badge } from '@gedatou/cadenza-ui'
 import { useTranslation } from 'react-i18next'
@@ -6,11 +7,13 @@ import { PlayOnHover } from '@/components/icon-motion'
 
 import { cn } from '@/lib/utils'
 
+import { ROLE_LABEL_KEYS } from './roles'
+
 // 账号即身份凭证:角色 = 权限 chips、邮箱验证 = 印章、机器 id = 等宽"编号"戳、
 // 字段用大写微标签。跨 list/detail/edit 共用同一套词汇。
 
 /**
- * 角色"权限"chips。空 → muted 占位。`max` 截断(表格单行用):超出显示 `+N`,
+ * 角色"权限"chips(显示名走 i18n,不显示机器码)。空 → muted 占位。`max` 截断(表格单行用):超出显示 `+N`,
  * 配 `flex-nowrap` 不撑行高;详情页不传 max → 全展开可换行。
  */
 export function RoleBadges({
@@ -18,7 +21,7 @@ export function RoleBadges({
   max,
   className,
 }: {
-  roles: string[]
+  roles: RoleName[]
   max?: number
   className?: string
 }) {
@@ -40,7 +43,7 @@ export function RoleBadges({
             variant='secondary'
           >
             <ShieldCheckIcon className='size-3 opacity-60' />
-            {role}
+            {t(ROLE_LABEL_KEYS[role])}
           </Badge>
         </PlayOnHover>
       ))}

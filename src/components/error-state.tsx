@@ -1,9 +1,10 @@
 import type { LinkProps } from '@tanstack/react-router'
 import { Button, LinkButton } from '@gedatou/cadenza-ui'
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 
 import { useTranslation } from 'react-i18next'
 
+import { TenantMenu } from '@/components/team-switcher'
 import { cn } from '@/lib/utils'
 
 interface ErrorStateProps {
@@ -50,14 +51,24 @@ export function NotFoundScreen() {
   )
 }
 
+// 全屏 403 由后台守卫(准入探针 403)带来,常见情形是刚切进一个自己没有后台权限的租户。
+// 账号属于 ≥ 2 个租户时在这里给出切换器,切换成功后回后台首页重新过守卫,不至于走进死路。
+// 本页可能被匿名访问,租户列表走软探测(401 不跳登录页)。
 export function ForbiddenScreen() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   return (
-    <ErrorState
-      className='min-h-svh'
-      code='403'
-      title={t('errors.forbidden.title')}
-      description={t('errors.forbidden.description')}
-    />
+    <div className='flex min-h-svh flex-col items-center justify-center gap-6'>
+      <ErrorState
+        code='403'
+        title={t('errors.forbidden.title')}
+        description={t('errors.forbidden.description')}
+      />
+      <TenantMenu
+        soft
+        hint={t('tenant.switcher.forbiddenHint')}
+        onSwitched={() => void navigate({ to: '/admin/home' })}
+      />
+    </div>
   )
 }

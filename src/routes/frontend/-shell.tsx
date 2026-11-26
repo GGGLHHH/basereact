@@ -32,6 +32,8 @@ export function FrontendShell() {
           {me
             ? (
                 <>
+                  {/* 前台不提供切换组织:跟随当前组织(后台切换或登录时决定)。以后按域名 / 配置确定组织时,
+                      后端须校验「域名推出的组织 == token 里的组织」。见 spec §4.8。 */}
                   <span className='text-muted-foreground'>{me.username}</span>
                   <Button
                     variant='outline'

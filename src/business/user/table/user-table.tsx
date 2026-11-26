@@ -35,12 +35,13 @@ export function UserTable({
   onView,
   onEdit,
   onDelete,
+  canManage,
 }: UserTableProps) {
   const { t } = useTranslation('common')
   const hasActions = Boolean(onView || onEdit || onDelete)
   const columns = useMemo(
-    () => createUserColumns(t, hasActions ? { onView, onEdit, onDelete } : undefined),
-    [t, hasActions, onView, onEdit, onDelete],
+    () => createUserColumns(t, hasActions ? { onView, onEdit, onDelete, canManage } : undefined),
+    [t, hasActions, onView, onEdit, onDelete, canManage],
   )
 
   return (

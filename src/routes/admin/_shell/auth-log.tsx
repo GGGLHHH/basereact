@@ -23,7 +23,7 @@ export const Route = createFileRoute('/admin/_shell/auth-log')({
     icon: FingerprintIcon,
     groupKey: 'menuGroups.admin',
     order: 3,
-    // 安全审计页,准入随 users:admin(与后端 auth-events 端点一致);无元数据会 fail-closed。
+    // 安全审计页,准入随 audit:read(superadmin 独占,与后端 auth-events 端点一致);无元数据会 fail-closed。
     accessPolicyKeys: ['listAuthEvents'],
   },
 })

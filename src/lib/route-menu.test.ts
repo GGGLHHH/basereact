@@ -53,15 +53,27 @@ describe('buildAdminMenu with the real route tree', () => {
     history: createMemoryHistory(),
     routeTree,
   })
-  // widgets 声明了 accessPolicyKeys: ['adminListWidgets'](AND: users:admin + admin:login),
-  // 完整菜单断言要携带这两个权限;nested/* 无策略声明,恒可见。
-  const groups = buildAdminMenu({ ...router.routesById }, ['users:admin', 'admin:login'])
+  // widgets 声明了 accessPolicyKeys: ['adminListWidgets'](租户级 widgets:read + 后台准入),
+  // users 要平台级 users:admin,monitoring / auth-log 要 superadmin 独占的 ops:read / audit:read,
+  // tenants 要平台级 tenants:admin,members 要租户级 members:read;完整菜单断言要携带这些权限;
+  // nested/* 无策略声明,恒可见。
+  const groups = buildAdminMenu({ ...router.routesById }, [
+    'users:admin',
+    'tenants:admin',
+    'ops:read',
+    'audit:read',
+    'admin:login',
+    'widgets:read',
+    'members:read',
+  ])
 
   it('exposes the full nested tree of admin pages that declare menu titles', () => {
     expect(collectUrls(groups.flatMap(group => group.entries))).toEqual([
       '/admin/home',
       '/admin/auth-log',
       '/admin/monitoring',
+      '/admin/members',
+      '/admin/tenants',
       '/admin/users',
       '/admin/widgets',
       '/admin/nested',
@@ -89,10 +101,92 @@ describe('buildAdminMenu with the real route tree', () => {
 
   it('hides policy-declaring entries until permissions are known (fail closed)', () => {
     const trimmed = buildAdminMenu({ ...router.routesById })
-    // widgets / monitoring(声明 users:admin)缺席;nested 子树无策略,照常出现。
+    // widgets(租户级 widgets:read)/ monitoring(ops:read)缺席;nested 子树无策略,照常出现。
     expect(collectUrls(trimmed.flatMap(group => group.entries))).not.toContain('/admin/widgets')
     expect(collectUrls(trimmed.flatMap(group => group.entries))).not.toContain('/admin/monitoring')
     expect(collectUrls(trimmed.flatMap(group => group.entries))).toContain('/admin/nested')
+  })
+
+  it('shows widgets to a tenant admin without any platform permission', () => {
+    // 租户管理员:当前租户里有 admin:login + widgets:read,没有平台级 users:admin。
+    const urls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, ['admin:login', 'widgets:read']).flatMap(
+        group => group.entries,
+      ),
+    )
+    expect(urls).toContain('/admin/widgets')
+    expect(urls).not.toContain('/admin/monitoring')
+    expect(urls).not.toContain('/admin/users')
+  })
+
+  it('menu_hides_platform_pages_from_tenant_admin', () => {
+    // 租户管理员(默认 admin 角色的租户级权限):看得到「成员」,看不到「租户管理」和「账号管理」。
+    const urls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, [
+        'admin:login',
+        'widgets:read',
+        'members:read',
+        'members:admin',
+      ]).flatMap(group => group.entries),
+    )
+    expect(urls).toContain('/admin/members')
+    expect(urls).not.toContain('/admin/tenants')
+    expect(urls).not.toContain('/admin/users')
+  })
+
+  it('menu_shows_platform_pages_to_platform_admin', () => {
+    // 平台管理员在平台上下文(没有当前租户 → 没有任何租户级权限):
+    // 「租户管理」和「账号管理」可见,「成员」(租户级 members:read)不可见。
+    const urls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, ['users:admin', 'tenants:admin']).flatMap(
+        group => group.entries,
+      ),
+    )
+    expect(urls).toContain('/admin/tenants')
+    expect(urls).toContain('/admin/users')
+    expect(urls).not.toContain('/admin/members')
+  })
+
+  it('menu_hides_monitoring_and_auth_log_from_platform_admin', () => {
+    // 平台管理员(platform_admin 的默认权限):账号 / 组织管理可见;系统监控(ops:read)、
+    // 登录日志(audit:read)是 superadmin 独占,菜单里没有。
+    const platformAdmin = [
+      'users:admin',
+      'tenants:admin',
+      'profiles:read',
+      'profiles:write',
+      'profiles:write:all',
+    ]
+    const urls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, platformAdmin).flatMap(group => group.entries),
+    )
+    expect(urls).toContain('/admin/users')
+    expect(urls).toContain('/admin/tenants')
+    expect(urls).not.toContain('/admin/monitoring')
+    expect(urls).not.toContain('/admin/auth-log')
+
+    // superadmin 多了三项独占权限 → 两个菜单都出现
+    const superUrls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, [
+        ...platformAdmin,
+        'ops:read',
+        'audit:read',
+        'platform:roles',
+      ]).flatMap(group => group.entries),
+    )
+    expect(superUrls).toContain('/admin/monitoring')
+    expect(superUrls).toContain('/admin/auth-log')
+  })
+
+  it('shows neither member nor platform pages to a plain member', () => {
+    const urls = collectUrls(
+      buildAdminMenu({ ...router.routesById }, ['widgets:read', 'contents:read']).flatMap(
+        group => group.entries,
+      ),
+    )
+    expect(urls).not.toContain('/admin/members')
+    expect(urls).not.toContain('/admin/tenants')
+    expect(urls).not.toContain('/admin/users')
   })
 
   it('keeps login and error pages out of the menu', () => {

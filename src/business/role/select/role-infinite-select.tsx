@@ -49,6 +49,12 @@ interface RoleInfiniteSelectCommonProps {
    * footer 内按钮用 `useInfiniteSelectActions()` 拿 clear/close。
    */
   slots?: ReactNode
+
+  /**
+   * 固定的候选项(不拉 `/roles` 目录)。目录只列「调用者能授出的角色」,给授角色用;
+   * 列表筛选这类「按已有角色过滤」的场景要全部角色,传生成类型派生的闭集(见 business/user/roles)。
+   */
+  options?: RoleView[]
 }
 
 export type RoleInfiniteSelectProps = RoleInfiniteSelectCommonProps
@@ -81,7 +87,16 @@ export function RoleInfiniteSelect(props: RoleInfiniteSelectProps) {
     open: props.open,
   })
 
-  const list = useInfiniteRoleOptions({ enabled: combobox.open, pageSize })
+  const fetched = useInfiniteRoleOptions({
+    enabled: combobox.open && props.options === undefined,
+    pageSize,
+  })
+  // 固定候选项:沿用(未启用的)查询状态,只换掉条目 —— 不发请求、没有下一页。
+  const staticOptions = props.options
+  const list = useMemo(
+    () => (staticOptions === undefined ? fetched : { ...fetched, items: staticOptions }),
+    [fetched, staticOptions],
+  )
 
   // 无服务端角色搜索:客户端按 name/display_name 过滤已加载的全量目录。
   const query = (combobox.queryValue ?? '').trim().toLowerCase()

@@ -22,9 +22,9 @@ export function ProfilePage() {
   const update = useUpdateProfile()
   const uploadAvatar = useUploadAvatar()
 
-  // 头像与表单文本分开管:上传是独立副作用(先传 content 拿 id),PUT 时才把
-  // 当前 avatarContentId 连同文本一起全量提交。preview 存本地 objectURL 或
-  // 服务端相对 avatar_url,即时可见;PUT 成功刷新 profile 后 avatar_url 归位。
+  // 头像与表单文本分开管:上传是独立副作用 —— POST /profiles/me/avatar 上传即绑定,
+  // 返回更新后的资料;记下它的 avatar_content_id,之后的全量 PUT 原样带上(不冲掉新头像)。
+  // preview 存本地 objectURL 或服务端相对 avatar_url,即时可见。
   const [avatarContentId, setAvatarContentId] = useState<string | null>(
     profile?.avatar_content_id ?? null,
   )
@@ -46,14 +46,14 @@ export function ProfilePage() {
     const nextUrl = URL.createObjectURL(file)
     setPreview(nextUrl)
     try {
-      const content = await uploadAvatar.mutateAsync(file)
+      const updated = await uploadAvatar.mutateAsync(file)
       // 成功:采纳新 objectURL,撤销上一枚本地 URL(服务端 avatar_url 非 objectURL,
-      // localUrlRef 为 null 时跳过撤销)。
+      // localUrlRef 为 null 时跳过撤销)。头像 id 以服务端绑定结果为准。
       if (localUrlRef.current !== null) {
         URL.revokeObjectURL(localUrlRef.current)
       }
       localUrlRef.current = nextUrl
-      setAvatarContentId(content.id)
+      setAvatarContentId(updated.avatar_content_id ?? null)
     }
     catch (error) {
       // 失败:撤销这枚失败 URL,预览与 id 一起回退到选前状态。
@@ -76,12 +76,9 @@ export function ProfilePage() {
       // PUT 全量替换:空串按清空(→ null)提交,avatar_content_id 带当前选择。
       try {
         await update.mutateAsync({
-          userId: profile.user_id,
-          request: {
-            display_name: value.display_name.trim() || null,
-            phone: value.phone.trim() || null,
-            avatar_content_id: avatarContentId,
-          },
+          display_name: value.display_name.trim() || null,
+          phone: value.phone.trim() || null,
+          avatar_content_id: avatarContentId,
         })
         toast.success(t('profile.saved'))
       }

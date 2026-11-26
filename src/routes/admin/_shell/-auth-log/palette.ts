@@ -45,6 +45,8 @@ export const EVENT_META: Record<AuthEventType, EventMeta> = {
   'auth.logged_out': { tone: 'muted', labelKey: 'authLog.events.loggedOut' },
   'auth.logout_all': { tone: 'muted', labelKey: 'authLog.events.logoutAll' },
   'auth.account_deleted': { tone: 'warn', labelKey: 'authLog.events.accountDeleted' },
+  // 切换租户:同一会话换了数据边界,例行操作,不算安全告警。
+  'auth.tenant_switched': { tone: 'muted', labelKey: 'authLog.events.tenantSwitched' },
 }
 
 export const REASON_LABEL_KEY: Record<FailureReason, CommonKey> = {

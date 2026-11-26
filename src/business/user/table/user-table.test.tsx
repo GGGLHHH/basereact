@@ -34,12 +34,13 @@ interface Handlers {
   onView?: (user: AdminUserView) => void
   onEdit?: (user: AdminUserView) => void
   onDelete?: (user: AdminUserView) => void
+  canManage?: (user: AdminUserView) => boolean
 }
 
-function renderTable(handlers: Handlers) {
+function renderTable(handlers: Handlers, data: AdminUserView[] = [fakeUser()]) {
   return render(
     <UserTable
-      data={[fakeUser()]}
+      data={data}
       isLoading={false}
       limit={20}
       page={1}
@@ -87,6 +88,32 @@ describe('userTable actions column', () => {
     fireEvent.click(screen.getByText('ada'))
 
     expect(onRowClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }))
+  })
+})
+
+describe('userTable 按行裁剪操作(持平台角色的账号)', () => {
+  it('hides edit / delete (keeps view) on rows the operator cannot manage', () => {
+    renderTable(
+      { canManage: user => user.id !== 'root', onDelete: noop, onEdit: noop, onView: noop },
+      [fakeUser({ id: 'root', roles: ['superadmin'], username: 'root' })],
+    )
+
+    expect(screen.getByLabelText('View')).toBeTruthy()
+    expect(screen.queryByLabelText('Edit')).toBeNull()
+    expect(screen.queryByLabelText('Delete')).toBeNull()
+  })
+
+  it('keeps edit / delete on manageable rows', () => {
+    renderTable({ canManage: () => true, onDelete: noop, onEdit: noop, onView: noop })
+
+    expect(screen.getByLabelText('Edit')).toBeTruthy()
+    expect(screen.getByLabelText('Delete')).toBeTruthy()
+  })
+
+  it('shows role display names, not machine codes', () => {
+    renderTable({ onView: noop }, [fakeUser({ roles: ['platform_admin'] })])
+
+    expect(screen.getByText('Platform admin')).toBeTruthy()
   })
 })
 

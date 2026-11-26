@@ -9,8 +9,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
+import { useMyPermissions } from '@/lib/use-access-policy'
 
 import { DeleteUserDialog } from './delete-user-dialog'
+import { canManageAccount } from './roles'
 import { AccountStamp, FieldRow, RoleBadges, VerifiedBadge } from './user-badges'
 
 export function UserDetailPage({ userId }: { userId: string }) {
@@ -19,6 +21,7 @@ export function UserDetailPage({ userId }: { userId: string }) {
   const router = useRouter()
   const { data: user } = useUser(userId)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const permissions = useMyPermissions()
 
   // loader 已 ensure;冷进兜底不渲染(404 由路由 errorComponent 接)。
   if (!user) {
@@ -27,6 +30,8 @@ export function UserDetailPage({ userId }: { userId: string }) {
 
   // 富化的显示名可能悬空(null/undefined),空串与缺失同等对待 → 回退登录名。
   const displayName = user.display_name ?? ''
+  // 持平台角色的账号只有 platform:roles 能改 / 删(后端兜底 403)
+  const manageable = canManageAccount(user, permissions)
 
   return (
     <Card className='mx-auto w-full max-w-2xl'>
@@ -86,20 +91,26 @@ export function UserDetailPage({ userId }: { userId: string }) {
           >
             {t('action.goBack')}
           </Button>
-          <Button
-            onClick={() => {
-              void navigate({ params: { userId }, to: '/admin/users/$userId/edit' })
-            }}
-            variant='outline'
-          >
-            {t('action.edit')}
-          </Button>
-          <Button
-            onClick={() => setDeleteOpen(true)}
-            variant='destructive'
-          >
-            {t('action.delete')}
-          </Button>
+          {manageable
+            ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      void navigate({ params: { userId }, to: '/admin/users/$userId/edit' })
+                    }}
+                    variant='outline'
+                  >
+                    {t('action.edit')}
+                  </Button>
+                  <Button
+                    onClick={() => setDeleteOpen(true)}
+                    variant='destructive'
+                  >
+                    {t('action.delete')}
+                  </Button>
+                </>
+              )
+            : null}
         </div>
       </CardContent>
 

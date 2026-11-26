@@ -8,12 +8,14 @@ import { useUser } from '@/api/users'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDateTime } from '@/lib/datetime'
 import { nameInitials } from '@/lib/display-name'
+import { useMyPermissions } from '@/lib/use-access-policy'
 
 import { AccountSection } from './edit/account-section'
 import { PasswordSection } from './edit/password-section'
 import { ProfileSection } from './edit/profile-section'
 import { RolesSection } from './edit/roles-section'
 import { EditSectionCard } from './edit/section-card'
+import { canManageAccount, rolesEditable } from './roles'
 import { AccountStamp, FieldRow, VerifiedBadge } from './user-badges'
 
 // 分区式编辑:每区 = 一个后端端点,各自独立保存,失败互不牵连。
@@ -23,11 +25,15 @@ export function UserEditPage({ userId }: { userId: string }) {
   const { t } = useTranslation('common')
   const router = useRouter()
   const { data: user } = useUser(userId)
+  const permissions = useMyPermissions()
 
   // loader 已 ensure,首帧即有;冷进兜底不渲染。
   if (!user) {
     return null
   }
+  // 持平台角色的账号(superadmin / 平台管理员)只有 platform:roles 能改:其余操作者只看到说明,
+  // 不渲染任何可保存的分区(直连 URL 也一样;后端兜底 403)。
+  const manageable = canManageAccount(user, permissions)
 
   return (
     <div className='mx-auto flex w-full max-w-2xl flex-col gap-6'>
@@ -64,11 +70,30 @@ export function UserEditPage({ userId }: { userId: string }) {
         </Button>
       </div>
 
-      <AccountSection user={user} />
-      <RolesSection user={user} />
-      <PasswordSection userId={userId} />
-      {/* 资料/头像已纳入 users:admin(整页即 users:admin 门),故恒显示。 */}
-      <ProfileSection userId={userId} />
+      {manageable
+        ? (
+            <>
+              <AccountSection user={user} />
+              {rolesEditable(user)
+                ? <RolesSection user={user} />
+                : (
+                    <EditSectionCard title={t('users.edit.rolesTitle')}>
+                      <p className='text-sm text-muted-foreground'>{t('users.edit.rolesFixed')}</p>
+                    </EditSectionCard>
+                  )}
+              <PasswordSection userId={userId} />
+              {/* 资料/头像已纳入 users:admin(整页即 users:admin 门),故恒显示。 */}
+              <ProfileSection userId={userId} />
+            </>
+          )
+        : (
+            <p
+              className='rounded-md border border-border p-4 text-sm text-muted-foreground'
+              role='note'
+            >
+              {t('users.edit.protected')}
+            </p>
+          )}
       <MetaSection user={user} />
     </div>
   )

@@ -12,7 +12,11 @@ vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 const h = vi.hoisted(() => ({
   deleteMutate: vi.fn(),
   navigate: vi.fn(),
+  permissions: [] as string[],
   user: null as AdminUserView | null,
+}))
+vi.mock('@/lib/use-access-policy', () => ({
+  useMyPermissions: () => h.permissions,
 }))
 vi.mock('@/api/users', () => ({
   useDeleteUser: () => ({ isPending: false, mutateAsync: h.deleteMutate }),
@@ -31,7 +35,7 @@ function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
     email: 'ada@example.com',
     email_verified: true,
     id: 'u1',
-    roles: ['admin', 'superadmin'],
+    roles: ['platform_admin'],
     username: 'ada',
     ...overrides,
   }
@@ -39,6 +43,7 @@ function fakeUser(overrides: Partial<AdminUserView> = {}): AdminUserView {
 
 beforeEach(() => {
   h.user = fakeUser()
+  h.permissions = ['users:admin', 'platform:roles']
   h.deleteMutate.mockReset().mockResolvedValue(undefined)
   h.navigate.mockReset().mockResolvedValue(undefined)
   vi.stubGlobal(
@@ -68,9 +73,26 @@ describe('userDetailPage', () => {
     render(<UserDetailPage userId='u1' />)
     expect(screen.getAllByText('ada').length).toBeGreaterThan(0)
     expect(screen.getByText('ada@example.com')).toBeTruthy()
-    // 角色现为独立 chips(RoleBadges),不再是合并串。
-    expect(screen.getByText('admin')).toBeTruthy()
-    expect(screen.getByText('superadmin')).toBeTruthy()
+    // 角色现为独立 chips(RoleBadges),显示名走 i18n,不显示机器码。
+    expect(screen.getByText('Platform admin')).toBeTruthy()
+    expect(screen.queryByText('platform_admin')).toBeNull()
+  })
+
+  it('hides edit / delete on a platform-role account when the operator lacks platform:roles', () => {
+    h.permissions = ['users:admin', 'tenants:admin']
+    render(<UserDetailPage userId='u1' />)
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull()
+    // 返回按钮照常
+    expect(screen.getByRole('button', { name: 'Go back' })).toBeTruthy()
+  })
+
+  it('keeps edit / delete on a plain account for a platform admin', () => {
+    h.permissions = ['users:admin', 'tenants:admin']
+    h.user = fakeUser({ roles: [] })
+    render(<UserDetailPage userId='u1' />)
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy()
   })
 
   it('navigates to the edit page from the Edit action', () => {

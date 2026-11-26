@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { QueryClient } from '@tanstack/react-query'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 import { AUTH_PROBE_HEADER, requestJson, SOFT_AUTH_HEADER } from './api-client'
@@ -112,10 +113,13 @@ it('does not enter the refresh ladder for login failures', async () => {
 
 it('gives up after the refreshed retry still returns 401 and routes to login', async () => {
   const navigate = vi.fn()
-  const setQueryData = vi.fn()
+  const queryClient = new QueryClient()
+  // 上一个会话缓存的列表:终态 401 后一条都不能留(下一个登录的可能是别的账号 / 组织)。
+  queryClient.setQueryData(['widgets', 'list'], { items: ['previous-session-row'] })
+  queryClient.setQueryData(['auth', 'tenants'], [{ id: 't1' }])
   globalRouter.instance = {
     navigate,
-    options: { context: { queryClient: { setQueryData } } },
+    options: { context: { queryClient } },
     state: { location: { pathname: '/' } },
   } as unknown as typeof globalRouter.instance
 
@@ -138,8 +142,11 @@ it('gives up after the refreshed retry still returns 401 and routes to login', a
     '/api/v1/frontend/widgets',
   ])
   expect(navigate).toHaveBeenCalledWith({ to: '/admin/login' })
-  // 终态 401 必须写显式匿名标记,守卫才不会在 staleTime 窗口内信任尸体缓存。
-  expect(setQueryData).toHaveBeenCalledWith(['admin', 'auth', 'me'], null)
+  // 终态 401:先清空全部缓存,再写显式匿名标记(守卫才不会在 staleTime 窗口内信任尸体缓存)。
+  expect(queryClient.getQueryData(['widgets', 'list'])).toBeUndefined()
+  expect(queryClient.getQueryData(['auth', 'tenants'])).toBeUndefined()
+  expect(queryClient.getQueryCache().getAll()).toHaveLength(1)
+  expect(queryClient.getQueryData(['admin', 'auth', 'me'])).toBeNull()
 })
 
 it('shares one refresh across concurrent 401s', async () => {
@@ -162,4 +169,80 @@ it('shares one refresh across concurrent 401s', async () => {
     requestJson('frontend/contents', { method: 'GET' }),
   ])
   expect(refreshCalls).toBe(1)
+})
+
+it('sends a tenant-less user to the admin empty state on tenant_required', async () => {
+  const navigate = vi.fn()
+  globalRouter.instance = {
+    navigate,
+    state: { location: { pathname: '/admin/widgets' } },
+  } as unknown as typeof globalRouter.instance
+  fetchMock.mockImplementation(async () =>
+    jsonResponse(403, { code: 'tenant_required', error: 'A current tenant is required' }))
+
+  await expect(requestJson('admin/widgets', { method: 'GET' })).rejects.toMatchObject({
+    code: 'tenant_required',
+    status: 403,
+  })
+  expect(navigate).toHaveBeenCalledWith({ to: '/admin/no-tenant' })
+})
+
+it('sends a tenant-less user to the frontend empty state outside /admin', async () => {
+  const navigate = vi.fn()
+  globalRouter.instance = {
+    navigate,
+    state: { location: { pathname: '/frontend/about' } },
+  } as unknown as typeof globalRouter.instance
+  fetchMock.mockImplementation(async () =>
+    jsonResponse(403, { code: 'tenant_required', error: 'A current tenant is required' }))
+
+  await expect(requestJson('frontend/widgets/stats', { method: 'GET' })).rejects.toMatchObject({
+    status: 403,
+  })
+  expect(navigate).toHaveBeenCalledWith({ to: '/frontend/no-tenant' })
+})
+
+it('leaves tenant_required on guard probes and plain 403s to the caller', async () => {
+  const navigate = vi.fn()
+  globalRouter.instance = {
+    navigate,
+    state: { location: { pathname: '/admin/home' } },
+  } as unknown as typeof globalRouter.instance
+
+  // 守卫探针:redirect 单一归属 route-guard。
+  fetchMock.mockImplementation(async () =>
+    jsonResponse(403, { code: 'tenant_required', error: 'A current tenant is required' }))
+  await expect(
+    requestJson('admin/auth/me', { headers: { [AUTH_PROBE_HEADER]: '1' }, method: 'GET' }),
+  ).rejects.toMatchObject({ code: 'tenant_required' })
+
+  // 普通权限不足:不是「没加入组织」。
+  fetchMock.mockImplementation(async () => jsonResponse(403, { code: 'forbidden', error: 'no' }))
+  await expect(requestJson('admin/widgets', { method: 'GET' })).rejects.toMatchObject({ status: 403 })
+
+  expect(navigate).not.toHaveBeenCalled()
+})
+
+it('keeps an account with platform roles in place on tenant_required', async () => {
+  // spec §4.2:有平台角色、没有租户 = 平台上下文,正常进入,不是「还没加入任何组织」。
+  const navigate = vi.fn()
+  const me = { email_verified: false, id: 'u1', roles: ['superadmin'], username: 'root' }
+  globalRouter.instance = {
+    navigate,
+    options: {
+      context: {
+        queryClient: {
+          getQueryData: (key: readonly unknown[]) => (key.join('/') === 'admin/auth/me' ? me : undefined),
+        },
+      },
+    },
+    state: { location: { pathname: '/admin/widgets' } },
+  } as unknown as typeof globalRouter.instance
+  fetchMock.mockImplementation(async () =>
+    jsonResponse(403, { code: 'tenant_required', error: 'A current tenant is required' }))
+
+  await expect(requestJson('admin/widgets', { method: 'GET' })).rejects.toMatchObject({
+    code: 'tenant_required',
+  })
+  expect(navigate).not.toHaveBeenCalled()
 })

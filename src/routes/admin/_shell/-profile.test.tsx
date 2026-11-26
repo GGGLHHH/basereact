@@ -79,10 +79,26 @@ describe('profilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
 
     await waitFor(() => expect(h.mutateUpdate).toHaveBeenCalledTimes(1))
+    // 全量:文本改动 + 空 phone → null(清空),头像 id 原样带过(未改也不丢)。
     expect(h.mutateUpdate).toHaveBeenCalledWith({
-      userId: 'u1',
-      // 全量:文本改动 + 空 phone → null(清空),头像 id 原样带过(未改也不丢)。
-      request: { avatar_content_id: 'c0', display_name: 'New Name', phone: null },
+      avatar_content_id: 'c0',
+      display_name: 'New Name',
+      phone: null,
     })
+  })
+
+  it('carries the avatar bound by the upload into the next save', async () => {
+    // 后端上传即绑定,返回更新后的资料;之后的全量 PUT 必须带新头像 id,不能把它冲掉。
+    h.mutateUpload.mockResolvedValue(fakeProfile({ avatar_content_id: 'c9', avatar_url: '/a.png' }))
+    const { container } = render(<ProfilePage />)
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')
+    const file = new File(['x'], 'a.png', { type: 'image/png' })
+    fireEvent.change(input as HTMLInputElement, { target: { files: [file] } })
+    await waitFor(() => expect(h.mutateUpload).toHaveBeenCalledWith(file))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => expect(h.mutateUpdate).toHaveBeenCalledTimes(1))
+    expect(h.mutateUpdate.mock.calls[0]?.[0]).toMatchObject({ avatar_content_id: 'c9' })
   })
 })

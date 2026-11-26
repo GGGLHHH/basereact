@@ -49,7 +49,8 @@
       "refreshed": "Session refreshed",
       "loggedOut": "Signed out",
       "logoutAll": "All sessions ended",
-      "accountDeleted": "Account deleted"
+      "accountDeleted": "Account deleted",
+      "tenantSwitched": "Switched organization"
     },
     "reasons": {
       "unknownUser": "unknown user",
@@ -172,21 +173,21 @@
       "username": "Username"
     },
     "create": {
-      "description": "Add a new account and assign roles.",
-      "submit": "Create user",
-      "success": "User created",
-      "title": "Create user"
+      "description": "Create a platform account and grant platform roles. To let it into an organization, add it under Members or Organizations.",
+      "submit": "Create account",
+      "success": "Account created",
+      "title": "Create account"
     },
     "delete": {
       "confirm": "Delete",
       "description": "This permanently deletes {{name}} and can't be undone.",
-      "success": "User deleted",
-      "title": "Delete user"
+      "success": "Account deleted",
+      "title": "Delete account"
     },
     "detail": {
       "account": "Account ID",
-      "notFound": "User not found",
-      "title": "User detail"
+      "notFound": "Account not found",
+      "title": "Account detail"
     },
     "edit": {
       "accountDescription": "Change the sign-in username and email address.",
@@ -200,13 +201,15 @@
       "profileDescription": "Avatar, display name, and phone are stored on the user's profile.",
       "profileSaved": "Profile saved",
       "profileTitle": "Profile",
+      "protected": "This account holds a platform role (super admin / platform admin). Only the super admin can change it.",
       "rolesDescription": "Add or remove roles. Unknown role names are rejected on save.",
+      "rolesFixed": "The super admin role cannot be changed here (it is declared only in the seed data).",
       "rolesSaved": "Roles saved",
       "rolesTitle": "Roles",
       "success": "Changes saved",
-      "title": "Edit user"
+      "title": "Edit account"
     },
-    "empty": "No users yet",
+    "empty": "No accounts yet",
     "filterRoles": "Roles",
     "form": {
       "avatarHint": "JPG, PNG, or GIF.",
@@ -225,10 +228,14 @@
       "rolesPlaceholder": "e.g. admin, editor",
       "usernamePlaceholder": "Enter a username"
     },
-    "new": "New user",
+    "new": "New account",
     "noRoles": "No roles",
+    "roles": {
+      "platform_admin": "Platform admin",
+      "superadmin": "Super admin"
+    },
     "searchPlaceholder": "Search name or display name",
-    "tableLabel": "Users table",
+    "tableLabel": "Accounts table",
     "unverified": "Unverified",
     "validation": {
       "passwordMin": "Password must be at least 3 characters",
@@ -245,6 +252,116 @@
     },
     "empty": "No widgets yet",
     "tableLabel": "Widgets table"
+  },
+  "members": {
+    "actions": "Actions",
+    "add": "Add member",
+    "addDialog": {
+      "description": "Add an existing account to this organization by its exact username. New accounts are created by platform administrators.",
+      "notFound": "No account with this username",
+      "submit": "Add",
+      "success": "Member added",
+      "title": "Add member",
+      "username": "Username",
+      "usernamePlaceholder": "Exact username",
+      "usernameRequired": "Username is required"
+    },
+    "columns": {
+      "displayName": "Display name",
+      "roles": "Roles",
+      "status": "Status",
+      "username": "Username"
+    },
+    "editRoles": {
+      "action": "Edit roles",
+      "description": "Roles of {{name}} in this organization.",
+      "success": "Roles saved",
+      "title": "Edit roles"
+    },
+    "empty": "No members yet",
+    "remove": {
+      "action": "Remove",
+      "confirm": "Remove member",
+      "description": "{{name}} will lose access to this organization and be signed out of it. The account itself is kept.",
+      "success": "Member removed",
+      "title": "Remove member?"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "legend": "Roles",
+      "required": "Pick at least one role",
+      "user": "Member"
+    },
+    "searchPlaceholder": "Search name or display name",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "tableLabel": "Members table"
+  },
+  "tenants": {
+    "actions": "Actions",
+    "columns": {
+      "createdAt": "Created at",
+      "name": "Name",
+      "slug": "Slug",
+      "status": "Status"
+    },
+    "create": {
+      "description": "Organizations are isolated from each other: none can see another's data. Add its first administrator after creating it.",
+      "name": "Name",
+      "nameInvalid": "Name must be 1–100 characters",
+      "namePlaceholder": "e.g. Acme Inc",
+      "slug": "Slug",
+      "slugHint": "Can't be changed later",
+      "slugInvalid": "1–63 lowercase letters, digits and hyphens; no hyphen at either end",
+      "slugPlaceholder": "e.g. acme",
+      "slugTaken": "This slug is already taken",
+      "submit": "Create",
+      "success": "Organization created",
+      "title": "New organization"
+    },
+    "detail": {
+      "account": "Account",
+      "accountPlaceholder": "Pick an account",
+      "accountRequired": "Pick an account",
+      "addMember": "Add member",
+      "addMemberDescription": "Pick an existing account. If it is already a member, its roles here are replaced.",
+      "id": "Organization ID",
+      "info": "Basic info",
+      "infoDescription": "Rename the organization. The slug can't be changed.",
+      "memberSaved": "Member saved",
+      "members": "Members",
+      "membersDescription": "Accounts in this organization and their roles here. Use this to appoint a new organization's first administrator.",
+      "renamed": "Name saved",
+      "statusActive": "Members can sign in and use this organization.",
+      "statusSuspended": "Suspended: members can't enter this organization. Data is kept.",
+      "statusTitle": "Status"
+    },
+    "empty": "No organizations yet",
+    "manage": "Manage",
+    "new": "New organization",
+    "resume": {
+      "action": "Resume",
+      "confirm": "Resume",
+      "description": "Members of {{name}} can enter it again.",
+      "success": "Organization resumed",
+      "title": "Resume this organization?"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "suspend": {
+      "action": "Suspend",
+      "confirm": "Suspend",
+      "description": "Members of {{name}} will be signed out of it and can't enter it until it is resumed. Access already issued stays valid until it expires (15 minutes by default). Data is kept.",
+      "success": "Organization suspended",
+      "title": "Suspend this organization?",
+      "warningCurrent": "This is the organization you are currently in: once suspended, none of its members (you included) can enter it.",
+      "warningDefault": "This is the default organization: once suspended, none of its members (you included) can enter it."
+    },
+    "tableLabel": "Organizations table"
   },
   "nav": {
     "main": {
@@ -263,9 +380,21 @@
       "profile": "Profile"
     }
   },
-  "teamSwitcher": {
-    "addTeam": "Add team",
-    "teams": "Teams"
+  "tenant": {
+    "switcher": {
+      "label": "Organizations",
+      "failed": "Could not switch organization. Please try again.",
+      "trigger": "Current organization: {{name}}. Click to switch",
+      "forbiddenHint": "No access in this organization? Switch to another one:"
+    },
+    "empty": {
+      "title": "Not in any organization yet",
+      "description": "Your account has not joined any organization. Ask an administrator to add you, then sign in again."
+    },
+    "choose": {
+      "title": "Choose an organization",
+      "description": "You are not in an organization right now. Pick one you belong to:"
+    }
   },
   "admin": {
     "home": {

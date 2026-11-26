@@ -7,7 +7,7 @@ import { redirect } from '@tanstack/react-router'
 import { myPermissionsQueryOptions } from '@/api/auth'
 import { adminGetMe, getMe } from '@/generated/client'
 import { declaresAccessPolicy, isStaticDataGranted } from '@/lib/access-control'
-import { ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE } from '@/lib/api-client'
+import { ADMIN_NO_TENANT_ROUTE, ApiErrorClass, AUTH_PROBE_HEADER, LOGIN_ROUTE, TENANT_REQUIRED_CODE } from '@/lib/api-client'
 import { globalRouter } from '@/lib/global-router'
 import { queryKeys } from '@/lib/query-keys'
 
@@ -24,8 +24,9 @@ export type GuardLocation = Pick<ParsedLocation, 'pathname' | 'search'>
 
 /**
  * admin 区准入闸(_shell beforeLoad)。两级:
- * 1) 登录/角色门:探针 = adminGetMe(后端 gate 在 users:admin),前端不自行推角色——
- *    200 放行 / 401 转登录 / 403 转全屏 403。
+ * 1) 登录/角色门:探针 = adminGetMe(后端 gate:当前租户角色或平台角色里有后台权限),
+ *    前端不自行推角色——200 放行 / 401 转登录 / 403 tenant_required 转「还没加入任何组织」/
+ *    其余 403 转全屏 403。
  * 2) 细粒度权限门:匹配链上声明了 accessPolicyKeys/anyOf 的路由,按有效权限集
  *    (getMyPermissions)判定,缺权限转壳内 /admin/403。见下方注释与 access-control.ts。
  * 探针带 AUTH_PROBE_HEADER:刷新梯照常续期重试,但终态 401 不做命令式跳转,
@@ -78,6 +79,10 @@ export async function requireAdmin(
       throw redirect({ to: LOGIN_ROUTE })
     }
     if (status === 403) {
+      // 没有任何有效成员关系、也没有平台角色:不是「没权限」,是「还没加入组织」。
+      if (error instanceof ApiErrorClass && error.code === TENANT_REQUIRED_CODE) {
+        throw redirect({ to: ADMIN_NO_TENANT_ROUTE })
+      }
       throw redirect({ to: '/403' })
     }
     throw error

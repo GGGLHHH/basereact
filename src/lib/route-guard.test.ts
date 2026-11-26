@@ -22,10 +22,12 @@ vi.mock('@/generated/client', () => ({
   deleteMe: vi.fn(),
   getMe: mocks.getMe,
   getMyPermissions: mocks.getMyPermissions,
+  listMyTenants: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
   logoutAll: vi.fn(),
   register: vi.fn(),
+  switchTenant: vi.fn(),
   updateMe: vi.fn(),
 }))
 
@@ -101,6 +103,17 @@ describe('requireAdmin', () => {
     expect(mocks.adminGetMe).toHaveBeenCalledTimes(1)
   })
 
+  it('no_tenant_user_sees_empty_state', async () => {
+    // 没有任何有效成员关系、也没有平台角色:后台准入探针 403 tenant_required →
+    // 「还没加入任何组织」页,而不是笼统的 403。
+    mocks.adminGetMe.mockRejectedValue(
+      new ApiErrorClass('A current tenant is required', { code: 'tenant_required', status: 403 }),
+    )
+
+    const error = await caught(requireAdmin(freshClient(), adminHome))
+    expect(redirectTarget(error)).toBe('/admin/no-tenant')
+  })
+
   it('redirects to the fullscreen 403 page on 403', async () => {
     mocks.adminGetMe.mockRejectedValue(new ApiErrorClass('forbidden', { status: 403 }))
 
@@ -136,9 +149,9 @@ describe('requireAdmin', () => {
 
   it('fetches permissions with the probe header and passes a granted chain', async () => {
     mocks.adminGetMe.mockResolvedValue({ id: 'u1', roles: ['admin'], username: 'root' })
-    // adminListWidgets = AND(users:admin, admin:login);两权齐链才放行。
+    // adminListWidgets = widgets:read AND 后台准入(admin:login 或任一平台级权限):租户管理员两权齐即放行。
     mocks.getMyPermissions.mockResolvedValue({
-      permissions: ['users:admin', 'admin:login'],
+      permissions: ['widgets:read', 'admin:login'],
       roles: ['admin'],
     })
     mocks.matchRoutes.mockReturnValue([

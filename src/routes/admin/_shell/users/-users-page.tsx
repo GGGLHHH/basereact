@@ -1,17 +1,19 @@
-import type { AdminUserView } from '@/generated/api-types'
+import type { AdminUserView, RoleView } from '@/generated/api-types'
 import { ChevronDownIcon, PlusIcon } from '@gedatou/cadenza-icons'
 import { Button, InfiniteSelectClear, InfiniteSelectClose, InfiniteSelectFooter, SearchField } from '@gedatou/cadenza-ui'
 import { getRouteApi } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUsers } from '@/api/users'
 
 import { RoleInfiniteSelect } from '@/business/role/select/role-infinite-select'
 import { DeleteUserDialog } from '@/business/user/delete-user-dialog'
+import { canManageAccount, PLATFORM_ROLE_NAMES, ROLE_LABEL_KEYS } from '@/business/user/roles'
 import { UserTable } from '@/business/user/table'
 import { HostHoverIcon, PlayOnHover } from '@/components/icon-motion'
 import { toDataPagination } from '@/components/table/pagination'
 import { Separator } from '@/components/ui/separator'
+import { useMyPermissions } from '@/lib/use-access-policy'
 import { cn } from '@/lib/utils'
 
 // 组件与路由定义分文件:路由文件只导出 Route(单一导出才吃得到代码分割 / fast refresh),
@@ -22,8 +24,14 @@ export function UsersPage() {
   const { page, size, q, role } = routeApi.useSearch()
   const navigate = routeApi.useNavigate()
   const { t } = useTranslation('common')
-  // role 存 {id,name}:name 喂后端 filter(RoleName),id 喂选择器(uuid)—— 无目录、无映射。
-  const { data, isPending } = useUsers({ page, size, q, role: role?.map(r => r.name) })
+  // role 存角色名:直接喂后端 filter(RoleName),也是选择器候选的键。
+  const { data, isPending } = useUsers({ page, size, q, role })
+  // 角色筛选的候选 = 全部平台角色(账号列表的角色列就是平台角色),不用 /roles 目录 —— 那只列
+  // 「调用者能授出的」,平台管理员拿到的是空目录,却仍要能按 superadmin / 平台管理员筛。
+  const roleFilterOptions = useMemo<RoleView[]>(
+    () => PLATFORM_ROLE_NAMES.map(name => ({ display_name: t(ROLE_LABEL_KEYS[name]), id: name, name })),
+    [t],
+  )
   // PageInfo(union)→ 分页器 total 走 ACL(见 table/pagination),免手搓 union 窄化。
   const { total } = toDataPagination(data?.page_info)
 
@@ -31,6 +39,12 @@ export function UsersPage() {
 
   // 待删目标即弹窗开合信号;删除成功由列表失效自动刷新(DeleteUserDialog 内 invalidate)。
   const [deleteTarget, setDeleteTarget] = useState<AdminUserView | null>(null)
+  // 持平台角色的账号(superadmin / 平台管理员)只有 platform:roles 能管:其余操作者看不到它们的编辑 / 删除。
+  const permissions = useMyPermissions()
+  const canManage = useCallback(
+    (user: AdminUserView) => canManageAccount(user, permissions),
+    [permissions],
+  )
 
   const goDetail = (user: AdminUserView) =>
     void navigate({ params: { userId: user.id }, to: '/admin/users/$userId' })
@@ -50,11 +64,12 @@ export function UsersPage() {
           />
           <RoleInfiniteSelect
             commitOnClose
+            options={roleFilterOptions}
             selectionMode='multiple'
-            value={role?.map(r => r.id) ?? []}
-            // items 自带 id+name(角色是全量加载的封闭集,items 恒完整)→ 直接存对象,无目录映射。
+            value={role ?? []}
+            // 候选的 id 就是角色名(固定闭集)→ 直接存名字。
             onValueChange={(items) => {
-              const picked = items.map(r => ({ id: r.id, name: r.name }))
+              const picked = items.map(r => r.name)
               void navigate({
                 resetScroll: false,
                 search: prev => ({
@@ -106,6 +121,7 @@ export function UsersPage() {
         limit={size}
         page={page}
         total={total}
+        canManage={canManage}
         onDelete={setDeleteTarget}
         onEdit={(user) => {
           void navigate({ params: { userId: user.id }, to: '/admin/users/$userId/edit' })

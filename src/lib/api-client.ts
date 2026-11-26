@@ -5,7 +5,7 @@
 
 import type { LinkProps } from '@tanstack/react-router'
 import type { Options as KyOptions } from 'ky'
-import type { ErrorBody } from '@/generated/api-types'
+import type { ErrorBody, UserResponse } from '@/generated/api-types'
 
 import i18next from 'i18next'
 import ky, { isNetworkError, isTimeoutError } from 'ky'
@@ -17,6 +17,10 @@ import { queryKeys } from '@/lib/query-keys'
 
 export const API_BASE_URL = '/api/v1'
 export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']
+/** 后端「没有当前租户」的错误码(ErrorBody.code):账号没有任何有效成员关系。 */
+export const TENANT_REQUIRED_CODE = 'tenant_required' satisfies ErrorBody['code']
+export const ADMIN_NO_TENANT_ROUTE = '/admin/no-tenant' satisfies LinkProps['to']
+export const FRONTEND_NO_TENANT_ROUTE = '/frontend/no-tenant' satisfies LinkProps['to']
 const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
 
 /**
@@ -87,9 +91,12 @@ function handleAuthFailure() {
 
   const router = globalRouter.instance
 
-  // 终态 401 = 会话已死:写显式匿名标记,守卫见 null 直转登录,
+  // 终态 401 = 会话已死:清空全部缓存(下一个登录的可能是别的账号 / 组织,上一个会话的
+  // 列表不能再渲染出来),再写显式匿名标记,守卫见 null 直转登录,
   // 不再在 staleTime 窗口内信任尸体缓存(否则 guest 闸会把用户弹回后台壳)。
-  router?.options.context.queryClient.setQueryData(queryKeys.admin.auth.me(), null)
+  const queryClient = router?.options.context.queryClient
+  queryClient?.clear()
+  queryClient?.setQueryData(queryKeys.admin.auth.me(), null)
 
   // 会话终态失效:提示一次(authFailureHandled 已挡重复),再交给守卫/下面的跳转。
   // 本函数可能在路由初始 load/hydration 的 transition 内被 401 hook 同步调起;
@@ -110,6 +117,31 @@ function handleAuthFailure() {
   // router 尚未登记(极早期请求):整页跳转兜底。
   if (!window.location.pathname.startsWith(LOGIN_ROUTE)) {
     window.location.assign(LOGIN_ROUTE)
+  }
+}
+
+/**
+ * 租户级接口回 403 tenant_required = 这个账号当前没有租户(spec §4.2)。没有平台角色时
+ * 带到所在 surface 的「还没加入任何组织」页;有平台角色 = 平台上下文,正常留在原处,
+ * 错误照常交给调用方(平台角色取自已缓存的 me,两个 surface 任一份)。守卫探针 / 软探测不走这里
+ * (redirect 单一归属 route-guard)。router 未登记(SSR / 极早期)时不动,调用方照常拿到错误。
+ */
+function handleTenantRequired() {
+  const router = globalRouter.instance
+  if (!router) {
+    return
+  }
+  const queryClient = router.options?.context?.queryClient
+  const hasPlatformRole = [queryKeys.admin.auth.me(), queryKeys.auth.me()].some(
+    key => (queryClient?.getQueryData<UserResponse | null>(key)?.roles.length ?? 0) > 0,
+  )
+  if (hasPlatformRole) {
+    return
+  }
+  const pathname = router.state.location.pathname
+  const target = pathname.startsWith('/admin') ? ADMIN_NO_TENANT_ROUTE : FRONTEND_NO_TENANT_ROUTE
+  if (pathname !== target) {
+    void router.navigate({ to: target })
   }
 }
 
@@ -179,7 +211,16 @@ export const api = ky.create({
         }
 
         if (!response.ok) {
-          throw await createApiError(response)
+          const error = await createApiError(response)
+          if (
+            response.status === 403
+            && error.code === TENANT_REQUIRED_CODE
+            && request.headers.get(AUTH_PROBE_HEADER) !== '1'
+            && request.headers.get(SOFT_AUTH_HEADER) !== '1'
+          ) {
+            handleTenantRequired()
+          }
+          throw error
         }
         return response
       },
