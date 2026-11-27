@@ -11,7 +11,7 @@ import { frontendLandingAfterLogin, useAdminLogin, useLogin } from '@/api/auth'
 import { Field, FieldGroup } from '@/components/field'
 import { formProps, useAppForm } from '@/components/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getErrorMessage } from '@/lib/api-client'
+import { ApiErrorClass, getErrorMessage, TENANT_REQUIRED_CODE } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 
 // surface 决定登录走哪个 surface 的端点与登录后落点。两个 hook 都无条件调用
@@ -49,10 +49,16 @@ export function LoginForm({
         user = await login.mutateAsync(value)
       }
       catch (error) {
-        toast.error(getErrorMessage(error))
+        // 后台登录对「没有任何有效成员关系、也没有平台权限」的账号回 403 tenant_required、不发 token:
+        // 人没有登录,只能留在登录页,提示他找管理员加入组织(api-client 对登录请求不做空状态页跳转)。
+        toast.error(
+          error instanceof ApiErrorClass && error.code === TENANT_REQUIRED_CODE
+            ? t('auth.login.noTenant')
+            : getErrorMessage(error),
+        )
         return
       }
-      // 后台:固定去首页,没加入任何组织由守卫(403 tenant_required)转空状态页。
+      // 后台:登录成功固定去首页(没加入任何组织的账号在上面已被登录接口拒绝)。
       // 公开站:没有成员关系也没有平台角色 → 直接去「还没加入任何组织」(spec §4.2)。
       // ponytail: 要"回跳来源页"时加 redirect search param。
       const redirectTo = surface === 'admin'

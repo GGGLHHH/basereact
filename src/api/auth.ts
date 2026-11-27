@@ -29,7 +29,7 @@ import {
 } from '@/generated/client'
 import { AUTH_PROBE_HEADER, SOFT_AUTH_HEADER } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import { broadcastTenantChanged } from '@/lib/tenant-sync'
+import { broadcastSessionChanged, leaveEndedSession, refreshSession } from '@/lib/session-sync'
 
 // ---- admin surface (admin/auth/*) ----
 // beforeLoad 守卫的探针在 lib/route-guard.ts(带 AUTH_PROBE_HEADER,不走 hook)。
@@ -58,7 +58,9 @@ export function useAdminLogin() {
       // 一条都不能在新会话里渲染出来;登出留下的 null 标记也一并清掉。
       // 不用 adminLogin 响应直接种 me:进壳时让守卫真正打一次 adminGetMe(users:admin 门)——
       // adminLogin 若不校验角色,种缓存会让非管理员绕过探针混进后台壳(复审 #5)。
+      // 本页随后导航离开登录页,清空即可;共享 cookie 换了会话,通知其他标签页按新会话刷新。
       queryClient.clear()
+      broadcastSessionChanged('login')
     },
   })
 }
@@ -89,6 +91,7 @@ export function useLogin() {
       // 同 useAdminLogin:换了账号 / 组织,先清空全部缓存,再种本次登录的 me。
       queryClient.clear()
       queryClient.setQueryData(queryKeys.auth.me(), user)
+      broadcastSessionChanged('login')
     },
   })
 }
@@ -115,18 +118,18 @@ export function useMyTenants(options?: { enabled?: boolean, soft?: boolean }) {
 
 /**
  * 切换当前租户(POST /frontend/auth/switch-tenant,后端换 session + 写 cookie)。
- * 成功后:清空**全部**查询缓存(上一个租户的数据一条不留)→ 广播给其他标签页 →
- * router.invalidate() 重新进入当前路由(守卫 / loader 按新租户重跑)。
+ * 成功后:广播给其他标签页 → refreshSession:**全部**查询就地重置(上一个租户的数据当场从页面
+ * 消失,正在显示的立刻按新租户重取)+ router.invalidate()(守卫按新租户重跑)。
+ * 不用 clear():已挂载的 useQuery 会绑在被删掉的旧查询上,不重取(复审 #1,见 lib/session-sync.ts)。
  */
 export function useSwitchTenant() {
   const queryClient = useQueryClient()
   const router = useRouter()
   return useMutation({
     mutationFn: (tenantId: string) => switchTenantApi({ body: { tenant_id: tenantId } }),
-    onSuccess: async (_user, tenantId) => {
-      queryClient.clear()
-      broadcastTenantChanged(tenantId)
-      await router.invalidate()
+    onSuccess: async () => {
+      broadcastSessionChanged('tenant-switched')
+      await refreshSession(queryClient, router)
     },
   })
 }
@@ -161,6 +164,8 @@ export function useRegister() {
     mutationFn: (request: RegisterRequest) => registerApi({ body: request }),
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me(), user)
+      // 注册成功即登录(后端写 auth cookie):同登录,通知其他标签页。
+      broadcastSessionChanged('login')
     },
   })
 }
@@ -183,6 +188,8 @@ export function useLogout() {
       queryClient.clear()
       // 显式匿名标记:守卫见 null 直接转登录,不再发探针(避免登出后 401→refresh 连环)。
       queryClient.setQueryData(queryKeys.admin.auth.me(), null)
+      // 共享 cookie 已清:其他标签页也回登录页。
+      broadcastSessionChanged('logout')
     },
   })
 }
@@ -194,16 +201,38 @@ export function useLogoutAll() {
     onSuccess: () => {
       queryClient.clear()
       queryClient.setQueryData(queryKeys.admin.auth.me(), null)
+      broadcastSessionChanged('logout')
     },
   })
 }
 
+/**
+ * 改密码:后端撤销该账号的**全部**会话并清掉 auth cookie —— 本页的会话也随之结束,同登出。
+ * 成功后广播 logout(其他标签页回登录页),本页按 leaveEndedSession 的顺序离开:先写匿名标记 →
+ * 回所在 surface 的登录页(卸掉当前页面)→ 再清缓存。先 clear() 的话,导航途中重渲染的组件会以
+ * 已失效的会话再发请求,401 触发刷新梯和「会话过期」提示(见 lib/session-sync.ts)。
+ * 跳转由本 hook 负责,调用方不必再 navigate。
+ *
+ * 旧密码错:后端回 401 `invalid_credentials`(不是会话过期的 `unauthorized`),拦截器原样交给调用方 ——
+ * 不刷新、不跳登录页、不清缓存,会话照旧;调用方从 mutation 的 error 里拿到它自己提示
+ * (`error.code === INVALID_CREDENTIALS_CODE`,见 lib/api-client.ts)。
+ */
 export function useChangePassword() {
+  const queryClient = useQueryClient()
+  const router = useRouter()
   return useMutation({
     mutationFn: (request: ChangePasswordRequest) => changePasswordApi({ body: request }),
+    onSuccess: async () => {
+      // 共享 cookie 已清:其他标签页也回登录页。
+      broadcastSessionChanged('logout')
+      await leaveEndedSession(queryClient, router)
+    },
   })
 }
 
+/**
+ * 注销账号(要密码确认)。密码错同改密码:401 `invalid_credentials` 交给调用方,会话照旧、不跳转。
+ */
 export function useDeleteMe() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -211,6 +240,8 @@ export function useDeleteMe() {
     onSuccess: () => {
       queryClient.clear()
       queryClient.setQueryData(queryKeys.admin.auth.me(), null)
+      // 账号没了,会话随之结束:同登出。
+      broadcastSessionChanged('logout')
     },
   })
 }

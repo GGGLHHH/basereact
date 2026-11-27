@@ -2,11 +2,13 @@ import type { TFunction } from 'i18next'
 import type { ReactNode } from 'react'
 import type { AdminMenuEntry } from '@/lib/route-menu'
 import { ChevronDownIcon } from '@gedatou/cadenza-icons'
-import { DropdownMenu, DropdownMenuPopup, DropdownMenuTrigger, ScrollArea, SidebarInset, SidebarProvider, SidebarTrigger } from '@gedatou/cadenza-ui'
+import { DropdownMenu, DropdownMenuPopup, DropdownMenuTrigger, ScrollArea, SidebarInset, SidebarProvider, SidebarTrigger, Spinner } from '@gedatou/cadenza-ui'
+import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link, Outlet, useMatches, useRouterState } from '@tanstack/react-router'
 import { Fragment } from 'react'
 
 import { useTranslation } from 'react-i18next'
+import { myPermissionsQueryOptions } from '@/api/auth'
 import { AppSidebar } from '@/components/app-sidebar'
 import { PlayOnHover } from '@/components/icon-motion'
 import { FlyoutMenuNode } from '@/components/menu-flyout'
@@ -186,8 +188,28 @@ function readSidebarOpen(): boolean {
   return match ? match[1] === 'true' : true
 }
 
+/**
+ * 当前组织的身份标识,和账号 id 一起给页面区当 key 用;undefined = 还不知道(首次加载 / 切换后重取中)。
+ * 取自有效权限(与守卫、菜单同一份缓存):切换组织时 resetQueries 把它清空 → 页面区立刻卸载,
+ * 按新组织取回后以新 key 重新挂载 —— 上一个组织的页面连同页面内状态(打开着的、指向旧行的
+ * 编辑 / 移除弹窗,表单草稿)一条不留,不会以新组织身份打到旧行上(复审 #1)。
+ * 平台上下文没有当前组织,用固定的 'platform';权限读失败时不挡页面(页面自己的请求会报错)。
+ */
+function useTenantScopeKey(): string | undefined {
+  const { data, isError } = useQuery(myPermissionsQueryOptions)
+  if (data) {
+    return data.tenant?.id ?? 'platform'
+  }
+  return isError ? 'unknown' : undefined
+}
+
 export function AdminShell() {
   const { me } = routeApi.useRouteContext()
+  const tenantScopeKey = useTenantScopeKey()
+  // 页面区按「账号 + 组织」区分:别的标签页换了账号但组织没变时,组织 key 不变,只靠它也得重新挂载,
+  // 上一个账号打开着的弹窗 / 表单草稿不能留到新账号身上。me 来自守卫(beforeLoad)写进的路由 context:
+  // 会话变更后 refreshSession 先 resetQueries 再 router.invalidate(),守卫重跑、取回新账号,context 随之更新。
+  const sessionScopeKey = tenantScopeKey === undefined ? undefined : `${me.id}:${tenantScopeKey}`
 
   return (
     // 整壳锁在一屏高(h-svh):页面内容在下面的 ScrollArea 里滚,用组件库的滚动条,不出浏览器原生滚动条。
@@ -219,7 +241,13 @@ export function AdminShell() {
           viewportRender={<div data-scroll-restoration-id={ADMIN_SCROLL_ID} />}
         >
           <div className='flex min-h-full flex-col gap-4 p-4'>
-            <Outlet />
+            {sessionScopeKey === undefined
+              ? (
+                  <div className='flex flex-1 items-center justify-center'>
+                    <Spinner className='size-6' />
+                  </div>
+                )
+              : <Outlet key={sessionScopeKey} />}
           </div>
         </ScrollArea>
       </SidebarInset>

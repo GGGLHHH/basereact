@@ -246,3 +246,24 @@ it('keeps an account with platform roles in place on tenant_required', async () 
   })
   expect(navigate).not.toHaveBeenCalled()
 })
+
+it('leaves tenant_required on a login request to the login form (no jump to the empty state)', async () => {
+  // 复审 #3:后台登录对没有组织的账号回 403 tenant_required、不发 token。此时人没登录,
+  // 不能被带到出口是「登出」的空状态页;错误照常抛给登录表单。
+  const navigate = vi.fn()
+  globalRouter.instance = {
+    navigate,
+    state: { location: { pathname: '/admin/login' } },
+  } as unknown as typeof globalRouter.instance
+  fetchMock.mockImplementation(async () =>
+    jsonResponse(403, { code: 'tenant_required', error: 'A current tenant is required' }))
+
+  await expect(
+    requestJson('admin/auth/login', { json: { identifier: 'a', password: 'b' }, method: 'POST' }),
+  ).rejects.toMatchObject({ code: 'tenant_required', status: 403 })
+  await expect(
+    requestJson('public/auth/login', { json: { identifier: 'a', password: 'b' }, method: 'POST' }),
+  ).rejects.toMatchObject({ code: 'tenant_required', status: 403 })
+
+  expect(navigate).not.toHaveBeenCalled()
+})

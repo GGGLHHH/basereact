@@ -19,6 +19,11 @@ export const API_BASE_URL = '/api/v1'
 export const LOGIN_ROUTE = '/admin/login' satisfies LinkProps['to']
 /** 后端「没有当前租户」的错误码(ErrorBody.code):账号没有任何有效成员关系。 */
 export const TENANT_REQUIRED_CODE = 'tenant_required' satisfies ErrorBody['code']
+/**
+ * 后端「凭据错」的错误码(ErrorBody.code,401):登录密码错、改密码旧密码错、注销密码确认错。
+ * 会话本身还有效 —— 与会话失效的 401 `unauthorized` 不同,拦截器不刷新、不跳登录页,错误直接交给调用方。
+ */
+export const INVALID_CREDENTIALS_CODE = 'invalid_credentials' satisfies ErrorBody['code']
 export const ADMIN_NO_TENANT_ROUTE = '/admin/no-tenant' satisfies LinkProps['to']
 export const FRONTEND_NO_TENANT_ROUTE = '/frontend/no-tenant' satisfies LinkProps['to']
 const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
@@ -36,6 +41,8 @@ export const SOFT_AUTH_HEADER = 'x-soft-auth-check'
  */
 export const AUTH_PROBE_HEADER = 'x-auth-probe'
 // auth 端点自身的 401 不进刷新梯:login 是凭证错误,logout/refresh 本身就是会话终点。
+// 改密码 / 注销的「密码不对」不靠路径认:按错误码 INVALID_CREDENTIALS_CODE 认(见 afterResponse 的 401 分支),
+// 这两个接口的 token 失效 401(code = unauthorized)照常刷新重试。
 const SKIP_REFRESH_SUFFIXES = ['/login', '/logout', '/logout-all', '/refresh']
 
 export type ApiRequestOptions = KyOptions & {
@@ -75,8 +82,12 @@ function shouldSkipRefresh(request: Request): boolean {
   return SKIP_REFRESH_SUFFIXES.some(suffix => request.url.endsWith(suffix))
 }
 
+function isLoginRequest(request: Request): boolean {
+  return request.url.endsWith('/login')
+}
+
 function isAuthRecoveryRequest(request: Request): boolean {
-  return request.url.endsWith('/login') || request.url.endsWith('/refresh')
+  return isLoginRequest(request) || request.url.endsWith('/refresh')
 }
 
 function handleAuthFailure() {
@@ -125,6 +136,10 @@ function handleAuthFailure() {
  * 带到所在 surface 的「还没加入任何组织」页;有平台角色 = 平台上下文,正常留在原处,
  * 错误照常交给调用方(平台角色取自已缓存的 me,两个 surface 任一份)。守卫探针 / 软探测不走这里
  * (redirect 单一归属 route-guard)。router 未登记(SSR / 极早期)时不动,调用方照常拿到错误。
+ *
+ * 登录请求也不走这里:后台登录对「没有任何有效成员关系、也没有平台权限」的账号直接回 403
+ * tenant_required、不发 token —— 此时用户**没有登录**,空状态页的出口「登出」对他没有意义。
+ * 这个错误由登录表单自己提示(LoginForm,auth.login.noTenant),人留在登录页。
  */
 function handleTenantRequired() {
   const router = globalRouter.instance
@@ -167,34 +182,42 @@ export const api = ky.create({
 
         // 401 处理顺序(每支必须先于下一支):
         //   0. 软探测            → 直接抛,零副作用
-        //   1. /login 响应       → 直接抛(凭证错误,调用方自己展示)
-        //   2. /logout*          → 抛 + 会话失效处理;/refresh 自身 401 只抛,
+        //   1. 凭据错(code = invalid_credentials:改密码旧密码错、注销密码错……)
+        //                        → 直接抛,零副作用。会话还有效,不能当会话过期去刷新 / 跳登录页 / 清缓存;
+        //                          刷新后重试才报凭据错(token 恰好过期 + 密码也输错)同样落在这一支
+        //   2. /login 响应       → 直接抛(凭证错误,调用方自己展示)
+        //   3. /logout*          → 抛 + 会话失效处理;/refresh 自身 401 只抛,
         //                          定罪交给 await ensureRefreshed 的发起方
-        //   3. 刷新后重试仍 401   → 终态失败;守卫探针只抛(redirect 归 route-guard)
-        //   4. 其余              → 刷新会话 + 重试一次
+        //   4. 刷新后重试仍 401   → 终态失败;守卫探针只抛(redirect 归 route-guard)
+        //   5. 其余              → 刷新会话 + 重试一次
         if (response.status === 401) {
           const isProbe = request.headers.get(AUTH_PROBE_HEADER) === '1'
+          const error = await createApiError(response)
 
           if (request.headers.get(SOFT_AUTH_HEADER) === '1') {
-            throw await createApiError(response)
+            throw error
+          }
+
+          if (error.code === INVALID_CREDENTIALS_CODE) {
+            throw error
           }
 
           if (request.url.endsWith('/login')) {
-            throw await createApiError(response)
+            throw error
           }
 
           if (shouldSkipRefresh(request)) {
             if (!request.url.endsWith('/refresh')) {
               handleAuthFailure()
             }
-            throw await createApiError(response)
+            throw error
           }
 
           if (request.headers.get(RETRIED_AFTER_REFRESH_HEADER) === '1') {
             if (!isProbe) {
               handleAuthFailure()
             }
-            throw await createApiError(response)
+            throw error
           }
 
           try {
@@ -204,7 +227,7 @@ export const api = ky.create({
             if (!isProbe) {
               handleAuthFailure()
             }
-            throw await createApiError(response)
+            throw error
           }
 
           return retryAfterRefresh(request)
@@ -215,6 +238,7 @@ export const api = ky.create({
           if (
             response.status === 403
             && error.code === TENANT_REQUIRED_CODE
+            && !isLoginRequest(request)
             && request.headers.get(AUTH_PROBE_HEADER) !== '1'
             && request.headers.get(SOFT_AUTH_HEADER) !== '1'
           ) {

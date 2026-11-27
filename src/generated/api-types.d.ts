@@ -805,8 +805,10 @@ export interface paths {
          */
         get: operations["get_profile"];
         /**
-         * 按 id 全量替换 upsert 资料(`profiles:write`,**平台级**);带 `profiles:write:all` 可替任何人。
+         * 按 id 全量替换 upsert 资料(`profiles:write`,**平台级**);改别人还要 `profiles:write:all` **和** `platform:roles`
+         *     (只有 superadmin —— 防平台管理员改 superadmin 的资料;平台管理员改普通账号走后台 `PUT /admin/auth/users/{id}/profile`)。
          *     未建 → 201,已有 → 200(PUT 即建即替,RFC 7231 本义;profile 无独立 POST)。本人改自己走 `PUT /profiles/me`。
+         * @description 条件权限:路径里的 user_id 不是调用者本人(改别人)时另需 `profiles:write:all` + `platform:roles`(缺 → 403)。
          */
         put: operations["put_profile"];
         post?: never;
@@ -1368,7 +1370,7 @@ export interface components {
          * @description 错误机器码闭集(前端按它分支;闭集生成前端 union,见 closed-enums skill)。
          * @enum {string}
          */
-        ErrorCode: "not_found" | "validation" | "bad_request" | "unauthorized" | "conflict" | "forbidden" | "tenant_required" | "account_not_found" | "internal" | "timeout" | "rate_limited";
+        ErrorCode: "not_found" | "validation" | "bad_request" | "unauthorized" | "invalid_credentials" | "conflict" | "forbidden" | "tenant_required" | "account_not_found" | "internal" | "timeout" | "rate_limited";
         /**
          * @description 失败原因闭集。同上头注;`account_locked`/`rate_limited` 目前 emit 侧未产出(预留取值,
          *     闭集只增不改 —— 出现才炸,不提前拒绝合法但暂未使用的取值)。
@@ -4365,6 +4367,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description superadmin 不能注销自己(superadmin 不经任何接口撤销) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
             /** @description 校验失败 */
             422: {
                 headers: {
@@ -5477,7 +5488,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
-            /** @description 无 profiles:write / 改别人无 write:all(平台级) */
+            /** @description 无 profiles:write / 改别人缺 profiles:write:all 或 platform:roles(平台级;平台管理员改别人走后台资料接口) */
             403: {
                 headers: {
                     [name: string]: unknown;

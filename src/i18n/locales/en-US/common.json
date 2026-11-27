@@ -137,6 +137,7 @@
       "identifierPlaceholder": "m@example.com",
       "identifierRequired": "Email or username is required",
       "noAccount": "Don't have an account?",
+      "noTenant": "This account doesn't belong to any organization yet, so it can't sign in to the admin console. Please contact an administrator to be added to an organization.",
       "passwordLabel": "Password",
       "passwordRequired": "Password is required",
       "signUp": "Sign up",

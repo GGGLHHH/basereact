@@ -42,7 +42,9 @@ function markPlatformMemberListsStale(queryClient: QueryClient): void {
 
 export function useMembers(request?: ListMembersQuery) {
   return useQuery({
-    // 翻页 / 搜索时保留上一页行,避免整表闪空。
+    // 翻页 / 搜索时保留上一页行,避免整表闪空。只在同一个组织里生效:切换组织时全部查询被
+    // resetQueries 清成无数据(lib/session-sync.ts),后台壳又按组织 id 重新挂载页面(-shell-layout.tsx),
+    // 新的 observer 没有「上一页」可留,旧组织的行不会被当成占位显示出来。
     placeholderData: keepPreviousData,
     queryFn: () => listMembersApi({ query: request }),
     queryKey: queryKeys.members.list(request),

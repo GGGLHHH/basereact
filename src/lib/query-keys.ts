@@ -37,7 +37,7 @@ export const queryKeys = {
     stats: () => [...queryKeys.widgets.all, 'stats'] as const,
     myCount: () => [...queryKeys.widgets.all, 'my-count'] as const,
   },
-  // 本租户成员(GET /admin/auth/members,租户级)。切换租户时 queryClient.clear() 整体清掉。
+  // 本租户成员(GET /admin/auth/members,租户级)。切换租户时随全部查询一起 resetQueries(见 lib/session-sync.ts)。
   members: {
     all: ['members'] as const,
     list: (request?: unknown) => [...queryKeys.members.all, 'list', request ?? {}] as const,

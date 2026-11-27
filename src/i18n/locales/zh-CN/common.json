@@ -137,6 +137,7 @@
       "identifierPlaceholder": "m@example.com",
       "identifierRequired": "请输入邮箱或用户名",
       "noAccount": "还没有账号?",
+      "noTenant": "该账号还没有加入任何组织,不能登录后台。请联系管理员把你加入组织。",
       "passwordLabel": "密码",
       "passwordRequired": "请输入密码",
       "signUp": "注册",

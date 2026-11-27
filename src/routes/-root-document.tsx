@@ -9,7 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import i18next from '@/i18n'
 import { detectInitialLocale } from '@/i18n/config'
 import { installErrorReporting } from '@/lib/error-reporting'
-import { TenantSync } from '@/lib/tenant-sync'
+import { SessionSync } from '@/lib/session-sync'
 
 // SSR 恒以 DEFAULT_LOCALE 出首屏;hydration 后按 localStorage/浏览器语言切换,
 // 避免服务端-客户端首帧不一致(hydration mismatch)。
@@ -59,8 +59,8 @@ export function RootDocument({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <LocaleSync />
           <ErrorReporting />
-          {/* 别的标签页切了租户:清缓存 + 重新进入当前路由(见 lib/tenant-sync.ts)。 */}
-          <TenantSync />
+          {/* 别的标签页切了组织 / 登录 / 登出:按新会话刷新或回登录页(见 lib/session-sync.ts)。 */}
+          <SessionSync />
           {children}
           <Toaster />
           <TanStackDevtools

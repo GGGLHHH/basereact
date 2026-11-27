@@ -2,20 +2,34 @@
 
 import type { ReactNode } from 'react'
 import type { MyTenantView, UserResponse } from '@/generated/api-types'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { adminLogin, listMyTenants, login, switchTenant } from '@/generated/client'
+import { adminLogin, changePassword, deleteMe, listMyTenants, login, logout, logoutAll, register, switchTenant } from '@/generated/client'
 import { SOFT_AUTH_HEADER } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 
-import { frontendLandingAfterLogin, useAdminLogin, useLogin, useMyTenants, useSwitchTenant } from './auth'
+import {
+  frontendLandingAfterLogin,
+  useAdminLogin,
+  useChangePassword,
+  useDeleteMe,
+  useLogin,
+  useLogout,
+  useLogoutAll,
+  useMyTenants,
+  useRegister,
+  useSwitchTenant,
+} from './auth'
 
 const h = vi.hoisted(() => ({
   broadcast: vi.fn(),
   invalidate: vi.fn(),
+  navigate: vi.fn(),
+  /** useRouter().state.location.pathname:改密码后按所在 surface 回对应的登录页。 */
+  pathname: '/admin/profile',
 }))
 
 // auth.ts 的其余 generated 导入也走这个 mock,缺一个命名导出就是调用期报错——全部补上。
@@ -35,14 +49,20 @@ vi.mock('@/generated/client', () => ({
   updateMe: vi.fn(),
 }))
 
-vi.mock('@/lib/tenant-sync', () => ({
-  broadcastTenantChanged: h.broadcast,
+// 只替换广播;refreshSession 用真的(切换后的缓存行为就是它)。
+vi.mock('@/lib/session-sync', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/lib/session-sync')>()),
+  broadcastSessionChanged: h.broadcast,
 }))
 
-// 只替换 useRouter:切换后「重新进入当前路由」= router.invalidate()。
+// 只替换 useRouter:切换后「重新进入当前路由」= router.invalidate();改密码后回登录页 = navigate。
 vi.mock('@tanstack/react-router', async importOriginal => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-  useRouter: () => ({ invalidate: h.invalidate }),
+  useRouter: () => ({
+    invalidate: h.invalidate,
+    navigate: h.navigate,
+    state: { location: { pathname: h.pathname } },
+  }),
 }))
 
 function makeClient(): QueryClient {
@@ -67,10 +87,13 @@ function tenant(id: string, current = false): MyTenantView {
 
 beforeEach(() => {
   h.invalidate.mockReset().mockResolvedValue(undefined)
+  h.navigate.mockReset().mockResolvedValue(undefined)
   h.broadcast.mockReset()
+  h.pathname = '/admin/profile'
 })
 
 afterEach(() => {
+  cleanup()
   vi.clearAllMocks()
 })
 
@@ -109,10 +132,36 @@ describe('useSwitchTenant', () => {
     await result.current.mutateAsync('t2')
 
     expect(switchTenant).toHaveBeenCalledWith({ body: { tenant_id: 't2' } })
-    expect(client.getQueryCache().getAll()).toHaveLength(0)
-    expect(h.broadcast).toHaveBeenCalledWith('t2')
+    expect(client.getQueryData(queryKeys.widgets.list())).toBeUndefined()
+    expect(client.getQueryData(queryKeys.auth.tenants())).toBeUndefined()
+    expect(h.broadcast).toHaveBeenCalledWith('tenant-switched')
     // 重新进入当前路由:守卫 / loader 按新租户重跑。
     expect(h.invalidate).toHaveBeenCalledTimes(1)
+  })
+
+  it('refetches the queries on screen with the new tenant instead of leaving them on the old data', async () => {
+    // 复审 #1:clear() 之后,已挂载的 useQuery 绑在被删掉的旧查询上,既不重取也不清空。
+    let tenantId = 't1'
+    const queryFn = vi.fn(async () => ({ items: [`${tenantId}-row`] }))
+    vi.mocked(switchTenant).mockImplementation(async ({ body }) => {
+      tenantId = body.tenant_id
+      return fakeUser()
+    })
+    const client = makeClient()
+    // 列表单独一个 React 根:切换 mutation 的状态变化不会顺带让它重渲染(页面上的列表也不会)。
+    function List() {
+      const { data } = useQuery({ queryFn, queryKey: queryKeys.widgets.list() })
+      return <div>{data ? data.items.join(',') : 'loading'}</div>
+    }
+    render(<List />, { wrapper: wrapper(client) })
+    expect(await screen.findByText('t1-row')).toBeTruthy()
+
+    const { result } = renderHook(() => useSwitchTenant(), { wrapper: wrapper(client) })
+    await result.current.mutateAsync('t2')
+
+    expect(await screen.findByText('t2-row')).toBeTruthy()
+    expect(screen.queryByText('t1-row')).toBeNull()
+    expect(queryFn).toHaveBeenCalledTimes(2)
   })
 
   it('keeps the cache and stays silent when the switch fails', async () => {
@@ -175,6 +224,123 @@ describe('login clears every cached query', () => {
     await expect(result.current.mutateAsync({ identifier: 'bob', password: 'x' })).rejects.toThrow()
 
     expect(client.getQueryData(queryKeys.widgets.list())).toEqual({ items: ['previous-account-row'] })
+  })
+})
+
+// 共享 cookie 里的会话变了:通知其他标签页(复审 #2)。失败时不广播。
+describe('session changes are broadcast to other tabs', () => {
+  it('admin and frontend login broadcast login', async () => {
+    vi.mocked(adminLogin).mockResolvedValue(fakeUser())
+    vi.mocked(login).mockResolvedValue(fakeUser())
+    const client = makeClient()
+
+    const admin = renderHook(() => useAdminLogin(), { wrapper: wrapper(client) })
+    await admin.result.current.mutateAsync({ identifier: 'alice', password: 'pw' })
+    expect(h.broadcast).toHaveBeenLastCalledWith('login')
+
+    const frontend = renderHook(() => useLogin(), { wrapper: wrapper(client) })
+    await frontend.result.current.mutateAsync({ identifier: 'alice', password: 'pw' })
+    expect(h.broadcast).toHaveBeenCalledTimes(2)
+    expect(h.broadcast).toHaveBeenLastCalledWith('login')
+  })
+
+  it('register (signs the new account in) broadcasts login', async () => {
+    vi.mocked(register).mockResolvedValue(fakeUser())
+    const { result } = renderHook(() => useRegister(), { wrapper: wrapper(makeClient()) })
+    await result.current.mutateAsync({ password: 'pw-long-enough', username: 'alice' })
+    expect(h.broadcast).toHaveBeenCalledWith('login')
+  })
+
+  it('logout, logout-all and delete-me broadcast logout', async () => {
+    vi.mocked(logout).mockResolvedValue(undefined)
+    vi.mocked(logoutAll).mockResolvedValue(undefined)
+    vi.mocked(deleteMe).mockResolvedValue(undefined)
+    const client = makeClient()
+
+    await renderHook(() => useLogout(), { wrapper: wrapper(client) }).result.current.mutateAsync()
+    await renderHook(() => useLogoutAll(), { wrapper: wrapper(client) }).result.current.mutateAsync()
+    await renderHook(() => useDeleteMe(), { wrapper: wrapper(client) }).result.current.mutateAsync({ password: 'pw' })
+
+    expect(h.broadcast.mock.calls).toEqual([['logout'], ['logout'], ['logout']])
+  })
+
+  it('does not broadcast when login or logout fails', async () => {
+    vi.mocked(adminLogin).mockRejectedValue(new Error('bad credentials'))
+    vi.mocked(logout).mockRejectedValue(new Error('network'))
+    const client = makeClient()
+
+    await expect(
+      renderHook(() => useAdminLogin(), { wrapper: wrapper(client) }).result.current.mutateAsync({ identifier: 'a', password: 'b' }),
+    ).rejects.toThrow()
+    await expect(renderHook(() => useLogout(), { wrapper: wrapper(client) }).result.current.mutateAsync()).rejects.toThrow()
+
+    expect(h.broadcast).not.toHaveBeenCalled()
+  })
+})
+
+// 后端改密码会撤销该账号的全部会话、清掉 auth cookie(同登出):本页和其他标签页都得离开已结束的会话。
+describe('useChangePassword ends the session like logout', () => {
+  function seedSession(client: QueryClient) {
+    client.setQueryData(queryKeys.admin.auth.me(), fakeUser())
+    client.setQueryData(queryKeys.auth.me(), fakeUser())
+    client.setQueryData(queryKeys.widgets.list(), { items: ['row-of-ended-session'] })
+  }
+
+  it('broadcasts logout, goes to the admin login page and keeps only the anonymous markers', async () => {
+    vi.mocked(changePassword).mockResolvedValue(undefined)
+    const client = makeClient()
+    seedSession(client)
+    // 导航那一刻:匿名标记已经写好(登录页 guest 闸见到旧用户会弹回首页),旧数据还没清(先离开页面再清)。
+    let atNavigate: { adminMe: unknown, widgets: unknown } | undefined
+    h.navigate.mockImplementation(async () => {
+      atNavigate = {
+        adminMe: client.getQueryData(queryKeys.admin.auth.me()),
+        widgets: client.getQueryData(queryKeys.widgets.list()),
+      }
+    })
+
+    const { result } = renderHook(() => useChangePassword(), { wrapper: wrapper(client) })
+    await result.current.mutateAsync({ current_password: 'old-pw', new_password: 'new-password-1' })
+
+    expect(changePassword).toHaveBeenCalledWith({ body: { current_password: 'old-pw', new_password: 'new-password-1' } })
+    expect(h.broadcast.mock.calls).toEqual([['logout']])
+    expect(h.navigate).toHaveBeenCalledExactlyOnceWith({ to: '/admin/login' })
+    expect(atNavigate).toEqual({ adminMe: null, widgets: { items: ['row-of-ended-session'] } })
+    // 上一个会话的数据一条不留,只剩两个 surface 的显式匿名标记。
+    expect(client.getQueryData(queryKeys.widgets.list())).toBeUndefined()
+    expect(client.getQueryData(queryKeys.admin.auth.me())).toBeNull()
+    expect(client.getQueryData(queryKeys.auth.me())).toBeNull()
+    expect(client.getQueryCache().getAll()).toHaveLength(2)
+  })
+
+  it('goes to the frontend login page when changed from the public site', async () => {
+    vi.mocked(changePassword).mockResolvedValue(undefined)
+    h.pathname = '/frontend/account'
+    const client = makeClient()
+    seedSession(client)
+
+    const { result } = renderHook(() => useChangePassword(), { wrapper: wrapper(client) })
+    await result.current.mutateAsync({ current_password: 'old-pw', new_password: 'new-password-1' })
+
+    expect(h.navigate).toHaveBeenCalledExactlyOnceWith({ to: '/frontend/login' })
+    expect(client.getQueryData(queryKeys.auth.me())).toBeNull()
+    expect(h.broadcast).toHaveBeenCalledWith('logout')
+  })
+
+  it('keeps the session, the cache and stays silent when the change fails', async () => {
+    vi.mocked(changePassword).mockRejectedValue(new Error('wrong current password'))
+    const client = makeClient()
+    seedSession(client)
+
+    const { result } = renderHook(() => useChangePassword(), { wrapper: wrapper(client) })
+    await expect(
+      result.current.mutateAsync({ current_password: 'wrong', new_password: 'new-password-1' }),
+    ).rejects.toThrow('wrong current password')
+
+    expect(h.broadcast).not.toHaveBeenCalled()
+    expect(h.navigate).not.toHaveBeenCalled()
+    expect(client.getQueryData(queryKeys.admin.auth.me())).toEqual(fakeUser())
+    expect(client.getQueryData(queryKeys.widgets.list())).toEqual({ items: ['row-of-ended-session'] })
   })
 })
 
