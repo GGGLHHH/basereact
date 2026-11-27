@@ -5,9 +5,8 @@ import betterTailwind from 'eslint-plugin-better-tailwindcss'
 export default antfu(
   {
     // No `type: 'lib'` — this is an app, and 'app' is the default.
-    // No `pnpm: true` either: pnpm-workspace.yaml here defines only
-    // onlyBuiltDependencies and no catalogs, so eslint-plugin-pnpm would flag
-    // every dependency for not using one.
+    // No `pnpm: true` either: pnpm-workspace.yaml here defines no catalogs,
+    // so eslint-plugin-pnpm would flag every dependency for not using one.
 
     // @eslint-react + react-refresh. rules-of-hooks and exhaustive-deps are the
     // point; the react-x no-* rules also auto-migrate React 19 idioms
@@ -29,14 +28,8 @@ export default antfu(
       },
     },
     ignores: [
-      // Carried over from .oxlintrc's ignorePatterns. dist, node_modules and
-      // .claude are already in antfu's GLOB_EXCLUDE, so only these remain.
+      // dist, node_modules and .claude are already in antfu's GLOB_EXCLUDE.
 
-      // GitNexus's parse caches — hundreds of thousands of lint reports live in
-      // there. It is listed in .git/info/exclude, which is local-only and which
-      // antfu's `gitignore: true` never reads (it reads .gitignore alone), so
-      // the ignore has to be stated here to hold for everyone.
-      '.gitnexus',
       // Rewritten by `tsr generate` on every route change.
       'src/routeTree.gen.ts',
       // vite-plugin-openapi-codegen output.
@@ -103,8 +96,7 @@ export default antfu(
 }).append({
   name: 'basereact/rule-overrides',
   rules: {
-    // Carried over from .oxlintrc. Row keys in the table/list components are
-    // index-based on purpose: the rows have no stable id before the server
+    // Row keys in the table/list components are index-based on purpose: the rows have no stable id before the server
     // assigns one.
     'react/no-array-index-key': 'off',
 

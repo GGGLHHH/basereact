@@ -56,7 +56,3 @@ export const REASON_LABEL_KEY: Record<FailureReason, CommonKey> = {
   account_locked: 'authLog.reasons.accountLocked',
   rate_limited: 'authLog.reasons.rateLimited',
 }
-
-export function toneOf(eventType: AuthEventType): Tone {
-  return EVENT_META[eventType].tone
-}

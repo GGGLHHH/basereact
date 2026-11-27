@@ -67,8 +67,8 @@ export function useAuthEventsPage(f: {
   })
 }
 
-// 后端读模型不含用户名(只 user_id + identifier_attempted);展示主体:失败取 identifier,
-// 成功暂取 user_id(读模型富化用户名是后续项)。ponytail: 富 auth_event.actor_name 后改这里。
+// 展示主体:后端读模型的 actor(登录成功等事件写的是用户名);没有 actor 时退回提交的
+// identifier(失败事件),再退回 user_id。
 export function toAuthEvent(row: AuthEventRow): AuthEvent {
   return {
     id: row.id,
@@ -103,7 +103,7 @@ const ZERO_KPI: Kpi = {
   failedDelta: 0,
 }
 
-/** AuthStats(后端)→ 组件领域形状。后端不算 delta(留 0,Trend 侧隐藏)。 */
+/** AuthStats(后端)→ 组件领域形状。delta 由后端按上一等长窗口算好(total_delta / failed_delta)。 */
 export function mapStats(s: AuthStats | undefined): MappedStats {
   if (!s) {
     return { kpi: ZERO_KPI, activity: [], reasons: [], types: [], topIps: [] }

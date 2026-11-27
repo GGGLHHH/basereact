@@ -26,7 +26,7 @@ import { getErrorMessage } from '@/lib/api-client'
  * 也没有平台角色。文案固定在这里;各 surface 的页面把自己的出口(登出 / 回首页)
  * 作为 children 放进来。
  */
-export function NoTenantState({ children, className }: { children?: ReactNode, className?: string }) {
+function NoTenantState({ children, className }: { children?: ReactNode, className?: string }) {
   const { t } = useTranslation()
   return (
     <Empty className={className}>

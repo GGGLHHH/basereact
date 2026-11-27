@@ -29,7 +29,7 @@ This matches the repo's shadcn idiom (`data-slot` thin parts, `cn(base, classNam
 4. **Internal actions are injected via the context, not render-props** — the action slot grabs it from the hook; the caller passes only the label.
 5. **The business wrapper composes i18n'd default slots** (`useTranslation` lives here) and exposes a `slots?` prop for per-instance override.
 
-## Example (real: `src/components/select/infinite-select.tsx`)
+## Example (real: the base is `InfiniteSelect` and its slot parts in `@gedatou/cadenza-ui`; the business wrapper is `src/business/user/select/user-infinite-select.tsx`)
 
 ```tsx
 // BASE — zero text, zero i18n. Context + hook + slot parts live here (lowest layer).
@@ -49,20 +49,21 @@ export function InfiniteSelectRetry({ className, onClick, ...p }: ComponentProps
 ```
 
 ```tsx
-// BUSINESS WRAPPER — i18n lives ONLY here; composes defaults, allows override.
-export function UserInfiniteSelect({ slots, ...props }: UserInfiniteSelectProps) {
+// BUSINESS WRAPPER — i18n lives ONLY here; composes the default slots, callers append more.
+export function UserInfiniteSelect(props: UserInfiniteSelectProps) {
   const { t } = useTranslation('common')
-  const defaultSlots = (
-    <>
+  return (
+    <InfiniteCombobox {...}>
+      {props.children /* trigger */}
       <InfiniteSelectEmpty>{t('loading.empty')}</InfiniteSelectEmpty>
-      <InfiniteSelectLoading>{t('loading.loading')}</InfiniteSelectLoading>
+      <InfiniteSelectLoadingOverlay>{t('loading.loading')}</InfiniteSelectLoadingOverlay>
       <InfiniteSelectError>
         {t('loading.failed')}
         <InfiniteSelectRetry>{t('action.retry')}</InfiniteSelectRetry>
       </InfiniteSelectError>
-    </>
+      {props.slots /* e.g. an InfiniteSelectFooter */}
+    </InfiniteCombobox>
   )
-  return <InfiniteCombobox slots={slots ?? defaultSlots} {...} />  // slots pass through as InfiniteSelect children
 }
 ```
 
@@ -86,4 +87,4 @@ Same rule for footer actions (clear/close): `InfiniteSelectActionsProvider` + `u
 
 - **Base:** `createContext` + `useXState()` + `<XEmpty>/<XLoading>/<XError>/<XRetry>` (each `data-slot`; share one status container with `role='status'` for a11y) + render `{children}` under the provider.
 - **Action slot:** `const { onRetry } = useXState(); if (!onRetry) return null` — wire it internally, label via `children`.
-- **Business wrapper:** `const { t } = useTranslation()` → `const defaultSlots = <>…t()…</>` → `<Base slots={props.slots ?? defaultSlots}>`.
+- **Business wrapper:** `const { t } = useTranslation()` → render the i18n'd default slots as children of the base, then `{props.slots}` for per-instance extras.

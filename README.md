@@ -1,193 +1,49 @@
-Welcome to your new TanStack Start app! 
+# basereact
 
-# Getting Started
+baserust 全家桶的前端:TanStack Start(React 19 + TanStack Router / Query,SSR 走 Nitro)+ Tailwind v4,
+组件库用 [`@gedatou/cadenza-ui`](https://github.com/GGGLHHH/cadenza)(表单 `@gedatou/cadenza-form`、动画图标
+`@gedatou/cadenza-icons`)。后端是同仓库组里的 baserust,接口类型从它的 OpenAPI 生成。
 
-To run this application:
+## 本地开发
 
 ```bash
 pnpm install
-pnpm dev
+cp .env.example .env   # 可选:不建 .env 时用 vite.config.ts 里的默认值
+pnpm dev               # http://localhost:7621,/api 代理到 BACKEND_ORIGIN(默认 http://localhost:8137)
 ```
 
-# Building For Production
+后端怎么起、整栈怎么用 Docker 起,见上一级 baserust-stack 的 README。
 
-To build this application for production:
+## 常用命令
 
-```bash
-pnpm build
-```
+| 命令 | 作用 |
+|---|---|
+| `pnpm dev` | 开发服务器(端口 `FRONTEND_DEV_PORT`) |
+| `pnpm build` / `pnpm start` | 生产构建(产物 `.output/`)/ 本地跑构建产物 |
+| `pnpm lint` / `pnpm fix` | ESLint 检查 / 自动修复 |
+| `pnpm tsc` | 类型检查 |
+| `pnpm test` | Vitest 单元 / 组件测试(happy-dom) |
+| `pnpm check` | `fix` + `tsc` + `test` |
+| `pnpm generate` | 从运行中的后端(`${BACKEND_ORIGIN}/api-docs/openapi.json`)重新生成 `src/generated/*` |
+| `pnpm generate-routes` | 重新生成 `src/routeTree.gen.ts`(`pnpm dev` / `pnpm build` 也会自动重生成) |
 
-## Testing
+CI(`.github/workflows/ci.yml`)依次跑 lint、tsc、test、build。
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## 目录
 
-```bash
-pnpm test
-```
+| 路径 | 内容 |
+|---|---|
+| `src/routes/` | 文件路由。`admin/` 后台(纯客户端渲染,`_shell` 带侧栏和准入守卫),`frontend/` 公开站(SSR)。`-` 前缀的文件不进路由生成,放页面组件和测试 |
+| `src/api/` | 按资源分的 TanStack Query hooks,调 `src/generated/client.ts` |
+| `src/business/` | 业务组件(表格、弹窗、表单分区) |
+| `src/components/` | 通用组件;`ui/` 是 shadcn 生成、被 `ui-lock.test.ts` 钉住哈希的少数几个,新组件用 cadenza-ui |
+| `src/lib/` | api-client(ky + 401 刷新梯)、路由守卫、菜单、会话同步、错误上报等 |
+| `src/i18n/` | i18next,`en-US` 是基准语言(key 类型从它推导),另有 `zh-CN` |
+| `src/generated/`、`src/routeTree.gen.ts` | 生成文件,不手改 |
+| `.claude/skills/` | 本仓库的写法约定(路由拆分、缓存同步、组件插槽、导航) |
 
-## Styling
+## 部署
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+`Dockerfile` 构建 Nitro 自包含 server(`.output/server/index.mjs`,监听 `$PORT`,默认 3000)。容器本身不处理 `/api`:
+生产由前面的 nginx 把 `/api` 转给后端、其余转给本容器(见 baserust-stack 的 `compose.yaml` 和 `deploy/`)。
+构建时传 `APP_RELEASE` 会作为前端版本号随错误上报带给后端。

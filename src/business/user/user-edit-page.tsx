@@ -20,7 +20,7 @@ import { AccountStamp, FieldRow, VerifiedBadge } from './user-badges'
 
 // 分区式编辑:每区 = 一个后端端点,各自独立保存,失败互不牵连。
 // username/email → updateUser;roles → setUserRoles;password → resetUserPassword;
-// 头像/display_name/phone → putProfile(需 profiles:write,无权限则整区不出现)。
+// 头像/display_name/phone → setUserProfile / 头像上传(都在 users:admin 之下,整页同一个门)。
 export function UserEditPage({ userId }: { userId: string }) {
   const { t } = useTranslation('common')
   const router = useRouter()

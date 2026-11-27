@@ -8,9 +8,9 @@ import { UserDetailRoute } from './-user-detail-route'
 // 从本路由去嵌套 → 编辑整屏替换详情而非套进来,故本路由是叶子(无 Outlet)。
 export const Route = createFileRoute('/admin/_shell/users/$userId')({
   component: UserDetailRoute,
-  // 进页前 ensure 详情:命中缓存(列表刚看过)则零请求,首帧即有数据。
+  // 进页前取详情:命中缓存(列表刚看过)则零请求,首帧即有数据(staleTime 'static':有缓存就用)。
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(userQueryOptions(params.userId)),
+    context.queryClient.query({ ...userQueryOptions(params.userId), staleTime: 'static' }),
   staticData: {
     titleKey: 'titles.adminUserDetail',
     accessPolicyKeys: ['getUser'],

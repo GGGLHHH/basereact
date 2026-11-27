@@ -68,10 +68,6 @@
     "dark": "Dark",
     "system": "System"
   },
-  "home": {
-    "editHint": "Edit <code>{{path}}</code> to get started.",
-    "welcome": "Welcome to TanStack Start"
-  },
   "action": {
     "cancel": "Cancel",
     "clear": "Clear",
@@ -85,7 +81,6 @@
     "save": "Save",
     "saveChanges": "Save changes",
     "saving": "Saving...",
-    "search": "Search",
     "view": "View"
   },
   "loading": {
@@ -102,12 +97,7 @@
     "summary": "Showing {{count}} of {{total}}"
   },
   "upload": {
-    "confirming": "Confirming...",
-    "done": "Upload complete",
-    "error": "Upload failed",
-    "failedWithStatus": "Upload failed with status {{status}}",
-    "preparing": "Preparing...",
-    "uploading": "Uploading..."
+    "failedWithStatus": "Upload failed with status {{status}}"
   },
   "form": {
     "togglePassword": "Toggle password visibility"
@@ -132,15 +122,12 @@
     "login": {
       "description": "Enter your email below to login to your account",
       "forgotPassword": "Forgot your password?",
-      "google": "Login with Google",
       "identifierLabel": "Email or username",
       "identifierPlaceholder": "m@example.com",
       "identifierRequired": "Email or username is required",
-      "noAccount": "Don't have an account?",
       "noTenant": "This account doesn't belong to any organization yet, so it can't sign in to the admin console. Please contact an administrator to be added to an organization.",
       "passwordLabel": "Password",
       "passwordRequired": "Password is required",
-      "signUp": "Sign up",
       "submit": "Login",
       "submitting": "Logging in...",
       "title": "Login to your account"
@@ -164,7 +151,6 @@
   "users": {
     "actions": "Actions",
     "columns": {
-      "avatarUrl": "Avatar URL",
       "createdAt": "Created at",
       "displayName": "Display name",
       "email": "Email",
@@ -186,14 +172,11 @@
       "title": "Delete account"
     },
     "detail": {
-      "account": "Account ID",
-      "notFound": "Account not found",
-      "title": "Account detail"
+      "account": "Account ID"
     },
     "edit": {
       "accountDescription": "Change the sign-in username and email address.",
       "accountTitle": "Account",
-      "description": "Manage this account's identity, roles, password, and profile.",
       "metaTitle": "System",
       "passwordButton": "Reset password",
       "passwordDescription": "Set a new password directly — the current one is not required.",
@@ -207,8 +190,7 @@
       "rolesFixed": "The super admin role cannot be changed here (it is declared only in the seed data).",
       "rolesSaved": "Roles saved",
       "rolesTitle": "Roles",
-      "success": "Changes saved",
-      "title": "Edit account"
+      "success": "Changes saved"
     },
     "empty": "No accounts yet",
     "filterRoles": "Roles",
@@ -224,8 +206,6 @@
       "passwordPlaceholder": "At least 3 characters",
       "phone": "Phone",
       "phonePlaceholder": "Optional",
-      "rolesAddPlaceholder": "Add a role, then press Enter",
-      "rolesHint": "Comma-separated role names; leave blank for none.",
       "rolesPlaceholder": "e.g. admin, editor",
       "usernamePlaceholder": "Enter a username"
     },
@@ -365,17 +345,6 @@
     "tableLabel": "Organizations table"
   },
   "nav": {
-    "main": {
-      "platform": "Platform"
-    },
-    "projects": {
-      "delete": "Delete Project",
-      "more": "More",
-      "moreActions": "More",
-      "share": "Share Project",
-      "title": "Projects",
-      "view": "View Project"
-    },
     "user": {
       "logout": "Log out",
       "profile": "Profile"

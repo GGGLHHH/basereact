@@ -17,7 +17,7 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   # via @reduxjs/toolkit <- recharts, which the chart components need.
   - reselect@5.1.1
-  # via @babel/core <- @babel/preset-typescript <- shadcn.
+  # via @babel/core <- @tanstack/start-plugin-core (react-start) / @tanstack/router-cli.
   - semver@6.3.1
   # via @types/node <- happy-dom / vitest.
   - undici-types@6.21.0

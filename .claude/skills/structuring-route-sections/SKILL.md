@@ -34,7 +34,7 @@ users/
    |---|---|---|
    | `menuTitleKey`, `icon`, `groupKey` | layout `route.tsx` | the menu node is the route carrying `menuTitleKey`; children with only `titleKey` stay out of the menu |
    | section `accessPolicyKeys` | layout `route.tsx` | the menu node is pruned by *its own* policy, so section access must live where the menu title lives — and it then ANDs onto every child (fine when the whole section shares one permission set) |
-   | `titleKey` | each child leaf | breadcrumb is the chain of `titleKey`s (`_shell.tsx`); the layout's `titleKey` becomes the clickable parent crumb |
+   | `titleKey` | each child leaf | breadcrumb is the chain of `titleKey`s (`-shell-layout.tsx`); the layout's `titleKey` becomes the clickable parent crumb |
    | per-page `accessPolicyKeys` | each child leaf | gate on the write op the page performs (`createUser`/`updateUser`) — ANDed with the section policy |
    | `validateSearch` | the one route that reads it (`index.tsx`) | putting it on the layout leaks the params onto every child |
 
@@ -42,7 +42,7 @@ users/
 
 ## Before committing
 
-- `npx tsr generate` — route tree is manual here (`generateOnDev/Hmr: false`). Then `npx tsc --noEmit`.
+- `pnpm generate-routes` (`tsr generate`) rewrites `src/routeTree.gen.ts` without a dev server (`pnpm dev` / `pnpm build` regenerate it too). Then `pnpm tsc`.
 - Confirm the `to` union still lists the same URLs (`grep "'/admin/…" src/routeTree.gen.ts`) — existing `navigate({ to })` call sites should need no change.
 
 ## Common mistakes

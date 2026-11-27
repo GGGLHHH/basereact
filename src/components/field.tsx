@@ -16,13 +16,9 @@ import { cn } from '@/lib/utils'
 // call sites pass `required` instead of the old `require` alias.
 export {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldLabel,
   FieldLegend,
-  FieldSeparator,
   FieldSet,
-  FieldTitle,
 } from '@gedatou/cadenza-ui'
 
 function FieldGroup({ className, ...props }: FieldGroupProps) {

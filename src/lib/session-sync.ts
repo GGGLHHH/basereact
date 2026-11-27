@@ -21,7 +21,7 @@ export const SESSION_CHANNEL = 'basereact:session'
 /** 会话怎么变的:登录 / 登出 / 切换当前组织。 */
 export type SessionChangeReason = 'login' | 'logout' | 'tenant-switched'
 
-export interface SessionChangedMessage {
+interface SessionChangedMessage {
   type: 'session-changed'
   reason: SessionChangeReason
   /** 发出广播的标签页(本模块实例)的 id,用来忽略自己的广播。 */
@@ -60,7 +60,7 @@ export function broadcastSessionChanged(reason: SessionChangeReason): void {
 }
 
 /** 订阅其他标签页的会话变更(本标签页自己的广播被忽略);返回取消订阅。 */
-export function onSessionChanged(handler: (reason: SessionChangeReason) => void): () => void {
+function onSessionChanged(handler: (reason: SessionChangeReason) => void): () => void {
   if (!hasChannel()) {
     return () => {}
   }

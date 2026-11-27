@@ -15,7 +15,7 @@ export function MenuIcon({ icon: Icon }: { icon?: AdminMenuEntry['icon'] }) {
 }
 
 // 飞出层:叶子=Link 直达,
-// 含子=递归 DropdownMenuSubmenu,多级也能点到任意子页。飞出层用 vendored ui/dropdown-menu
+// 含子=递归 DropdownMenuSubmenu,多级也能点到任意子页。飞出层用 cadenza 的 DropdownMenu
 // (块流,不加容器间距);项间缝由下面的 pill 内缩给。
 //
 // 飞出项高亮走内缩 ::before pill:pill 四周都内缩(inset-x-1 + inset-y-0.5),相邻两项的

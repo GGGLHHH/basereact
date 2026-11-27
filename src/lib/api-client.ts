@@ -1,7 +1,7 @@
-// Runtime contract for vite-plugin-openapi-codegen generated clients.
-// Trimmed from xchangeai-web's api-client: same ky setup, error
-// normalization and 401 refresh ladder, minus i18n / toast — port those
-// back from xchangeai-web when this app grows them.
+// Runtime contract for vite-plugin-openapi-codegen generated clients
+// (src/generated/client.ts imports requestJson / requestVoid / ApiRequestOptions
+// from here): ky setup, error normalization, the 401 refresh ladder and the
+// tenant_required redirect.
 
 import type { LinkProps } from '@tanstack/react-router'
 import type { Options as KyOptions } from 'ky'
@@ -25,7 +25,7 @@ export const TENANT_REQUIRED_CODE = 'tenant_required' satisfies ErrorBody['code'
  */
 export const INVALID_CREDENTIALS_CODE = 'invalid_credentials' satisfies ErrorBody['code']
 export const ADMIN_NO_TENANT_ROUTE = '/admin/no-tenant' satisfies LinkProps['to']
-export const FRONTEND_NO_TENANT_ROUTE = '/frontend/no-tenant' satisfies LinkProps['to']
+const FRONTEND_NO_TENANT_ROUTE = '/frontend/no-tenant' satisfies LinkProps['to']
 const RETRIED_AFTER_REFRESH_HEADER = 'x-retried-after-refresh'
 
 /**
@@ -170,7 +170,7 @@ function retryAfterRefresh(request: Request) {
   })
 }
 
-export const api = ky.create({
+const api = ky.create({
   credentials: 'include',
   hooks: {
     afterResponse: [

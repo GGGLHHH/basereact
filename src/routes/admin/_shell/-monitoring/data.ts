@@ -5,7 +5,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getMonitoring, getMonitoringHistory, listMonitoringLogs } from '@/generated/client'
 
 /** 页面轮询间隔。后端每 15 秒存一个实时点,KPI / 表格是现算的,5 秒刷新足够"实时"。 */
-export const REFRESH_MS = 5000
+const REFRESH_MS = 5000
 
 /** 实时报告:定时轮询;切到后台标签页时暂停(react-query 默认不在后台轮询)。 */
 export function useMonitoring() {

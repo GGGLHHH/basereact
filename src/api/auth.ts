@@ -5,7 +5,6 @@ import type {
   DeleteMeRequest,
   LoginRequest,
   RegisterRequest,
-  UpdateMeRequest,
   UserResponse,
 } from '@/generated/api-types'
 
@@ -25,7 +24,6 @@ import {
   logout as logoutApi,
   register as registerApi,
   switchTenant as switchTenantApi,
-  updateMe as updateMeApi,
 } from '@/generated/client'
 import { AUTH_PROBE_HEADER, SOFT_AUTH_HEADER } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
@@ -69,19 +67,11 @@ export function useAdminLogin() {
 
 // 公开页导航栏的登录态探测:软探针(SOFT_AUTH_HEADER),匿名 401 只报错、
 // 不触发刷新梯/命令式跳转——公开页的匿名访客不该被一次注定失败的探测弹走。
-// 与 useMe 共用 auth.me 缓存:about 守卫(AUTH_PROBE_HEADER)一旦填充,导航即同步。
+// 与 requireUser 守卫(AUTH_PROBE_HEADER)共用 auth.me 缓存:守卫一旦填充,导航即同步。
 export const meSoftQueryOptions = queryOptions({
   queryFn: () => getMeApi({}, { headers: { [SOFT_AUTH_HEADER]: '1' } }),
   queryKey: queryKeys.auth.me(),
 })
-
-export function useMe(options?: { enabled?: boolean }) {
-  return useQuery({
-    enabled: options?.enabled ?? true,
-    queryFn: () => getMeApi({}),
-    queryKey: queryKeys.auth.me(),
-  })
-}
 
 export function useLogin() {
   const queryClient = useQueryClient()
@@ -99,7 +89,7 @@ export function useLogin() {
 // ---- 租户(两个 surface 共用:cookie 里只有一个当前租户) ----
 
 // 我的有效成员关系(租户 active + 成员 active),最近用过的在前,current 标出当前租户。
-export const myTenantsQueryOptions = queryOptions({
+const myTenantsQueryOptions = queryOptions({
   queryFn: () => listMyTenantsApi({}),
   queryKey: queryKeys.auth.tenants(),
 })
@@ -166,16 +156,6 @@ export function useRegister() {
       queryClient.setQueryData(queryKeys.auth.me(), user)
       // 注册成功即登录(后端写 auth cookie):同登录,通知其他标签页。
       broadcastSessionChanged('login')
-    },
-  })
-}
-
-export function useUpdateMe() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (request: UpdateMeRequest) => updateMeApi({ body: request }),
-    onSuccess: (user) => {
-      queryClient.setQueryData(queryKeys.auth.me(), user)
     },
   })
 }

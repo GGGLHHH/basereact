@@ -4,7 +4,7 @@ import type { AuthChannel, AuthEventType, AuthOutcome, FailureReason } from '@/g
 
 // 事件类型/通道/结果/失败原因单一真相源 = 后端枚举(regen 的闭合 union)。后端加变体 → regen →
 // union 变宽 → palette 的 exhaustive Record 编译不过,逼前端处理(漂移构建期抓)。
-export type { AuthChannel, AuthEventType, AuthOutcome, FailureReason }
+export type { AuthEventType, AuthOutcome, FailureReason }
 
 /** 视觉色调(安全语义)。见 palette.ts。 */
 export type Tone = 'success' | 'fail' | 'warn' | 'accent' | 'muted'
@@ -53,13 +53,4 @@ export interface IpStat {
   ip: string
   failures: number
   total: number
-}
-
-export interface AuthLogData {
-  kpi: Kpi
-  activity: HourBucket[]
-  reasons: Count<FailureReason>[]
-  types: Count<AuthEventType>[]
-  topIps: IpStat[]
-  recent: AuthEvent[]
 }

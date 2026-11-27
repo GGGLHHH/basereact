@@ -30,7 +30,7 @@ export function normalizeLocale(locale?: string | null): AppLocale {
   return byLanguage ?? DEFAULT_LOCALE
 }
 
-export function isSupportedLocale(locale: string): locale is AppLocale {
+function isSupportedLocale(locale: string): locale is AppLocale {
   return (SUPPORTED_LOCALES as readonly string[]).includes(locale)
 }
 

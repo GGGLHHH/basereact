@@ -6,7 +6,7 @@ import { useCallback, useMemo } from 'react'
  * Cursor pagination response envelope for APIs that expose `next_cursor`.
  * Empty backend pages may return `items: null`; this hook normalizes them.
  */
-export interface InfiniteCursorPage<TItem> {
+interface InfiniteCursorPage<TItem> {
   items: TItem[] | null
   nextCursor?: string
 }
@@ -14,7 +14,7 @@ export interface InfiniteCursorPage<TItem> {
 /**
  * Cursor pagination fields injected on every page request.
  */
-export interface InfiniteCursorPaginationParams {
+interface InfiniteCursorPaginationParams {
   cursor?: string
   limit: number
 }

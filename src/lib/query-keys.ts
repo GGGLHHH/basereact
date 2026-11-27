@@ -18,24 +18,15 @@ export const queryKeys = {
   profile: {
     all: ['profile'] as const,
     me: () => [...queryKeys.profile.all, 'me'] as const,
-    // 管理员按 user_id 查/改他人资料(GET/PUT /profiles/{user_id});与 me() 分开缓存。
+    // 管理员按 user_id 查/改他人资料(GET/PUT /admin/auth/users/{id}/profile);与 me() 分开缓存。
     detail: (userId: string) => [...queryKeys.profile.all, 'detail', userId] as const,
   },
   contents: {
     all: ['contents'] as const,
-    list: () => [...queryKeys.contents.all, 'list'] as const,
-    detail: (id: string) => [...queryKeys.contents.all, 'detail', id] as const,
-    metadata: (id: string) => [...queryKeys.contents.detail(id), 'metadata'] as const,
-    objects: (id: string) => [...queryKeys.contents.detail(id), 'objects'] as const,
   },
   widgets: {
     all: ['widgets'] as const,
     list: (request?: unknown) => [...queryKeys.widgets.all, 'list', request ?? {}] as const,
-    adminList: (request?: unknown) =>
-      [...queryKeys.widgets.all, 'admin-list', request ?? {}] as const,
-    detail: (id: string) => [...queryKeys.widgets.all, 'detail', id] as const,
-    stats: () => [...queryKeys.widgets.all, 'stats'] as const,
-    myCount: () => [...queryKeys.widgets.all, 'my-count'] as const,
   },
   // 本租户成员(GET /admin/auth/members,租户级)。切换租户时随全部查询一起 resetQueries(见 lib/session-sync.ts)。
   members: {

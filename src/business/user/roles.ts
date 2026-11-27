@@ -24,7 +24,7 @@ const IS_PLATFORM_ROLE = {
 export const PLATFORM_ROLE_NAMES: RoleName[] = ROLE_NAMES.filter(role => IS_PLATFORM_ROLE[role])
 
 /** 管理持平台角色的账号所需的权限(superadmin 独占)。 */
-export const PLATFORM_ROLES_PERM = 'platform:roles' satisfies Perm
+const PLATFORM_ROLES_PERM = 'platform:roles' satisfies Perm
 
 /** 账号持有任一平台角色(superadmin / 平台管理员)。 */
 export function holdsPlatformRole(roles: readonly RoleName[]): boolean {

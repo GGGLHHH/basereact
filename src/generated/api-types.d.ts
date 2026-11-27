@@ -897,7 +897,7 @@ export interface paths {
         };
         /**
          * **仅登录**(authenticated):当前用户在**当前租户**里创建的 widget 数。要 `CurrentUser`、**无特定 perm**
-         *     (`OP_PERMS` 标 `None` → 文档 `security:[{"oauth2":[]}]`)。演示"只需登录"形态。
+         *     (`OPERATION_PERMISSIONS` 标 `LoginOnly` → 文档 `security:[{"oauth2":[]}]`)。演示"只需登录"形态。
          *     数的是租户数据,所以仍要当前租户(平台上下文 → 403 `tenant_required`)。
          */
         get: operations["my_widget_count"];
@@ -919,7 +919,7 @@ export interface paths {
         /**
          * **多权限 OR 样板**:概览 —— 普通读权**或**本组织成员管理员(`members:admin`)任一即可。
          *     两支都是租户级权限:租户数据的接口不拿平台级权限(如 `users:admin`)当闸(spec §4.3)。
-         *     `require_any` 全败才 403;文档 = 多 requirement 各一 scope(`PermReq::Any`)。
+         *     `require_any` 全败才 403;文档 = 多 requirement 各一 scope(`PermissionRequirement::Any`)。
          */
         get: operations["widget_overview"];
         put?: never;
@@ -939,7 +939,7 @@ export interface paths {
         };
         /**
          * **多权限 AND 样板**:删除预检 —— 读得见**且**删得动才允许看"可删多少"。
-         *     `require_all` 缺任一 perm 即 403;文档 = 单 requirement 多 scope(`OP_PERMS` 的 `PermReq::All`)。
+         *     `require_all` 缺任一 perm 即 403;文档 = 单 requirement 多 scope(`OPERATION_PERMISSIONS` 的 `PermissionRequirement::All`)。
          */
         get: operations["purge_preview"];
         put?: never;
@@ -959,7 +959,7 @@ export interface paths {
         };
         /**
          * **仅登录**:当前租户的 widget 计数。要登录(frontend 组闸)+ 当前租户(`CurrentTenant`,缺 → 403
-         *     `tenant_required`),**无特定 perm**(`OP_PERMS` 标 `LoginOnly`)。按租户计数走普通运行时池 + 租户事务。
+         *     `tenant_required`),**无特定 perm**(`OPERATION_PERMISSIONS` 标 `LoginOnly`)。按租户计数走普通运行时池 + 租户事务。
          * @description 曾是免登录的「全站计数」:多租户下匿名请求没有租户,跨租户汇总要绕过 RLS,违背「租户互相看不见」,
          *     所以移到 frontend 组、只数当前租户。业务里要做公开数字,先想清楚它属于哪个租户。
          */
@@ -1079,7 +1079,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 兼容别名 = livez,保留早期 `/health` 引用不破。 */
+        /**
+         * 与 livez 相同(进程活着即 ok,不查依赖)。生产 nginx 对外只暴露这个探活入口
+         *     (`location = /health`),外层负载均衡和部署脚本都探它。
+         */
         get: operations["health"];
         put?: never;
         post?: never;
@@ -1297,7 +1300,8 @@ export interface components {
         };
         /**
          * @description 内容生命周期状态闭集(镜像 `content::ContentStatus` 的 wire 串;库零 HTTP 不 derive
-         *     ToSchema,视图枚举归消费方 —— 见 closed-enums skill)。`From` 穷尽匹配:库加变体这里编译错。
+         *     ToSchema,视图枚举归消费方 —— 见 closed-enums skill)。库的枚举是 `#[non_exhaustive]`,转换用 `TryFrom`:
+         *     已知变体逐个列出,库以后新加的变体 → 500(细节只进日志)。
          * @enum {string}
          */
         ContentStatusView: "created" | "uploading" | "uploaded" | "processing" | "processed" | "failed" | "archived";
@@ -1832,7 +1836,7 @@ export interface components {
             page_info: components["schemas"]["PageInfo"];
         };
         /**
-         * @description 权限词表的**唯一真相**(封闭集)。handler 用变体 `Perm::WidgetWrite`,拼错=编译错。
+         * @description 权限词表的**唯一真相**(封闭集)。handler 用变体 `Permission::WidgetWrite`,拼错=编译错。
          *     wire 串(TOML / JWT scope)经 `rename` 映射;未知串 → 反序列化失败 → 启动期挡住(fail-fast)。
          *     加权限 = 加一个变体 + `rename`,别处不动。
          * @enum {string}

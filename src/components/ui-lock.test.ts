@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-// vendored shadcn 组件(src/components/ui/**)不手改、可被 `shadcn add` 重生成覆盖。
-// 我们对个别文件打了必需的本地补丁(如 sidebar.tsx 的 min-w-0,防 admin 页宽表撑出页面横滚)。
-// 此测试对整个 ui/ 目录逐文件取 sha256 快照钉住:任一文件漂移(re-add 覆盖丢补丁、误改)即
-// 转红,提示人工确认。有意升级/重贴补丁后,跑 `vitest -u` 重钉快照。
+// vendored shadcn 组件(src/components/ui/**)不手改、可被 `shadcn add` 重生成覆盖;新组件优先用
+// @gedatou/cadenza-ui,这里只剩还有消费者的几个。
+// 此测试对整个 ui/ 目录逐文件取 sha256 快照钉住:任一文件漂移(re-add 覆盖、误改)即
+// 转红,提示人工确认。有意升级 / 增删文件后,跑 `vitest -u` 重钉快照。
 const UI_DIR = join(dirname(fileURLToPath(import.meta.url)), 'ui')
 
 function collectFiles(dir: string): string[] {

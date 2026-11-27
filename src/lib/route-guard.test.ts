@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   matchRoutes: vi.fn<(...args: unknown[]) => unknown>(),
 }))
 
-// route-guard 经 #/api/auth 引 myPermissionsQueryOptions,auth.ts 的其余
+// route-guard 经 @/api/auth 引 myPermissionsQueryOptions,auth.ts 的其余
 // generated 导入也走这个 mock,缺一个命名导出就是 import 期报错——全部补上。
 vi.mock('@/generated/client', () => ({
   adminGetMe: mocks.adminGetMe,
@@ -28,7 +28,6 @@ vi.mock('@/generated/client', () => ({
   logoutAll: vi.fn(),
   register: vi.fn(),
   switchTenant: vi.fn(),
-  updateMe: vi.fn(),
 }))
 
 // 守卫在模块内用 matchRoutes 现算匹配链;测试注入假体控制链上的 staticData。

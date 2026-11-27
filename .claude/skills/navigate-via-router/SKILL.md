@@ -19,7 +19,7 @@ All navigation goes through TanStack Router. Never hand-roll `<a href>`, `window
 Interceptors, route guards, plain utilities, event code — anything that can't call hooks — uses the registered singleton in `src/lib/global-router.ts`. There is **no** direct `import { router }`; the instance lives on `globalRouter.instance`, a **nullable** holder (set in `router.tsx` at startup, mockable in tests).
 
 ```ts
-import { globalRouter } from '#/lib/global-router'
+import { globalRouter } from '@/lib/global-router'
 
 // nullable — guard it
 globalRouter.instance?.navigate({ to: '/login' })

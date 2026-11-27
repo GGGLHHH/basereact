@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
  * 这是 @gedatou/cadenza-ui 的 DataTable 唯一没有的东西:它只接受固定的 `maxHeight`
  * (默认 480)。所以迁移时这段没有被删,而是抽出来喂给它的 `maxHeight`。
  *
- * 从 src/components/table/data-table.tsx 原样搬出,逻辑未改。
+ * 从迁移前的本地 DataTable(components/table/data-table.tsx,已删)原样搬出,逻辑未改。
  */
 
 /**
@@ -23,11 +23,10 @@ export const TABLE_HEADER_HEIGHT = 40
 const AUTO_FIT_MIN_HEIGHT = TABLE_HEADER_HEIGHT + TABLE_ROW_HEIGHT * 3
 const AUTO_FIT_SAFETY_BUFFER = 4
 
-// 「高度受限」的祖先容器。cadenza 与本仓库冻结区各自发出一套 data-slot,两套都要列:
-// scroll-area-viewport / popover-content 两边同名;sidebar-inset 只有冻结区的 sidebar.tsx
-// 发(admin 布局用的就是它,自适应高度实际量的祖先);而 cadenza 的对话框把
-// shadcn 时代的 dialog-content 改叫了 dialog-popup / alert-dialog-popup / dialog-viewport ——
-// 漏掉它们的话,放进对话框的表格会一路找到 documentElement、按整个视口高度撑开。
+// 「高度受限」的祖先容器,按 @gedatou/cadenza-ui 发出的 data-slot 认:后台壳的
+// sidebar-inset / scroll-area-viewport(自适应高度实际量的祖先)、弹层 popover-content,
+// 以及对话框的 dialog-popup / alert-dialog-popup / dialog-viewport(shadcn 时代叫
+// dialog-content)—— 漏掉它们的话,放进对话框的表格会一路找到 documentElement、按整个视口高度撑开。
 const STABLE_ANCESTOR_SLOTS = new Set([
   'scroll-area-viewport',
   'sidebar-inset',
@@ -35,9 +34,6 @@ const STABLE_ANCESTOR_SLOTS = new Set([
   'dialog-popup',
   'dialog-viewport',
   'alert-dialog-popup',
-  // 冻结区里仍有消费者的旧名
-  'sheet-content',
-  'dialog-content',
 ])
 
 function findLimitedHeightAncestor(start: HTMLElement): HTMLElement {

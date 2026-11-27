@@ -71,8 +71,8 @@ export function useUpdateProfile() {
 }
 
 // 后台管理员按 user_id 查他人资料 —— 走 admin 面(GET /admin/auth/users/{id}/profile,users:admin),
-// 不再需要 profiles:read。资料/头像管理整条收进 users:admin(见 baserust 纳入)。
-export function userProfileQueryOptions(userId: string) {
+// 不需要 profiles:read:后台的资料 / 头像管理整条收在 users:admin 之下。
+function userProfileQueryOptions(userId: string) {
   return queryOptions({
     queryFn: () => getUserProfileApi({ path: { id: userId } }),
     queryKey: queryKeys.profile.detail(userId),

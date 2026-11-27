@@ -24,13 +24,13 @@ import { queryKeys } from '@/lib/query-keys'
 const MEMBERS_LIST_KEY = [...queryKeys.members.all, 'list']
 
 /** 就地替换某成员在所有已缓存成员列表分页里的行。 */
-export function patchMemberInLists(queryClient: QueryClient, member: MemberView): void {
+function patchMemberInLists(queryClient: QueryClient, member: MemberView): void {
   queryClient.setQueriesData<Page_MemberView>({ queryKey: MEMBERS_LIST_KEY }, old =>
     old ? { ...old, items: old.items.map(m => (m.id === member.id ? member : m)) } : old)
 }
 
 /** 从所有已缓存成员列表分页里移除某成员。 */
-export function removeMemberFromLists(queryClient: QueryClient, userId: string): void {
+function removeMemberFromLists(queryClient: QueryClient, userId: string): void {
   queryClient.setQueriesData<Page_MemberView>({ queryKey: MEMBERS_LIST_KEY }, old =>
     old ? { ...old, items: old.items.filter(m => m.id !== userId) } : old)
 }

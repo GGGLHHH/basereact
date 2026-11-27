@@ -50,7 +50,7 @@ export function patchUserInLists(
 }
 
 /** 从所有已缓存 users.list 分页里移除某用户(删除乐观反映)。 */
-export function removeUserFromLists(queryClient: QueryClient, id: string): void {
+function removeUserFromLists(queryClient: QueryClient, id: string): void {
   queryClient.setQueriesData<Page_AdminUserView>({ queryKey: USERS_LIST_KEY }, old =>
     old ? { ...old, items: old.items.filter(u => u.id !== id) } : old)
 }

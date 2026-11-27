@@ -21,9 +21,9 @@ body {
   }
 
   /* Tailwind v4 Preflight no longer sets cursor:pointer on buttons (it follows the CSS
-     spec default `cursor: default`), and the vendored base-vega button does not add it.
-     Restore the pointer cursor app-wide here instead of forking src/components/ui/button.
-     Anchors styled as buttons (buttonVariants on <Link>) already get pointer from the UA. */
+     spec default `cursor: default`), and @gedatou/cadenza-ui's Button does not add it.
+     Restore the pointer cursor app-wide here instead of patching every call site.
+     Anchors rendered as buttons (Button render={<Link>}) already get pointer from the UA. */
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;

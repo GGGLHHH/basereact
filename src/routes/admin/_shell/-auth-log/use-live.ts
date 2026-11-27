@@ -86,7 +86,7 @@ export function useAuthEventStream(): AuthEventStream {
 // 触发防抖(带 maxWait,非纯 debounce):静默期内合并多条更新,但持续来事件时也保证每
 // `ms` 至少刷新一次——纯 debounce 会在持续攻击(登录失败连环炸)时被不断重置、一直不触发,
 // 安全大屏最不该在真出事的时候画面冻住。tape 不吃这层,单独直接用 stream.events(见
-// auth-log.tsx)——新事件要立刻上 tape,这层只挡"重算图表/分布"这种贵操作的触发频率。
+// -auth-log-page.tsx)——新事件要立刻上 tape,这层只挡"重算图表/分布"这种贵操作的触发频率。
 function useThrottledValue<T>(value: T, ms: number): T {
   const [throttled, setThrottled] = useState(value)
   const lastAtRef = useRef(0)

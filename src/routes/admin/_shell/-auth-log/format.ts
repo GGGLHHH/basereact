@@ -1,4 +1,4 @@
-// 时间/数字格式化(mono 数据展示)。tape/表/轴共用。
+// 时间格式化(mono 数据展示)。tape/表/轴共用。
 
 const HMS = new Intl.DateTimeFormat(undefined, {
   hour: '2-digit',
@@ -26,17 +26,4 @@ export function ago(iso: string, now = Date.now()): string {
   if (s < 3600)
     return `${Math.floor(s / 60)}m`
   return `${Math.floor(s / 3600)}h`
-}
-
-const NUM = new Intl.NumberFormat()
-export function num(n: number): string {
-  return NUM.format(n)
-}
-
-export function pct(x: number, digits = 1): string {
-  return `${(x * 100).toFixed(digits)}%`
-}
-
-export function signedPct(x: number): string {
-  return `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`
 }

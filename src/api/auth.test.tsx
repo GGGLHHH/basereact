@@ -46,7 +46,6 @@ vi.mock('@/generated/client', () => ({
   logoutAll: vi.fn(),
   register: vi.fn(),
   switchTenant: vi.fn(),
-  updateMe: vi.fn(),
 }))
 
 // 只替换广播;refreshSession 用真的(切换后的缓存行为就是它)。

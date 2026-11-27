@@ -62,7 +62,7 @@ const config = defineConfig(({ command, mode }) => {
       },
     },
     test: {
-      // Node 24+ 遮蔽 jsdom/happy-dom 的 Web Storage → 补内存版兜底(见 src/test-setup.ts)。
+      // Node 24+ 遮蔽 happy-dom 的 Web Storage → 补内存版兜底(见 src/test-setup.ts)。
       setupFiles: ['./src/test-setup.ts'],
     },
   }

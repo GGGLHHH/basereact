@@ -8,7 +8,7 @@ import { UserEditRoute } from './-user-edit-route'
 export const Route = createFileRoute('/admin/_shell/users/$userId_/edit')({
   component: UserEditRoute,
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(userQueryOptions(params.userId)),
+    context.queryClient.query({ ...userQueryOptions(params.userId), staleTime: 'static' }),
   staticData: {
     titleKey: 'titles.adminUserEdit',
     accessPolicyKeys: ['updateUser'],

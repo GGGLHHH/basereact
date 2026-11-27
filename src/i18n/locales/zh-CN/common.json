@@ -68,10 +68,6 @@
     "dark": "深色",
     "system": "跟随系统"
   },
-  "home": {
-    "editHint": "编辑 <code>{{path}}</code> 开始开发。",
-    "welcome": "欢迎使用 TanStack Start"
-  },
   "action": {
     "cancel": "取消",
     "clear": "清除",
@@ -85,7 +81,6 @@
     "save": "保存",
     "saveChanges": "保存修改",
     "saving": "保存中...",
-    "search": "搜索",
     "view": "查看"
   },
   "loading": {
@@ -102,12 +97,7 @@
     "summary": "本页 {{count}} · 共 {{total}} 条"
   },
   "upload": {
-    "confirming": "确认中...",
-    "done": "上传完成",
-    "error": "上传失败",
-    "failedWithStatus": "上传失败,状态码 {{status}}",
-    "preparing": "准备中...",
-    "uploading": "上传中..."
+    "failedWithStatus": "上传失败,状态码 {{status}}"
   },
   "form": {
     "togglePassword": "切换密码可见"
@@ -132,15 +122,12 @@
     "login": {
       "description": "在下方输入邮箱登录账号",
       "forgotPassword": "忘记密码?",
-      "google": "使用 Google 登录",
       "identifierLabel": "邮箱或用户名",
       "identifierPlaceholder": "m@example.com",
       "identifierRequired": "请输入邮箱或用户名",
-      "noAccount": "还没有账号?",
       "noTenant": "该账号还没有加入任何组织,不能登录后台。请联系管理员把你加入组织。",
       "passwordLabel": "密码",
       "passwordRequired": "请输入密码",
-      "signUp": "注册",
       "submit": "登录",
       "submitting": "登录中...",
       "title": "登录账号"
@@ -164,7 +151,6 @@
   "users": {
     "actions": "操作",
     "columns": {
-      "avatarUrl": "头像地址",
       "createdAt": "创建时间",
       "displayName": "显示名称",
       "email": "邮箱",
@@ -186,14 +172,11 @@
       "title": "删除账号"
     },
     "detail": {
-      "account": "账号 ID",
-      "notFound": "账号不存在",
-      "title": "账号详情"
+      "account": "账号 ID"
     },
     "edit": {
       "accountDescription": "修改登录用户名与邮箱。",
       "accountTitle": "账号",
-      "description": "管理该账号的身份、角色、密码与资料。",
       "metaTitle": "系统",
       "passwordButton": "重置密码",
       "passwordDescription": "直接设置新密码,无需旧密码。",
@@ -207,8 +190,7 @@
       "rolesFixed": "超级管理员的角色不能在这里修改(只由初始数据声明)。",
       "rolesSaved": "角色已保存",
       "rolesTitle": "角色",
-      "success": "修改已保存",
-      "title": "编辑账号"
+      "success": "修改已保存"
     },
     "empty": "暂无账号",
     "filterRoles": "角色",
@@ -224,8 +206,6 @@
       "passwordPlaceholder": "至少 3 个字符",
       "phone": "手机号",
       "phonePlaceholder": "可选",
-      "rolesAddPlaceholder": "输入角色后按回车",
-      "rolesHint": "逗号分隔的角色名;留空表示不授予。",
       "rolesPlaceholder": "如 admin, editor",
       "usernamePlaceholder": "请输入用户名"
     },
@@ -365,17 +345,6 @@
     "tableLabel": "组织表"
   },
   "nav": {
-    "main": {
-      "platform": "平台"
-    },
-    "projects": {
-      "delete": "删除项目",
-      "more": "更多",
-      "moreActions": "更多",
-      "share": "分享项目",
-      "title": "项目",
-      "view": "查看项目"
-    },
     "user": {
       "logout": "退出登录",
       "profile": "个人信息"
